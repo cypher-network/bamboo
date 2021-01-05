@@ -1,0 +1,26 @@
+﻿// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0. 
+// To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
+
+using System;
+
+using LiteDB;
+
+namespace BAMWallet.Model
+{
+    public class WalletTransaction
+    {
+        [BsonId]
+        public Guid Id { get; set; }
+        public string Address { get; set; }
+        public ulong Balance { get; set; }
+        public ulong Change { get; set; }
+        public DateTime DateTime { get; set; }
+        public ulong Fee { get; set; }
+        public string Memo { get; set; }
+        public ulong Payment { get; set; }
+        public bool Spent { get; set; }
+        public byte[] TxId { get; set; }
+        public WalletType WalletType { get; set; }
+        public Vout Vout { get; set; }
+    }
+}

@@ -1,0 +1,44 @@
+# IDE
+/.vscode
+/.vs
+/.DS_Store
+
+# misc
+/bin
+/obj
+/ApplicationLayer/.DS_Store
+*.log
+*.user
+*.zip
+/CLI/.vs
+/CLI/nuget.config
+
+*.dll
+*.pdb
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+
+# MSTest test Results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.log
+*.db
+*.pubxml
+
+Properties/PublishProfiles/
