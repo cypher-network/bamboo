@@ -114,7 +114,7 @@ namespace BAMWallet.Rpc
             {
                 using var request = new HttpRequestMessage(HttpMethod.Get, path);
                 using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
-                var read = response.Content.ReadAsStringAsync().Result;
+                var read = response.Content.ReadAsStringAsync(cancellationToken).Result;
                 var jObject = JObject.Parse(read);
                 var jToken = jObject.GetValue("protobufs");
                 var byteArray = Convert.FromBase64String(jToken.Value<string>());

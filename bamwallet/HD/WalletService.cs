@@ -490,6 +490,11 @@ namespace BAMWallet.HD
             var blindSum = new byte[32];
             var blindSumChange = new byte[32];
 
+            while (_safeguardDownloadingFlagProvider.IsDownloading)
+            {
+                System.Threading.Thread.Sleep(100);
+            }
+
             blinds[1] = pedersen.BlindSwitch(walletTx.Fee, secp256k1.CreatePrivateKey());
             blinds[2] = pedersen.BlindSwitch(walletTx.Payment, secp256k1.CreatePrivateKey());
             blinds[3] = pedersen.BlindSwitch(walletTx.Change, secp256k1.CreatePrivateKey());
@@ -687,6 +692,13 @@ namespace BAMWallet.HD
         private unsafe byte[] M(Session session, WalletTransaction walletTx, Secp256k1 secp256k1, Pedersen pedersen,
             Span<byte[]> blinds, Span<byte[]> sk, int nRows, int nCols, int index, byte[] m, Span<byte[]> pcm_in)
         {
+            var byteArray = Util.ReadFully(SafeguardService.GetSafeguardData());
+            var blockHeaders = Util.DeserializeListProto<Model.BlockHeader>(byteArray);
+
+            blockHeaders.ToList().Shuffle();
+
+            var transactions = blockHeaders.SelectMany(x => x.Transactions);
+
             for (int k = 0; k < nRows - 1; ++k)
                 for (int i = 0; i < nCols; ++i)
                 {
@@ -709,11 +721,9 @@ namespace BAMWallet.HD
                         continue;
                     }
 
-                    // Make fake inputs. Should collect outputs as the new imputs from network.                    
-                    var fakeAmountIn = 1;
-                    pcm_in[i + k * nCols] = pedersen.Commit((ulong)fakeAmountIn, secp256k1.Randomize32());
+                    pcm_in[i + k * nCols] = transactions.ElementAt(i).Vout[1].C;
 
-                    fixed (byte* mm = m, pk = secp256k1.CreatePublicKey(secp256k1.Randomize32(), true))
+                    fixed (byte* mm = m, pk = transactions.ElementAt(i).Vout[1].P)
                     {
                         Libsecp256k1Zkp.Net.Util.MemCpy(&mm[(i + k * nCols) * 33], pk, 33);
                     }

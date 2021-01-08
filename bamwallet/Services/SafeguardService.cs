@@ -2,6 +2,7 @@
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -11,6 +12,7 @@ using Microsoft.Extensions.Logging;
 
 using BAMWallet.Rpc;
 using System.IO;
+using BAMWallet.Helper;
 
 namespace BAMWallet.Services
 {
@@ -33,6 +35,19 @@ namespace BAMWallet.Services
         /// <summary>
         /// 
         /// </summary>
+        /// <returns></returns>
+        public static Stream GetSafeguardData()
+        {
+            var safeGuardPath = SafeguardFilePath();
+            var filePath = Directory.EnumerateFiles(safeGuardPath).Last();
+            var file = File.Open(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
+
+            return file;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="stoppingToken"></param>
         /// <returns></returns>
         protected async override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -50,11 +65,13 @@ namespace BAMWallet.Services
                 var baseAddress = _client.GetBaseAddress();
                 var path = _apiGatewaySection.GetSection(RestCall.Routing).GetValue<string>(RestCall.RestSafeguardTransactions.ToString());
 
-                var blockArray = await _client.GetAsync<byte[]>(baseAddress, path, stoppingToken);
-                if (blockArray != null)
+                var blockHeaders = await _client.GetRangeAsync<Model.BlockHeader>(baseAddress, path, stoppingToken);
+                if (blockHeaders.Any())
                 {
-                    var fileStream = SafeguardData(DateTime.UtcNow.ToShortDateString());
-                    await fileStream.WriteAsync(blockArray, stoppingToken);
+                    var fileStream = SafeguardData(DateTime.UtcNow.Ticks);
+
+                    await fileStream.WriteAsync(Util.SerializeProto(blockHeaders), stoppingToken);
+                    await fileStream.FlushAsync(stoppingToken);
 
                     _safeguardDownloadingFlagService.IsDownloading = false;
                 }
@@ -75,7 +92,7 @@ namespace BAMWallet.Services
         /// <returns></returns>
         private static bool NeedNewSafeguardData()
         {
-            var safeGuardPath = Path.Combine(Path.GetDirectoryName(Helper.Util.AppDomainDirectory()), "safeguard");
+            var safeGuardPath = SafeguardFilePath();
             var d = DateTime.UtcNow - TimeSpan.FromDays(1.8);
 
             if (Directory.Exists(safeGuardPath))
@@ -83,7 +100,7 @@ namespace BAMWallet.Services
                 foreach (var filename in Directory.EnumerateFiles(safeGuardPath))
                 {
                     string filenameWithoutPath = Path.GetFileNameWithoutExtension(filename);
-                    if (filenameWithoutPath.Equals(d.ToShortDateString()))
+                    if (filenameWithoutPath.Equals(d.Ticks.ToString()))
                     {
                         return false;
                     }
@@ -98,10 +115,9 @@ namespace BAMWallet.Services
         /// </summary>
         /// <param name="dateTime"></param>
         /// <returns></returns>
-        private static Stream SafeguardData(string date)
+        private static Stream SafeguardData(long ticks)
         {
-            var safeGuardPath = Path.Combine(Path.GetDirectoryName(Helper.Util.AppDomainDirectory()), Path.Combine("safeguard", $"{date}.json"));
-
+            var safeGuardPath = SafeguardFilePath();
             if (!Directory.Exists(safeGuardPath))
             {
                 try
@@ -114,9 +130,18 @@ namespace BAMWallet.Services
                 }
             }
 
-            var file = File.Open(safeGuardPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
+            var file = File.Open($"{safeGuardPath}/{ticks}.protobufs", FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
 
             return file;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        private static string SafeguardFilePath()
+        {
+            return Path.Combine(Path.GetDirectoryName(Helper.Util.AppDomainDirectory()), "safeguard");
         }
     }
 }
