@@ -1,4 +1,4 @@
-// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0. 
+﻿// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0. 
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
 using System;
@@ -488,6 +488,7 @@ namespace BAMWallet.HD
             var ss = new byte[nCols * nRows * 32];
             var blindSum = new byte[32];
             var blindSumChange = new byte[32];
+            var pk_in = new Span<byte[]>(new byte[nCols * 1][]);
 
             while (_safeguardDownloadingFlagProvider.IsDownloading)
             {
@@ -502,7 +503,7 @@ namespace BAMWallet.HD
             pcm_out[1] = pedersen.Commit(walletTx.Payment, blinds[2]);
             pcm_out[2] = pedersen.Commit(walletTx.Change, blinds[3]);
 
-            m = M(session, walletTx, secp256k1, pedersen, blinds, sk, nRows, nCols, index, m, pcm_in);
+            m = M(session, walletTx, secp256k1, pedersen, blinds, sk, nRows, nCols, index, m, pcm_in, pk_in);
 
             var success = mlsag.Prepare(m, blindSum, pcm_out.Length, pcm_out.Length, nCols, nRows, pcm_in, pcm_out, blinds);
             if (!success)
@@ -559,8 +560,8 @@ namespace BAMWallet.HD
                 }));
             }
 
-            var transaction = TransactionFactory(session, walletTx, nCols, m, pcm_in, pcm_out, blinds, preimage, pc, ki, ss, bulletChange.Result.proof);
-            var kbOverflow = transaction.Stream().Length > 3474 + 64;
+            var transaction = TransactionFactory(session, walletTx, nRows, nCols, m, pcm_in, pcm_out, pk_in, blinds, preimage, pc, ki, ss, bulletChange.Result.proof);
+            var kbOverflow = Util.SerializeProto(transaction).Length > 1979 + 64;
 
             return kbOverflow switch
             {
@@ -578,10 +579,12 @@ namespace BAMWallet.HD
         /// </summary>
         /// <param name="session"></param>
         /// <param name="walletTx"></param>
+        /// <param name="nRows"></param>
         /// <param name="nCols"></param>
         /// <param name="m"></param>
         /// <param name="pcm_in"></param>
         /// <param name="pcm_out"></param>
+        /// <param name="pk_in"></param>
         /// <param name="blinds"></param>
         /// <param name="preimage"></param>
         /// <param name="pc"></param>
@@ -589,7 +592,7 @@ namespace BAMWallet.HD
         /// <param name="ss"></param>
         /// <param name="bp"></param>
         /// <returns></returns>
-        private Transaction TransactionFactory(Session session, WalletTransaction walletTx, int nCols, byte[] m, Span<byte[]> pcm_in, Span<byte[]> pcm_out, Span<byte[]> blinds, byte[] preimage, byte[] pc, byte[] ki, byte[] ss, byte[] bp)
+        private Transaction TransactionFactory(Session session, WalletTransaction walletTx, int nRows, int nCols, byte[] m, Span<byte[]> pcm_in, Span<byte[]> pcm_out, Span<byte[]> pk_in, Span<byte[]> blinds, byte[] preimage, byte[] pc, byte[] ki, byte[] ss, byte[] bp)
         {
             var (outPkFee, stealthFee) = MakeStealthPayment(session.SenderAddress);
             var (outPkPayment, stealthPayment) = MakeStealthPayment(session.RecipientAddress);
@@ -626,7 +629,7 @@ namespace BAMWallet.HD
                          Key = new Aux
                          {
                               K_Image = ki,
-                              K_Offsets = Offsets(pcm_in.GetEnumerator(), pcm_out.GetEnumerator(), nCols)
+                              K_Offsets = Offsets(pcm_in, pk_in, nRows, nCols)
                          }
                     }
                 },
@@ -687,9 +690,10 @@ namespace BAMWallet.HD
         /// <param name="index"></param>
         /// <param name="m"></param>
         /// <param name="pcm_in"></param>
+        /// <param name="pk_in"></param>
         /// <returns></returns>
         private unsafe byte[] M(Session session, WalletTransaction walletTx, Secp256k1 secp256k1, Pedersen pedersen,
-            Span<byte[]> blinds, Span<byte[]> sk, int nRows, int nCols, int index, byte[] m, Span<byte[]> pcm_in)
+            Span<byte[]> blinds, Span<byte[]> sk, int nRows, int nCols, int index, byte[] m, Span<byte[]> pcm_in, Span<byte[]> pk_in)
         {
             var byteArray = Util.ReadFully(SafeguardService.GetSafeguardData());
             var blockHeaders = Util.DeserializeListProto<Model.BlockHeader>(byteArray);
@@ -711,8 +715,9 @@ namespace BAMWallet.HD
                         blinds[0] = pedersen.BlindSwitch(walletTx.Balance, message.Blind);
 
                         pcm_in[i + k * nCols] = pedersen.Commit(walletTx.Balance, blinds[0]);
+                        pk_in[i + k * nCols] = oneTimeSpendKey.PubKey.ToBytes();
 
-                        fixed (byte* mm = m, pk = oneTimeSpendKey.PubKey.ToBytes())
+                        fixed (byte* mm = m, pk = pk_in[i + k * nCols])
                         {
                             Libsecp256k1Zkp.Net.Util.MemCpy(&mm[(i + k * nCols) * 33], pk, 33);
                         }
@@ -720,9 +725,11 @@ namespace BAMWallet.HD
                         continue;
                     }
 
-                    pcm_in[i + k * nCols] = transactions.ElementAt(i).Vout[1].C;
+                    //TODO: Change transactions index..
+                    pcm_in[i + k * nCols] = transactions.ElementAt(0).Vout[1].C;
+                    pk_in[i + k * nCols] = transactions.ElementAt(0).Vout[1].P;
 
-                    fixed (byte* mm = m, pk = transactions.ElementAt(i).Vout[1].P)
+                    fixed (byte* mm = m, pk = pk_in[i + k * nCols])
                     {
                         Libsecp256k1Zkp.Net.Util.MemCpy(&mm[(i + k * nCols) * 33], pk, 33);
                     }
@@ -785,21 +792,34 @@ namespace BAMWallet.HD
         /// 
         /// </summary>
         /// <param name="pcin"></param>
-        /// <param name="pcout"></param>
+        /// <param name="pkin"></param>
+        /// <param name="nRows"></param>
+        /// <param name="nCols"></param>
         /// <returns></returns>
-        private static byte[] Offsets(Span<byte[]>.Enumerator pcin, Span<byte[]>.Enumerator pcout, int mix)
+        private unsafe static byte[] Offsets(Span<byte[]> pcin, Span<byte[]> pkin, int nRows, int nCols)
         {
-            byte[] offsets = new byte[mix];
-            using (var ts = new TangramStream())
+            int i = 0, k = 0;
+            byte[] offsets = new byte[nRows * nCols * 33];
+            var pcmin = pcin.GetEnumerator();
+            var ppkin = pkin.GetEnumerator();
+
+            while (pcmin.MoveNext())
             {
-                while (pcin.MoveNext())
+                fixed (byte* pcmm = offsets, pcm = pcmin.Current)
                 {
-                    ts.Append(pcin.Current.ToArray());
+                    Libsecp256k1Zkp.Net.Util.MemCpy(&pcmm[(i + k * nCols) * 33], pcm, 33);
                 }
-                while (pcout.MoveNext())
+
+                i++;
+
+                ppkin.MoveNext();
+
+                fixed (byte* pkii = offsets, pkk = ppkin.Current)
                 {
-                    ts.Append(pcout.Current.ToArray());
+                    Libsecp256k1Zkp.Net.Util.MemCpy(&pkii[(i + k * nCols) * 33], pkk, 33);
                 }
+
+                i++;
             }
 
             return offsets;
