@@ -1,4 +1,4 @@
-﻿// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0. 
+// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0. 
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
 using System;
@@ -324,7 +324,6 @@ namespace BAMWallet.HD
 
             return walletTx;
         }
-
 
         /// <summary>
         /// 
@@ -1161,9 +1160,11 @@ namespace BAMWallet.HD
         /// </summary>
         /// <param name="sessionId"></param>
         /// <returns></returns>
-        public Task TransferPayment(Guid sessionId)
+        public Task<byte[]> TransferPayment(Guid sessionId)
         {
             Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
+
+            byte[] paymentId = null;
 
             try
             {
@@ -1174,14 +1175,20 @@ namespace BAMWallet.HD
                 if (!balance.Success)
                 {
                     SetLastError(session, balance);
-                    return Task.CompletedTask;
+                    return Task.FromResult<byte[]>(null);
                 }
 
                 var spend = Spend(sessionId);
                 if (!spend.Success)
                 {
                     SetLastError(session, spend);
-                    return Task.CompletedTask;
+                    return Task.FromResult<byte[]>(null);
+                }
+
+                var walletTx = LastTransaction(session.SessionId, WalletType.Send);
+                if (walletTx != null)
+                {
+                    paymentId = walletTx.TxId;
                 }
             }
             catch (Exception ex)
@@ -1190,7 +1197,7 @@ namespace BAMWallet.HD
                 throw;
             }
 
-            return Task.CompletedTask;
+            return Task.FromResult(paymentId);
         }
 
         /// <summary>

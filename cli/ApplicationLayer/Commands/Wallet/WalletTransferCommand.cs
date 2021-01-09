@@ -65,7 +65,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                             SessionType = SessionType.Coin
                         });
 
-                        await _walletService.TransferPayment(session.SessionId);
+                        var paymentId = await _walletService.TransferPayment(session.SessionId);
 
                         if (session.LastError != null)
                         {
@@ -74,8 +74,14 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                         }
 
                         var balance = _walletService.AvailableBalance(session.SessionId);
+                        var message = $"Available Balance: {balance.Result.DivWithNaT():F9} ";
 
-                        spinner.Text = $"Available Balance: {balance.Result.DivWithNaT():F9}";
+                        if (paymentId != null)
+                        {
+                            message += $"PaymentID: {paymentId.ByteToHex()}";
+                        }
+
+                        spinner.Succeed(message);
                     }
                     catch (Exception ex)
                     {
