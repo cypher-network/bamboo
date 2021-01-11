@@ -1,4 +1,4 @@
-﻿// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0. 
+// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0. 
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
 using System;
@@ -751,22 +751,32 @@ namespace BAMWallet.HD
             var voutIndex = Libsecp256k1Zkp.Net.Util.Rand(0, 2);
             var vouts = transactions.ElementAt(Libsecp256k1Zkp.Net.Util.Rand(0, transactions.Count())).Vout;
 
-            var pcm = pcm_in.GetEnumerator();
-            var pk = pk_in.GetEnumerator();
-
-            while (pcm.MoveNext())
+            if (pcm_in.IsEmpty != true && pk_in.IsEmpty != true)
             {
-                if (pcm.Current.SequenceEqual(vouts[voutIndex].C))
-                {
-                    RollRingMember(transactions, pcm_in, pk_in, out _);
-                    break;
-                }
+                var pcm = pcm_in.GetEnumerator();
+                var pk = pk_in.GetEnumerator();
 
-                pk.MoveNext();
-                if (pk.Current.SequenceEqual(vouts[voutIndex].P))
+                while (pcm.MoveNext())
                 {
-                    RollRingMember(transactions, pcm_in, pk_in, out _);
-                    break;
+                    if (pcm.Current != null)
+                    {
+                        if (pcm.Current.SequenceEqual(vouts[voutIndex].C))
+                        {
+                            RollRingMember(transactions, pcm_in, pk_in, out _);
+                            break;
+                        }
+                    }
+
+                    pk.MoveNext();
+
+                    if (pk.Current != null)
+                    {
+                        if (pk.Current.SequenceEqual(vouts[voutIndex].P))
+                        {
+                            RollRingMember(transactions, pcm_in, pk_in, out _);
+                            break;
+                        }
+                    }
                 }
             }
 
