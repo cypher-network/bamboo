@@ -476,7 +476,7 @@ namespace BAMWallet.HD
             var blinds = new Span<byte[]>(new byte[4][]);
             var sk = new Span<byte[]>(new byte[2][]);
             int nRows = 2; // last row sums commitments
-            int nCols = 2;//22; // ring size
+            int nCols = 22; // ring size
             int index = Libsecp256k1Zkp.Net.Util.Rand(0, nCols) % nCols;
             var m = new byte[nRows * nCols * 33];
             var pcm_in = new Span<byte[]>(new byte[nCols * 1][]);
@@ -725,9 +725,10 @@ namespace BAMWallet.HD
                         continue;
                     }
 
-                    //TODO: Change transactions index..
-                    pcm_in[i + k * nCols] = transactions.ElementAt(0).Vout[1].C;
-                    pk_in[i + k * nCols] = transactions.ElementAt(0).Vout[1].P;
+                    RollRingMember(transactions, pcm_in, pk_in, out Vout vout);
+
+                    pcm_in[i + k * nCols] = vout.C;
+                    pk_in[i + k * nCols] = vout.P;
 
                     fixed (byte* mm = m, pk = pk_in[i + k * nCols])
                     {
@@ -736,6 +737,40 @@ namespace BAMWallet.HD
                 }
 
             return m;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="transactions"></param>
+        /// <param name="pcm_in"></param>
+        /// <param name="pk_in"></param>
+        /// <param name="vout"></param>
+        private static void RollRingMember(IEnumerable<Transaction> transactions, Span<byte[]> pcm_in, Span<byte[]> pk_in, out Vout vout)
+        {
+            var voutIndex = Libsecp256k1Zkp.Net.Util.Rand(0, 2);
+            var vouts = transactions.ElementAt(Libsecp256k1Zkp.Net.Util.Rand(0, transactions.Count())).Vout;
+
+            var pcm = pcm_in.GetEnumerator();
+            var pk = pk_in.GetEnumerator();
+
+            while (pcm.MoveNext())
+            {
+                if (pcm.Current.SequenceEqual(vouts[voutIndex].C))
+                {
+                    RollRingMember(transactions, pcm_in, pk_in, out _);
+                    break;
+                }
+
+                pk.MoveNext();
+                if (pk.Current.SequenceEqual(vouts[voutIndex].P))
+                {
+                    RollRingMember(transactions, pcm_in, pk_in, out _);
+                    break;
+                }
+            }
+
+            vout = vouts[voutIndex];
         }
 
         /// <summary>
@@ -988,11 +1023,11 @@ namespace BAMWallet.HD
 
                 return new BlanceSheet
                 {
-                    DateTime = tx.DateTime.ToUniversalTime(),
-                    Memo = message.Memo,
-                    MoneyOut = tx.WalletType == WalletType.Send ? $"-{tx.Change.DivWithNaT():F9}" : "",
-                    MoneyIn = tx.WalletType == WalletType.Receive ? tx.Change.DivWithNaT().ToString("F9") : "",
-                    Balance = tx.WalletType == WalletType.Send ? (credit -= tx.Change).DivWithNaT().ToString("F9") : (credit += tx.Change).DivWithNaT().ToString("F9")
+                    DateTime = tx.DateTime,
+                    Memo = tx.Memo ?? message.Memo,
+                    MoneyOut = tx.WalletType == WalletType.Send ? $"-{tx.Payment.DivWithNaT():F9}" : string.Empty,
+                    MoneyIn = tx.WalletType == WalletType.Receive ? tx.Change.DivWithNaT().ToString("F9") : string.Empty,
+                    Balance = tx.WalletType == WalletType.Send ? (credit -= tx.Payment).DivWithNaT().ToString("F9") : (credit += tx.Change).DivWithNaT().ToString("F9")
                 };
             });
 
