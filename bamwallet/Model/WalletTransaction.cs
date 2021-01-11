@@ -11,16 +11,17 @@ namespace BAMWallet.Model
     {
         [BsonId]
         public Guid Id { get; set; }
-        public string Address { get; set; }
         public ulong Balance { get; set; }
         public ulong Change { get; set; }
         public DateTime DateTime { get; set; }
         public ulong Fee { get; set; }
         public string Memo { get; set; }
         public ulong Payment { get; set; }
+        public string RecipientAddress { get; set; }
+        public string SenderAddress { get; set; }
         public bool Spent { get; set; }
         public byte[] TxId { get; set; }
-        public WalletType WalletType { get; set; }
         public Vout Vout { get; set; }
+        public WalletType WalletType { get; set; }
     }
 }

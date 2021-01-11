@@ -25,8 +25,8 @@ namespace BAMWallet.HD
         SecureString NewID(int bytes = 32);
         Task<string[]> CreateMnemonic(Language language, WordCount wordCount);
         ulong TotalAmount(Guid sessionId, string address);
-        WalletTransaction LastTransaction(Guid sessionId, WalletType transactionType);
-        TaskResult<WalletTransaction> SortChange(Guid sessionId);
+        WalletTransaction LastWalletTransaction(Guid sessionId, WalletType transactionType);
+        TaskResult<bool> SortChange(Guid sessionId);
         IEnumerable<string> WalletList();
         IEnumerable<BlanceSheet> History(Guid sessionId);
         IEnumerable<string> Addresses(Guid sessionId);
@@ -40,11 +40,13 @@ namespace BAMWallet.HD
         Session GetSession(Guid sessionId);
         Client HttpClient();
         Session SessionAddOrUpdate(Session session);
-        TaskResult<bool> Save(Guid sessionId, WalletTransaction walletTx);
-        Task<byte[]> TransferPayment(Guid sessionId);
+        TaskResult<bool> Save(Guid sessionId);
+        void CreatePayment(Guid sessionId);
+        Task Send(Guid sessionId);
         Task ReceivePayment(Guid sessionId, string paymentId);
-        TaskResult<Transaction> CreateTransaction(Session session, WalletTransaction walletTx);
+        TaskResult<Transaction> CreateTransaction(Session session);
         ulong Fee(int nByte);
         PubKey GetScanPublicKey(string address);
+        Transaction GetTransaction(Guid sessionId);
     }
 }

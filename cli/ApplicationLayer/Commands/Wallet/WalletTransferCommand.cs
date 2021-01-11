@@ -59,13 +59,25 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                     {
                         var session = _walletService.SessionAddOrUpdate(new Session(identifier, passphrase)
                         {
-                            Amount = t.ConvertToUInt64(),
-                            Memo = memo,
-                            RecipientAddress = address,
-                            SessionType = SessionType.Coin
+                            SessionType = SessionType.Coin,
+                            WalletTransaction = new WalletTransaction
+                            {
+                                Memo = memo,
+                                Payment = t.ConvertToUInt64(),
+                                RecipientAddress = address,
+                                WalletType = WalletType.Send
+                            }
                         });
 
-                        var paymentId = await _walletService.TransferPayment(session.SessionId);
+                        _walletService.CreatePayment(session.SessionId);
+
+                        if (session.LastError != null)
+                        {
+                            spinner.Fail(JsonConvert.SerializeObject(session.LastError.GetValue("message")));
+                            return;
+                        }
+
+                        await _walletService.Send(session.SessionId);
 
                         if (session.LastError != null)
                         {
@@ -74,11 +86,12 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                         }
 
                         var balance = _walletService.AvailableBalance(session.SessionId);
-                        var message = $"Available Balance: {balance.Result.DivWithNaT():F9} ";
+                        var message = $"Available Balance: {balance.Result.DivWithNaT():F9}";
 
-                        if (paymentId != null)
+                        var walletTx = _walletService.LastWalletTransaction(session.SessionId, WalletType.Send);
+                        if (walletTx != null)
                         {
-                            message += $"PaymentID: {paymentId.ByteToHex()}";
+                            message += $"PaymentID: {walletTx.TxId.ByteToHex()}";
                         }
 
                         spinner.Succeed(message);

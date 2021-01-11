@@ -13,16 +13,12 @@ namespace BAMWallet.HD
 {
     public class Session : IEqualityComparer<Session>
     {
-        public ulong Amount { get; set; }
-        public bool HasFunds { get; set; }
         public SecureString Identifier { get; }
         public JObject LastError { get; set; }
-        public string Memo { get; set; }
         public SecureString Passphrase { get; }
-        public string RecipientAddress { get; set; }
-        public string SenderAddress { get; set; }
         public Guid SessionId { get; }
         public SessionType SessionType { get; set; }
+        public WalletTransaction WalletTransaction { get; set; }
 
         public Session(SecureString identifier, SecureString passphrase)
         {
@@ -31,15 +27,26 @@ namespace BAMWallet.HD
             SessionId = Guid.NewGuid();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
         public bool Equals(Session x, Session y)
         {
-            return x.Identifier == y.Identifier && x.Passphrase == y.Passphrase && x.SenderAddress == y.SenderAddress && x.RecipientAddress == y.RecipientAddress && x.SessionId == y.SessionId;
+            return x.Identifier == y.Identifier && x.Passphrase == y.Passphrase && x.SessionId == y.SessionId;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="session"></param>
+        /// <returns></returns>
         public int GetHashCode(Session session)
         {
             Session s = session;
-            return s.SenderAddress.GetHashCode();
+            return s.SessionId.GetHashCode();
         }
     }
 }

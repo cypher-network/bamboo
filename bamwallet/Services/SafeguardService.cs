@@ -84,6 +84,10 @@ namespace BAMWallet.Services
             {
                 _logger.LogError($"<<< SafeguardService.ExecuteAsync >>>: {ex}");
             }
+            finally
+            {
+                _safeguardDownloadingFlagService.IsDownloading = false;
+            }
         }
 
         /// <summary>

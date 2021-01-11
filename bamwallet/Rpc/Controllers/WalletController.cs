@@ -21,33 +21,26 @@ namespace BAMWallet.Controllers
             _walletService = walletService;
         }
 
-        [HttpPost("bampos", Name = "CreateTransacrtion")]
+        [HttpPost("transaction", Name = "CreateTransacrtion")]
         public IActionResult CreateTransaction([FromBody] byte[] sendPayment)
         {
             var payment = Util.DeserializeProto<SendPayment>(sendPayment);
             var session = _walletService.SessionAddOrUpdate(new Session(payment.Credentials.Identifier.ToSecureString(), payment.Credentials.Passphrase.ToSecureString())
             {
-                Amount = payment.Amount.ConvertToUInt64(),
-                Memo = payment.Memo,
-                RecipientAddress = payment.Address,
-                SessionType = payment.SessionType
+                SessionType = payment.SessionType,
+                WalletTransaction = new WalletTransaction
+                {
+                    Payment = payment.Amount.ConvertToUInt64(),
+                    Fee = (ulong)payment.Fee,
+                    Memo = payment.Memo,
+                    RecipientAddress = payment.Address
+                }
             });
 
-            var bal = _walletService.AvailableBalance(session.SessionId);
-            if (!bal.Success)
-            {
-                return new OkObjectResult(null);
-            }
+            _walletService.CreatePayment(session.SessionId);
+            var transaction = _walletService.GetTransaction(session.SessionId);
 
-            var walletTx = new WalletTransaction
-            {
-                Balance = bal.Result,
-                Payment = payment.Amount.ConvertToUInt64()
-            };
-
-            var tx = _walletService.CreateTransaction(session, walletTx);
-
-            return new OkObjectResult(tx.Result);
+            return new OkObjectResult(transaction);
         }
     }
 }

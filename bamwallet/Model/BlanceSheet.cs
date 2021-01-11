@@ -9,6 +9,7 @@ namespace BAMWallet.Model
     public class BlanceSheet
     {
         public DateTime DateTime { get; set; }
+        public string CoinType { get; set; }
         public string Memo { get; set; }
         public string MoneyOut { get; set; }
         public string MoneyIn { get; set; }
