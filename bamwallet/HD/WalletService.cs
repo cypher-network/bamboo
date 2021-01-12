@@ -448,10 +448,9 @@ namespace BAMWallet.HD
         }
 
         /// <summary>
-        /// Lists all KeySets
+        /// 
         /// </summary>
-        /// <param name="secret"></param>
-        /// <param name="identifier"></param>
+        /// <param name="sessionId"></param>
         /// <returns></returns>
         public IEnumerable<KeySet> KeySets(Guid sessionId)
         {
@@ -471,10 +470,9 @@ namespace BAMWallet.HD
         }
 
         /// <summary>
-        /// Lists all addresses
+        /// 
         /// </summary>
-        /// <param name="secret"></param>
-        /// <param name="identifier"></param>
+        /// <param name="sessionId"></param>
         /// <returns></returns>
         public IEnumerable<string> Addresses(Guid sessionId)
         {
@@ -502,13 +500,11 @@ namespace BAMWallet.HD
             using var secp256k1 = new Secp256k1();
             using var pedersen = new Pedersen();
             using var mlsag = new MLSAG();
-            using var bulletProof = new BulletProof();
-            using var schnorr = new Schnorr();
 
             var blinds = new Span<byte[]>(new byte[4][]);
             var sk = new Span<byte[]>(new byte[2][]);
             int nRows = 2; // last row sums commitments
-            int nCols = 2; // ring size
+            int nCols = 22; // ring size
             int index = Libsecp256k1Zkp.Net.Util.Rand(0, nCols) % nCols;
             var m = new byte[nRows * nCols * 33];
             var pcm_in = new Span<byte[]>(new byte[nCols * 1][]);
@@ -597,7 +593,7 @@ namespace BAMWallet.HD
             }
 
             var transaction = TransactionFactory(session, nRows, nCols, m, pcm_in, pcm_out, pk_in, blinds, preimage, pc, ki, ss, bulletChange.Result.proof);
-            var kbOverflow = Util.SerializeProto(transaction).Length > 2500 + 64;
+            var kbOverflow = Util.SerializeProto(transaction).Length > FeeNByte;
 
             if (!kbOverflow)
             {
@@ -943,9 +939,10 @@ namespace BAMWallet.HD
         }
 
         /// <summary>
-        /// Calculate balance from transactions.
+        /// 
         /// </summary>
         /// <param name="source"></param>
+        /// <param name="sessionId"></param>
         /// <returns></returns>
         private ulong Balance(IEnumerable<WalletTransaction> source, Guid sessionId)
         {
@@ -1044,10 +1041,9 @@ namespace BAMWallet.HD
         }
 
         /// <summary>
-        /// Returns balance sheet for the calling wallet.
+        /// 
         /// </summary>
-        /// <param name="identifier"></param>
-        /// <param name="passphrase"></param>
+        /// <param name="sessionId"></param>
         /// <returns></returns>
         public IEnumerable<BlanceSheet> History(Guid sessionId)
         {
@@ -1091,8 +1087,7 @@ namespace BAMWallet.HD
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="identifier"></param>
-        /// <param name="passphrase"></param>
+        /// <param name="sessionId"></param>
         /// <returns></returns>
         public int Count(Guid sessionId)
         {
@@ -1108,8 +1103,7 @@ namespace BAMWallet.HD
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="identifier"></param>
-        /// <param name="passphrase"></param>
+        /// <param name="sessionId"></param>
         /// <returns></returns>
         public KeySet LastKeySet(Guid sessionId)
         {
@@ -1126,7 +1120,7 @@ namespace BAMWallet.HD
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="session"></param>
+        /// <param name="sessionId"></param>
         /// <returns></returns>
         public KeySet GetKeySet(Guid sessionId)
         {
@@ -1152,7 +1146,7 @@ namespace BAMWallet.HD
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="session"></param>
+        /// <param name="sessionId"></param>
         /// <returns></returns>
         public KeySet NextKeySet(Guid sessionId)
         {
@@ -1187,7 +1181,6 @@ namespace BAMWallet.HD
         /// 
         /// </summary>
         /// <param name="address"></param>
-        /// <param name="ephemKey"></param>
         /// <returns></returns>
         public (PubKey, StealthPayment) MakeStealthPayment(string address)
         {
@@ -1213,10 +1206,8 @@ namespace BAMWallet.HD
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="identifier"></param>
-        /// <param name="passphrase"></param>
-        /// <param name="transactionId"></param>
-        /// <param name="address"></param>s
+        /// <param name="sessionId"></param>
+        /// <param name="paymentId"></param>
         /// <returns></returns>
         public async Task ReceivePayment(Guid sessionId, string paymentId)
         {
@@ -1273,8 +1264,6 @@ namespace BAMWallet.HD
         /// 
         /// </summary>
         /// <param name="sessionId"></param>
-        /// <param name="send"></param>
-        /// <returns></returns>
         public void CreatePayment(Guid sessionId)
         {
             Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
@@ -1393,7 +1382,6 @@ namespace BAMWallet.HD
         /// 
         /// </summary>
         /// <param name="sessionId"></param>
-        /// <param name="walletTx"></param>
         /// <returns></returns>
         public TaskResult<bool> Save(Guid sessionId)
         {

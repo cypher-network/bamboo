@@ -68,10 +68,11 @@ namespace BAMWallet.Services
                 var blockHeaders = await _client.GetRangeAsync<Model.BlockHeader>(baseAddress, path, stoppingToken);
                 if (blockHeaders.Any())
                 {
-                    var fileStream = SafeguardData(DateTime.UtcNow.Ticks);
+                    var fileStream = SafeguardData(GetDays());
 
                     await fileStream.WriteAsync(Util.SerializeProto(blockHeaders), stoppingToken);
                     await fileStream.FlushAsync(stoppingToken);
+                    fileStream.Close();
 
                     _safeguardDownloadingFlagService.IsDownloading = false;
                 }
@@ -97,14 +98,14 @@ namespace BAMWallet.Services
         private static bool NeedNewSafeguardData()
         {
             var safeGuardPath = SafeguardFilePath();
-            var d = DateTime.UtcNow - TimeSpan.FromDays(1.8);
+            var d = GetDays();
 
             if (Directory.Exists(safeGuardPath))
             {
                 foreach (var filename in Directory.EnumerateFiles(safeGuardPath))
                 {
                     string filenameWithoutPath = Path.GetFileNameWithoutExtension(filename);
-                    if (filenameWithoutPath.Equals(d.Ticks.ToString()))
+                    if (filenameWithoutPath.Equals(d.ToString("dd-MM-yyyy")))
                     {
                         return false;
                     }
@@ -117,9 +118,18 @@ namespace BAMWallet.Services
         /// <summary>
         /// 
         /// </summary>
+        /// <returns></returns>
+        private static DateTime GetDays()
+        {
+            return DateTime.UtcNow - TimeSpan.FromDays(1.8);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="dateTime"></param>
         /// <returns></returns>
-        private static Stream SafeguardData(long ticks)
+        private static Stream SafeguardData(DateTime date)
         {
             var safeGuardPath = SafeguardFilePath();
             if (!Directory.Exists(safeGuardPath))
@@ -134,7 +144,7 @@ namespace BAMWallet.Services
                 }
             }
 
-            var file = File.Open($"{safeGuardPath}/{ticks}.protobufs", FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
+            var file = File.Open($"{safeGuardPath}/{date:dd-MM-yyyy}.protobufs", FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
 
             return file;
         }
