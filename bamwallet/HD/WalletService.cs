@@ -1,4 +1,4 @@
-﻿// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0. 
+// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0. 
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
 using System;
@@ -66,7 +66,7 @@ namespace BAMWallet.HD
         /// </summary>
         /// <param name="sessionId"></param>
         /// <returns></returns>
-        public Session GetSession(Guid sessionId) => Sessions.GetValueOrDefault(sessionId);
+        public Session Session(Guid sessionId) => Sessions.GetValueOrDefault(sessionId);
 
         /// <summary>
         /// 
@@ -75,25 +75,32 @@ namespace BAMWallet.HD
         /// <returns></returns>
         public Session SessionAddOrUpdate(Session session)
         {
+            Guard.Argument(session, nameof(session)).NotNull();
+
             var mSession = Sessions.AddOrUpdate(session.SessionId, session,
                             (Key, existingVal) =>
                             {
                                 if (session != existingVal)
                                     throw new ArgumentException("Duplicate sessions are not allowed: {0}.", session.SessionId.ToString());
 
-                                existingVal.WalletTransaction.Balance = session.WalletTransaction.Balance;
-                                existingVal.WalletTransaction.Change = session.WalletTransaction.Change;
-                                existingVal.WalletTransaction.DateTime = session.WalletTransaction.DateTime;
-                                existingVal.WalletTransaction.Fee = session.WalletTransaction.Fee;
-                                existingVal.WalletTransaction.Id = session.SessionId;
-                                existingVal.WalletTransaction.Memo = session.WalletTransaction.Memo;
-                                existingVal.WalletTransaction.Payment = session.WalletTransaction.Payment;
-                                existingVal.WalletTransaction.RecipientAddress = session.WalletTransaction.RecipientAddress;
-                                existingVal.WalletTransaction.SenderAddress = session.WalletTransaction.SenderAddress;
-                                existingVal.WalletTransaction.Spent = session.WalletTransaction.Spent;
-                                existingVal.WalletTransaction.TxId = session.WalletTransaction.TxId ?? Array.Empty<byte>();
-                                existingVal.WalletTransaction.Vout = session.WalletTransaction.Vout ?? null;
-                                existingVal.WalletTransaction.WalletType = session.WalletTransaction.WalletType;
+                                try
+                                {
+                                    existingVal.WalletTransaction.Balance = session.WalletTransaction.Balance;
+                                    existingVal.WalletTransaction.Change = session.WalletTransaction.Change;
+                                    existingVal.WalletTransaction.DateTime = session.WalletTransaction.DateTime;
+                                    existingVal.WalletTransaction.Fee = session.WalletTransaction.Fee;
+                                    existingVal.WalletTransaction.Id = session.SessionId;
+                                    existingVal.WalletTransaction.Memo = session.WalletTransaction.Memo;
+                                    existingVal.WalletTransaction.Payment = session.WalletTransaction.Payment;
+                                    existingVal.WalletTransaction.RecipientAddress = session.WalletTransaction.RecipientAddress;
+                                    existingVal.WalletTransaction.SenderAddress = session.WalletTransaction.SenderAddress;
+                                    existingVal.WalletTransaction.Spent = session.WalletTransaction.Spent;
+                                    existingVal.WalletTransaction.TxId = session.WalletTransaction.TxId ?? Array.Empty<byte>();
+                                    existingVal.WalletTransaction.ReceivedVout = session.WalletTransaction.ReceivedVout ?? null;
+                                    existingVal.WalletTransaction.WalletType = session.WalletTransaction.WalletType;
+                                }
+                                catch (Exception)
+                                { }
 
                                 return existingVal;
                             });
@@ -114,7 +121,7 @@ namespace BAMWallet.HD
 
             try
             {
-                var session = GetSession(sessionId);
+                var session = Session(sessionId);
 
                 using var db = Util.LiteRepositoryFactory(session.Passphrase, session.Identifier.ToUnSecureString());
 
@@ -145,7 +152,7 @@ namespace BAMWallet.HD
 
             try
             {
-                var session = GetSession(sessionId);
+                var session = Session(sessionId);
 
                 using var db = Util.LiteRepositoryFactory(session.Passphrase, session.Identifier.ToUnSecureString());
 
@@ -276,11 +283,11 @@ namespace BAMWallet.HD
         public ulong TotalAmount(Guid sessionId, string address)
         {
             Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
-            Guard.Argument(address, nameof(address)).NotNull().NotEmpty();
+            Guard.Argument(address, nameof(address)).NotNull().NotEmpty().NotWhiteSpace();
 
             ulong total;
 
-            var session = GetSession(sessionId);
+            var session = Session(sessionId);
 
             using (var db = Util.LiteRepositoryFactory(session.Passphrase, session.Identifier.ToUnSecureString()))
             {
@@ -307,7 +314,7 @@ namespace BAMWallet.HD
         {
             Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
 
-            var session = GetSession(sessionId);
+            var session = Session(sessionId);
 
             WalletTransaction walletTx;
 
@@ -339,11 +346,11 @@ namespace BAMWallet.HD
         /// </summary>
         /// <param name="sessionId"></param>
         /// <returns></returns>
-        public Transaction GetTransaction(Guid sessionId)
+        public Transaction Transaction(Guid sessionId)
         {
             Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
 
-            var session = GetSession(sessionId);
+            var session = Session(sessionId);
 
             Transaction transaction = null;
 
@@ -456,7 +463,7 @@ namespace BAMWallet.HD
         {
             Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
 
-            var session = GetSession(sessionId);
+            var session = Session(sessionId);
 
             using var db = Util.LiteRepositoryFactory(session.Passphrase, session.Identifier.ToUnSecureString());
 
@@ -478,8 +485,7 @@ namespace BAMWallet.HD
         {
             Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
 
-
-            var session = GetSession(sessionId);
+            var session = Session(sessionId);
 
             var keys = KeySets(session.SessionId);
             if (keys?.Any() != true)
@@ -522,6 +528,8 @@ namespace BAMWallet.HD
             {
                 System.Threading.Thread.Sleep(100);
             }
+
+            var session = Session(sessionId);
 
             var fee = session.WalletTransaction.Fee;
             var payment = session.WalletTransaction.Payment;
@@ -1093,7 +1101,7 @@ namespace BAMWallet.HD
         {
             Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
 
-            var session = GetSession(sessionId);
+            var session = Session(sessionId);
 
             using var db = Util.LiteRepositoryFactory(session.Passphrase, session.Identifier.ToUnSecureString());
 
@@ -1109,7 +1117,7 @@ namespace BAMWallet.HD
         {
             Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
 
-            var session = GetSession(sessionId);
+            var session = Session(sessionId);
 
             using var db = Util.LiteRepositoryFactory(session.Passphrase, session.Identifier.ToUnSecureString());
             var keySet = db.Query<KeySet>().ToList().Last();
@@ -1122,11 +1130,11 @@ namespace BAMWallet.HD
         /// </summary>
         /// <param name="sessionId"></param>
         /// <returns></returns>
-        public KeySet GetKeySet(Guid sessionId)
+        public KeySet KeySet(Guid sessionId)
         {
-            Guard.Argument(sessionId, nameof(sessionId)).NotZero();
+            Guard.Argument(sessionId, nameof(sessionId)).Default();
 
-            var session = GetSession(sessionId);
+            var session = Session(sessionId);
 
             using var db = Util.LiteRepositoryFactory(session.Passphrase, session.Identifier.ToUnSecureString());
             var keySet = db.Query<KeySet>().FirstOrDefault();
@@ -1150,15 +1158,15 @@ namespace BAMWallet.HD
         /// <returns></returns>
         public KeySet NextKeySet(Guid sessionId)
         {
-            Guard.Argument(sessionId, nameof(sessionId)).NotZero();
+            Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
 
             KeySet keySet = default;
 
             try
             {
-                var session = GetSession(sessionId);
+                var session = Session(sessionId);
 
-                keySet = GetKeySet(session.SessionId);
+                keySet = KeySet(session.SessionId);
 
                 using var db = Util.LiteRepositoryFactory(session.Passphrase, session.Identifier.ToUnSecureString());
 
@@ -1184,6 +1192,8 @@ namespace BAMWallet.HD
         /// <returns></returns>
         public (PubKey, StealthPayment) MakeStealthPayment(string address)
         {
+            Guard.Argument(address, nameof(address)).NotNull().NotEmpty().NotWhiteSpace();
+
             var ephem = new Key();
             var stealth = new BitcoinStealthAddress(address, _network);
             var payment = stealth.CreatePayment(ephem);
@@ -1197,8 +1207,10 @@ namespace BAMWallet.HD
         /// </summary>
         /// <param name="address"></param>
         /// <returns></returns>
-        public PubKey GetScanPublicKey(string address)
+        public PubKey ScanPublicKey(string address)
         {
+            Guard.Argument(address, nameof(address)).NotNull().NotEmpty().NotWhiteSpace();
+
             var stealth = new BitcoinStealthAddress(address, _network);
             return stealth.ScanPubKey;
         }
@@ -1270,31 +1282,31 @@ namespace BAMWallet.HD
 
             try
             {
-                var session = GetSession(sessionId);
+                var session = Session(sessionId);
                 session.LastError = null;
 
-                var balance = AvailableBalance(sessionId);
+                var balance = AvailableBalance(session.SessionId);
                 if (!balance.Success)
                 {
                     SetLastError(session, balance);
                     return;
                 }
 
-                var walletTx = SortChange(sessionId);
-                if (!walletTx.Success)
+                var calculated = CalculateChange(session.SessionId);
+                if (!calculated.Success)
                 {
-                    SetLastError(session, walletTx);
+                    SetLastError(session, calculated);
                     return;
                 }
 
-                var transaction = CreateTransaction(session);
+                var transaction = CreateTransaction(session.SessionId);
                 if (!transaction.Success)
                 {
                     SetLastError(session, transaction);
                     return;
                 }
 
-                var saved = Save(session.SessionId);
+                var saved = Save(session.SessionId, session.WalletTransaction);
                 if (!saved.Success)
                 {
                     SetLastError(session, saved);
@@ -1317,10 +1329,12 @@ namespace BAMWallet.HD
         /// <returns></returns>
         public async Task Send(Guid sessionId)
         {
-            var session = GetSession(sessionId);
+            Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
+
+            var session = Session(sessionId);
             session.LastError = null;
 
-            var transaction = GetTransaction(session.SessionId);
+            var transaction = Transaction(session.SessionId);
 
             var baseAddress = _client.GetBaseAddress();
             var path = _apiGatewaySection.GetSection(RestCall.Routing).GetValue<string>(RestCall.GetTransactionId.ToString());
@@ -1329,6 +1343,7 @@ namespace BAMWallet.HD
             if (posted == null)
             {
                 SetLastError(session, TaskResult<bool>.CreateFailure(new Exception($"Unable to send transaction with paymentId: {transaction.TxnId.ByteToHex()}")));
+                RollBackOne(session.SessionId);
             }
 
             return;
@@ -1359,13 +1374,15 @@ namespace BAMWallet.HD
         /// <returns></returns>
         public (Key, Key) Unlock(Guid sessionId)
         {
+            Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
+
             Key spend = null;
             Key scan = null;
 
             try
             {
-                var keySet = GetKeySet(sessionId);
-                var masterKey = GetMasterKey(keySet);
+                var keySet = KeySet(sessionId);
+                var masterKey = MasterKey(keySet);
 
                 spend = masterKey.Derive(new KeyPath($"{HDPath}0")).PrivateKey;
                 scan = masterKey.Derive(new KeyPath($"{HDPath}1")).PrivateKey;
@@ -1383,16 +1400,17 @@ namespace BAMWallet.HD
         /// </summary>
         /// <param name="sessionId"></param>
         /// <returns></returns>
-        public TaskResult<bool> Save(Guid sessionId)
+        public TaskResult<bool> Save<T>(Guid sessionId, T data)
         {
             Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
 
             try
             {
-                var session = GetSession(sessionId);
-                using var db = Util.LiteRepositoryFactory(session.Passphrase, session.Identifier.ToUnSecureString());
-
-                db.Insert(session.WalletTransaction);
+                var session = Session(sessionId);
+                using (var db = Util.LiteRepositoryFactory(session.Passphrase, session.Identifier.ToUnSecureString()))
+                {
+                    db.Insert(data);
+                }
             }
             catch (Exception ex)
             {
@@ -1410,16 +1428,24 @@ namespace BAMWallet.HD
         /// <returns></returns>
         private TaskResult<bool> RollBackOne(Guid sessionId)
         {
+            Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
+
             try
             {
-                var session = GetSession(sessionId);
+                var session = Session(sessionId);
 
                 using var db = Util.LiteRepositoryFactory(session.Passphrase, session.Identifier.ToUnSecureString());
 
-                var transaction = db.Query<Transaction>().Where(s => s.Equals(session.SessionId)).FirstOrDefault();
+                var transaction = db.Query<Transaction>().Where(s => s.Id == session.SessionId).FirstOrDefault();
                 if (transaction != null)
                 {
                     db.Delete<Transaction>(new LiteDB.BsonValue(transaction.Id));
+                }
+
+                var walletTransaction = db.Query<WalletTransaction>().Where(s => s.Id == session.SessionId).FirstOrDefault();
+                if (walletTransaction != null)
+                {
+                    db.Delete<WalletTransaction>(new LiteDB.BsonValue(walletTransaction.Id));
                 }
             }
             catch (Exception ex)

@@ -57,7 +57,7 @@ namespace BAMWallet.Helper
             return new TaskResult<T>
             {
                 Success = false,
-                NonSuccessMessage = $"{ex.Message}{Environment.NewLine}{ex.StackTrace}",
+                NonSuccessMessage = $"{ex.Message}{Environment.NewLine}{ex.StackTrace ?? null}",
                 Exception = ex,
                 Result = default,
             };

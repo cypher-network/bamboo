@@ -29,11 +29,19 @@ namespace BAMWallet.Model
         [ProtoMember(7)]
         public RCT[] Rct { get; set; }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public byte[] ToHash()
         {
-            return Helper.Util.SHA384ManagedHash(Stream());
+            return NBitcoin.Crypto.Hashes.DoubleSHA256(Stream()).ToBytes(false);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public byte[] Stream()
         {
             byte[] stream;

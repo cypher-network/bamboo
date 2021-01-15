@@ -1,4 +1,4 @@
-﻿// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0. 
+// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0. 
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
 using System;
@@ -28,25 +28,25 @@ namespace BAMWallet.HD
         WalletTransaction LastWalletTransaction(Guid sessionId, WalletType transactionType);
         TaskResult<bool> SortChange(Guid sessionId);
         IEnumerable<string> WalletList();
-        IEnumerable<BlanceSheet> History(Guid sessionId);
+        IEnumerable<BalanceSheet> History(Guid sessionId);
         IEnumerable<string> Addresses(Guid sessionId);
         IEnumerable<KeySet> KeySets(Guid sessionId);
         KeySet LastKeySet(Guid sessionId);
-        KeySet GetKeySet(Guid sessionId);
+        KeySet KeySet(Guid sessionId);
         (PubKey, StealthPayment) MakeStealthPayment(string address);
         int Count(Guid sessionId);
         KeySet NextKeySet(Guid sessionId);
         (Key, Key) Unlock(Guid sessionId);
-        Session GetSession(Guid sessionId);
+        Session Session(Guid sessionId);
         Client HttpClient();
         Session SessionAddOrUpdate(Session session);
-        TaskResult<bool> Save(Guid sessionId);
+        TaskResult<bool> Save<T>(Guid sessionId, T data);
         void CreatePayment(Guid sessionId);
         Task Send(Guid sessionId);
         Task ReceivePayment(Guid sessionId, string paymentId);
-        TaskResult<Transaction> CreateTransaction(Session session);
+        TaskResult<Transaction> CreateTransaction(Guid sessionId);
         ulong Fee(int nByte);
-        PubKey GetScanPublicKey(string address);
-        Transaction GetTransaction(Guid sessionId);
+        PubKey ScanPublicKey(string address);
+        Transaction Transaction(Guid sessionId);
     }
 }
