@@ -1,4 +1,4 @@
-// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0. 
+﻿// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0. 
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
 using System;
@@ -26,7 +26,7 @@ namespace BAMWallet.HD
         Task<string[]> CreateMnemonic(Language language, WordCount wordCount);
         ulong TotalAmount(Guid sessionId, string address);
         WalletTransaction LastWalletTransaction(Guid sessionId, WalletType transactionType);
-        TaskResult<bool> SortChange(Guid sessionId);
+        TaskResult<bool> CalculateChange(Guid sessionId);
         IEnumerable<string> WalletList();
         IEnumerable<BalanceSheet> History(Guid sessionId);
         IEnumerable<string> Addresses(Guid sessionId);

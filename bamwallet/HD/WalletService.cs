@@ -365,71 +365,6 @@ namespace BAMWallet.HD
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="sessionId"></param>
-        /// <returns></returns>
-        public TaskResult<bool> SortChange(Guid sessionId)
-        {
-            Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
-
-            try
-            {
-                var session = GetSession(sessionId);
-
-                List<WalletTransaction> transactions;
-                using (var db = Util.LiteRepositoryFactory(session.Passphrase, session.Identifier.ToUnSecureString()))
-                {
-                    transactions = db.Query<WalletTransaction>().ToList();
-                    if (transactions?.Any() != true)
-                    {
-                        return TaskResult<bool>.CreateFailure(false);
-                    }
-                }
-
-                var received = transactions.Where(tx => tx.WalletType == WalletType.Receive).ToArray();
-                var target = new WalletTransaction[received.Length];
-
-                Array.Copy(received, target, received.Length);
-
-                for (int i = 0, targetLength = target.Length; i < targetLength; i++)
-                {
-                    var balance = Balance(transactions, session.SessionId);
-                    if (balance >= session.WalletTransaction.Payment)
-                    {
-                        var fee = session.SessionType == SessionType.Coinstake ? session.WalletTransaction.Fee : Fee(FeeNByte);
-
-                        session.WalletTransaction = new WalletTransaction
-                        {
-                            Balance = balance,
-                            Change = balance - session.WalletTransaction.Payment - fee,
-                            DateTime = DateTime.UtcNow,
-                            Fee = fee,
-                            Id = session.SessionId,
-                            Memo = session.WalletTransaction.Memo,
-                            Payment = session.WalletTransaction.Payment,
-                            RecipientAddress = session.WalletTransaction.RecipientAddress,
-                            SenderAddress = session.WalletTransaction.SenderAddress,
-                            Spent = balance - session.WalletTransaction.Payment == 0,
-                            Vout = received.ElementAt(i).Vout
-                        };
-
-                        SessionAddOrUpdate(session);
-
-                        break;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex.Message);
-                return TaskResult<bool>.CreateFailure(ex);
-            }
-
-            return TaskResult<bool>.CreateSuccess(true);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
         /// <param name="nByte"></param>
         /// <returns></returns>
         public ulong Fee(int nByte)
@@ -499,7 +434,87 @@ namespace BAMWallet.HD
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="session"></param>
+        /// <param name="sessionId"></param>
+        /// <returns></returns>
+        public TaskResult<bool> CalculateChange(Guid sessionId)
+        {
+            Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
+
+            try
+            {
+                var session = Session(sessionId);
+
+                List<WalletTransaction> walletTransactions;
+                using (var db = Util.LiteRepositoryFactory(session.Passphrase, session.Identifier.ToUnSecureString()))
+                {
+                    walletTransactions = db.Query<WalletTransaction>().Where(x => x.WalletType == WalletType.Receive).ToList();
+                    if (walletTransactions?.Any() != true)
+                    {
+                        return TaskResult<bool>.CreateFailure(new Exception("There are no wallet transactions."));
+                    }
+                }
+
+                int count;
+                var tempWalletTxs = new List<WalletTransaction>();
+                var (spend, scan) = Unlock(session.SessionId);
+
+                for (var i = 0; i < walletTransactions.Count; i++)
+                {
+                    if (walletTransactions[i].Change == 0)
+                    {
+                        var message = Util.DeserializeProto<WalletTransactionMessage>(scan.Decrypt(walletTransactions[i].ReceivedVout.N));
+                        walletTransactions[i].Change = message.Amount;
+                    }
+
+                    count = (int)(session.WalletTransaction.Payment / walletTransactions[i].Change);
+
+                    if (count != 0)
+                        for (int k = 0; k < count; k++) tempWalletTxs.Add(walletTransactions[i]);
+
+                    session.WalletTransaction.Payment %= walletTransactions[i].Change;
+                }
+
+                var sum = Util.Sum(tempWalletTxs.Select(s => s.Change));
+                var remainder = session.WalletTransaction.Payment - sum;
+                var closest = walletTransactions.Select(x => x.Change).Aggregate((x, y) => x - remainder < y - remainder ? x : y);
+                var walletTransaction = walletTransactions.FirstOrDefault(a => a.Change == closest);
+
+                var fee = session.SessionType == SessionType.Coin ? Fee(FeeNByte) : 0;
+                var reward = session.SessionType == SessionType.Coinstake ? session.WalletTransaction.Reward : 0;
+                var balance = Balance(walletTransactions, session.SessionId);
+
+                session.WalletTransaction = new WalletTransaction
+                {
+                    Balance = balance,
+                    Change = balance - session.WalletTransaction.Payment - fee,
+                    DateTime = DateTime.UtcNow,
+                    Fee = fee,
+                    Id = session.SessionId,
+                    Memo = session.WalletTransaction.Memo,
+                    Payment = session.WalletTransaction.Payment,
+                    Reward = reward,
+                    RecipientAddress = session.WalletTransaction.RecipientAddress,
+                    SenderAddress = session.WalletTransaction.SenderAddress,
+                    Spent = balance - session.WalletTransaction.Payment == 0,
+                    ReceivedVout = walletTransaction.ReceivedVout,
+                    ReceivedVoutExtra = walletTransaction.ReceivedVoutExtra
+                };
+
+                SessionAddOrUpdate(session);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return TaskResult<bool>.CreateFailure(ex);
+            }
+
+            return TaskResult<bool>.CreateSuccess(true);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sessionId"></param>
         /// <returns></returns>
         public TaskResult<Transaction> CreateTransaction(Session session)
         {
@@ -1016,36 +1031,6 @@ namespace BAMWallet.HD
                 sum += amount;
             }
             return sum;
-        }
-
-        /// <summary>
-        /// Calculates the change.
-        /// </summary>
-        /// <returns>The change.</returns>
-        /// <param name="amount">Amount.</param>
-        /// <param name="transactions">Transactions.</param>
-        private static (WalletTransaction, ulong) CalculateChange(ulong amount, WalletTransaction[] walletTxs)
-        {
-            Guard.Argument(walletTxs, nameof(walletTxs)).NotNull();
-
-            int count;
-            var tempWalletTxs = new List<WalletTransaction>();
-
-            for (var i = 0; i < walletTxs.Length; i++)
-            {
-                count = (int)(amount / walletTxs[i].Change);
-                if (count != 0)
-                    for (int k = 0; k < count; k++) tempWalletTxs.Add(walletTxs[i]);
-
-                amount %= walletTxs[i].Change;
-            }
-
-            var sum = Util.Sum(tempWalletTxs.Select(s => s.Change));
-            var remainder = amount - sum;
-            var closest = walletTxs.Select(x => x.Change).Aggregate((x, y) => x - remainder < y - remainder ? x : y);
-            var walletTx = walletTxs.FirstOrDefault(a => a.Change == closest);
-
-            return (walletTx, remainder);
         }
 
         /// <summary>
