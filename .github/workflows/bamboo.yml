@@ -1,0 +1,24 @@
+name: build bamboo wallet
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Setup .NET Core 5.0
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: '5.0.101' # SDK Version to use.
+    - name: Checkout latest
+      uses: actions/checkout@master
+    - name: build bamboo
+      run:  |
+        dotnet restore bamboo.sln
+        dotnet publish cli --output publish/cli --configuration Release
+    - name: Archive build artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: dist
+        path: |
+          ${{ github.workspace }}/publish/cli/
