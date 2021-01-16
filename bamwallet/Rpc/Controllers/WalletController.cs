@@ -30,15 +30,16 @@ namespace BAMWallet.Controllers
                 SessionType = payment.SessionType,
                 WalletTransaction = new WalletTransaction
                 {
+                    Fee = payment.SessionType == SessionType.Coin ? (ulong)payment.Fee : 0,
                     Payment = payment.Amount.ConvertToUInt64(),
-                    Fee = (ulong)payment.Fee,
+                    Reward = payment.SessionType == SessionType.Coinstake ? (ulong)payment.Fee : 0,
                     Memo = payment.Memo,
                     RecipientAddress = payment.Address
                 }
             });
 
             _walletService.CreatePayment(session.SessionId);
-            var transaction = _walletService.GetTransaction(session.SessionId);
+            var transaction = _walletService.Transaction(session.SessionId);
 
             return new OkObjectResult(transaction);
         }

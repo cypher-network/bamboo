@@ -2,7 +2,7 @@
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
 using System;
-
+using System.Collections.Generic;
 using LiteDB;
 
 namespace BAMWallet.Model
@@ -18,10 +18,12 @@ namespace BAMWallet.Model
         public string Memo { get; set; }
         public ulong Payment { get; set; }
         public string RecipientAddress { get; set; }
+        public ulong Reward { get; set; }
         public string SenderAddress { get; set; }
         public bool Spent { get; set; }
         public byte[] TxId { get; set; }
-        public Vout Vout { get; set; }
+        public Vout ReceivedVout { get; set; }
+        public List<Vout> ReceivedVoutExtra { get; set; }
         public WalletType WalletType { get; set; }
     }
 }
