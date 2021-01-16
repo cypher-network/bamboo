@@ -30,9 +30,6 @@ namespace BAMWallet.Helper
             Initialize();
         }
 
-#if !DEBUG
-        [DebuggerHidden]
-#endif
         private void Initialize()
         {
             unsafe
@@ -72,9 +69,6 @@ namespace BAMWallet.Helper
             }
         }
 
-#if !DEBUG
-        [DebuggerHidden]
-#endif
         public void Dispose()
         {
             unsafe
