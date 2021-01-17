@@ -27,7 +27,7 @@ namespace BAMWallet.Model
         [ProtoMember(8)]
         public string Proof { get; set; }
         [ProtoMember(9)]
-        public string SecKey256 { get; set; }
+        public string Sec { get; set; }
         [ProtoMember(10)]
         public string Seed { get; set; }
         [ProtoMember(11)]

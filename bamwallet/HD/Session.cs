@@ -16,7 +16,7 @@ namespace BAMWallet.HD
         public SecureString Identifier { get; }
         public JObject LastError { get; set; }
         public SecureString Passphrase { get; }
-        public Guid SessionId { get; }
+        public Guid SessionId { get; set; }
         public SessionType SessionType { get; set; }
         public WalletTransaction WalletTransaction { get; set; }
 
