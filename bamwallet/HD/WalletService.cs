@@ -1,4 +1,4 @@
-﻿// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0. 
+// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0. 
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
 using System;
@@ -327,15 +327,6 @@ namespace BAMWallet.HD
                 }
 
                 walletTx = transactions.Last();
-
-                if (walletTx != null)
-                {
-                    var (spend, scan) = Unlock(sessionId);
-                    var message = Util.DeserializeProto<WalletTransactionMessage>(scan.Decrypt(walletTx.ReceivedVout.N));
-
-                    walletTx.Payment = message.Amount;
-                    walletTx.Memo = message.Memo;
-                }
             }
 
             return walletTx;
@@ -773,13 +764,7 @@ namespace BAMWallet.HD
             using var pedersen = new Pedersen();
 
             var session = Session(sessionId);
-
-            var byteArray = Util.ReadFully(SafeguardService.GetSafeguardData());
-            var blockHeaders = Util.DeserializeListProto<Model.BlockHeader>(byteArray);
-
-            blockHeaders.ToList().Shuffle();
-
-            var transactions = blockHeaders.SelectMany(x => x.Transactions);
+            var transactions = SafeguardService.GetTransactions();
 
             for (int k = 0; k < nRows - 1; ++k)
                 for (int i = 0; i < nCols; ++i)
@@ -1135,7 +1120,7 @@ namespace BAMWallet.HD
         /// <returns></returns>
         public KeySet KeySet(Guid sessionId)
         {
-            Guard.Argument(sessionId, nameof(sessionId)).Default();
+            Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
 
             var session = Session(sessionId);
 

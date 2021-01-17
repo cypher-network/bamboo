@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
@@ -13,7 +14,7 @@ using Microsoft.Extensions.Logging;
 
 using BAMWallet.Rpc;
 using BAMWallet.Helper;
-using BAMWallet.Extentions;
+using BAMWallet.Model;
 
 namespace BAMWallet.Services
 {
@@ -40,10 +41,34 @@ namespace BAMWallet.Services
         public static Stream GetSafeguardData()
         {
             var safeGuardPath = SafeguardFilePath();
-            var filePath = Directory.EnumerateFiles(safeGuardPath).Last();
+            var filePath = Directory.EnumerateFiles(safeGuardPath, "*.protobufs").Last();
             var file = File.Open(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
 
             return file;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public static IEnumerable<Transaction> GetTransactions()
+        {
+            var transactions = Enumerable.Empty<Transaction>();
+            var byteArray = Util.ReadFully(GetSafeguardData());
+
+            try
+            {
+                var blockHeaders = Util.DeserializeListProto<BlockHeader>(byteArray);
+
+                blockHeaders.ToList().Shuffle();
+                transactions = blockHeaders.SelectMany(x => x.Transactions);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+
+            return transactions;
         }
 
         /// <summary>
