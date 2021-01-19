@@ -21,23 +21,28 @@ namespace BAMWallet.Extentions
             }
         }
 
-        internal static byte[] ToArray(this SecureString s)
+        public static byte[] ToArray(this SecureString s)
         {
             if (s == null)
                 throw new NullReferenceException();
+
             if (s.Length == 0)
-                return new byte[0];
-            List<byte> result = new List<byte>();
-            IntPtr ptr = SecureStringMarshal.SecureStringToGlobalAllocAnsi(s);
+                return Array.Empty<byte>();
+
+            var result = new List<byte>();
+            var ptr = SecureStringMarshal.SecureStringToGlobalAllocAnsi(s);
+
             try
             {
-                int i = 0;
+                var i = 0;
                 do
                 {
-                    byte b = Marshal.ReadByte(ptr, i++);
+                    var b = Marshal.ReadByte(ptr, i++);
                     if (b == 0)
                         break;
+
                     result.Add(b);
+
                 } while (true);
             }
             finally

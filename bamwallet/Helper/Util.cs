@@ -19,6 +19,7 @@ using ProtoBuf;
 
 using BAMWallet.Model;
 using BAMWallet.Extentions;
+using NBitcoin;
 
 namespace BAMWallet.Helper
 {
@@ -353,6 +354,53 @@ namespace BAMWallet.Helper
 
             input.CopyTo(ms);
             return ms.ToArray();
+        }
+
+        public static WalletTransactionMessage Message(Vout vout, Key scan)
+        {
+            WalletTransactionMessage message = null;
+
+            try
+            {
+                message = DeserializeProto<WalletTransactionMessage>(scan.Decrypt(vout.N));
+            }
+            catch
+            { }
+
+            return message;
+        }
+
+        public static ulong MessageAmount(Vout vout, Key scan)
+        {
+            ulong amount = 0;
+
+            try
+            {
+                amount = DeserializeProto<WalletTransactionMessage>(scan.Decrypt(vout.N)).Amount;
+            }
+            catch
+            { }
+
+            return amount;
+        }
+
+        public static string MessageMemo(Vout vout, Key scan)
+        {
+            string message = string.Empty;
+
+            try
+            {
+                message = DeserializeProto<WalletTransactionMessage>(scan.Decrypt(vout.N)).Memo;
+            }
+            catch
+            { }
+
+            return message;
+        }
+
+        public static byte[] Message(ulong amount, byte[] blind, string memo)
+        {
+            return SerializeProto(new WalletTransactionMessage { Amount = amount, Blind = blind, Memo = memo });
         }
     }
 }

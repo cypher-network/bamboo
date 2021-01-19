@@ -40,8 +40,8 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                 var session = _walletService.SessionAddOrUpdate(new Session(identifier, passphrase));
                 var total = _walletService.AvailableBalance(session.SessionId);
 
-                _console.ForegroundColor = ConsoleColor.Magenta;
-                _console.WriteLine($"\nWallet balance: {total.Result.DivWithNaT():F9}\n");
+                _console.ForegroundColor = ConsoleColor.Green;
+                _console.WriteLine($"\nBalance: {total.Result.DivWithNaT():F9}\n");
                 _console.ForegroundColor = ConsoleColor.White;
             }
             catch (Exception)
