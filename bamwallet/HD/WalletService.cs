@@ -445,38 +445,37 @@ namespace BAMWallet.HD
                     }
                 }
 
-                int count;
-                var tempWalletTxs = new List<WalletTransaction>();
+                var changeList = new Dictionary<ulong, WalletTransaction>();
+
                 var (spend, scan) = Unlock(session.SessionId);
 
-                for (var i = 0; i < walletTransactions.Count; i++)
+                foreach (var transaction in walletTransactions)
                 {
-                    if (walletTransactions[i].Change == 0)
+                    if (transaction.Change == 0)
                     {
-                        walletTransactions[i].Change = Util.MessageAmount(walletTransactions[i].Vout[0], scan);
+                        var change = Util.MessageAmount(transaction.Vout[0], scan);
+                        changeList.Add(change, transaction);
+
+                        transaction.Change = change;
+
+                        continue;
                     }
 
-                    count = (int)(session.WalletTransaction.Payment / walletTransactions[i].Change);
-
-                    if (count != 0)
-                        for (int k = 0; k < count; k++) tempWalletTxs.Add(walletTransactions[i]);
-
-                    session.WalletTransaction.Payment %= walletTransactions[i].Change;
+                    changeList.Add(Util.MessageAmount(transaction.Vout[2], scan), transaction);
                 }
 
-                var sum = Util.Sum(tempWalletTxs.Select(s => s.Change));
-                var remainder = session.WalletTransaction.Payment - sum;
-                var closest = walletTransactions.Select(x => x.Change).Aggregate((x, y) => x - remainder < y - remainder ? x : y);
-                var walletTransaction = walletTransactions.FirstOrDefault(a => a.Change == closest);
-
                 var fee = session.SessionType == SessionType.Coin ? Fee(FeeNByte) : 0;
+                var payment = session.WalletTransaction.Payment;
                 var reward = session.SessionType == SessionType.Coinstake ? session.WalletTransaction.Reward : 0;
                 var balance = AvailableBalance(session.SessionId).Result;
+                var closest = changeList.OrderByDescending(x => x.Key).Last().Key;
+                var vOutChange = changeList.FirstOrDefault(x => x.Key == closest);
+                var spending = vOutChange.Value.Vout.FirstOrDefault(x => Util.MessageAmount(x, scan) == closest);
 
                 session.WalletTransaction = new WalletTransaction
                 {
                     Balance = balance,
-                    Change = balance - session.WalletTransaction.Payment - fee,
+                    Change = balance - payment - fee,
                     DateTime = DateTime.UtcNow,
                     Fee = fee,
                     Id = session.SessionId,
@@ -485,9 +484,9 @@ namespace BAMWallet.HD
                     Reward = reward,
                     RecipientAddress = session.WalletTransaction.RecipientAddress,
                     SenderAddress = session.WalletTransaction.SenderAddress,
-                    Spending = walletTransaction.Vout.FirstOrDefault(x => Util.MessageAmount(x, scan) == balance),
-                    Spent = balance - session.WalletTransaction.Payment == 0,
-                    Vout = walletTransaction.Vout
+                    Spending = spending,
+                    Spent = balance - payment == 0,
+                    Vout = vOutChange.Value.Vout
                 };
 
                 SessionAddOrUpdate(session);
@@ -739,7 +738,7 @@ namespace BAMWallet.HD
         /// <param name="blinds"></param>
         /// <param name="sk"></param>
         /// <param name="nRows"></param>
-        /// <param name="nCols"></param>
+        /// <param name="nCols"></param>s
         /// <param name="index"></param>
         /// <param name="m"></param>
         /// <param name="pcm_in"></param>
@@ -958,16 +957,30 @@ namespace BAMWallet.HD
         private ulong Balance(IEnumerable<WalletTransaction> transactions, Guid sessionId)
         {
             Guard.Argument(transactions, nameof(transactions)).NotNull();
+            Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
 
-            ulong total;
+            ulong total = 0;
 
             try
             {
                 var (spend, scan) = Unlock(sessionId);
-                var payment = (ulong)transactions.Where(tx => tx.WalletType == WalletType.Receive).Sum(x => (double)Util.MessageAmount(x.Vout.First(), scan));
-                var change = Util.MessageAmount(transactions.Where(tx => tx.WalletType == WalletType.Send).Last().Vout.ElementAt(2), scan);
+                ulong received = 0, fee = 0, payment = 0;
 
-                total = change == 0 ? payment : change;
+                transactions.Where(tx => tx.WalletType == WalletType.Receive).ToList().ForEach(x =>
+                {
+                    foreach (var v in x.Vout)
+                    {
+                        received += Util.MessageAmount(v, scan);
+                    }
+                });
+
+                transactions.Where(tx => tx.WalletType == WalletType.Send).ToList().ForEach(x =>
+                {
+                    fee += Util.MessageAmount(x.Vout[0], scan);
+                    payment += Util.MessageAmount(x.Vout[1], scan);
+                });
+
+                total = received - payment - fee;
             }
             catch (Exception ex)
             {
@@ -1336,14 +1349,23 @@ namespace BAMWallet.HD
         /// <param name="obj"></param>
         private void SetLastError<T>(Session session, TaskResult<T> obj)
         {
-            session.LastError = JObject.FromObject(new
+            if (obj.Exception == null)
             {
-                success = false,
-                message = obj.Exception.Message
-            });
+                session.LastError = obj.NonSuccessMessage;
+                _logger.LogError($"{obj.NonSuccessMessage.message}");
+            }
+            else
+            {
+                session.LastError = JObject.FromObject(new
+                {
+                    success = false,
+                    message = obj.Exception.Message
+                });
+
+                _logger.LogError(obj.Exception.Message);
+            }
 
             SessionAddOrUpdate(session);
-            _logger.LogError(obj.Exception.Message);
         }
 
         /// <summary>
