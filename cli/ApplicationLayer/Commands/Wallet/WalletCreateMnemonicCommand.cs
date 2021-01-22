@@ -19,7 +19,7 @@ using BAMWallet.HD;
 
 namespace CLi.ApplicationLayer.Commands.Wallet
 {
-    //[CommandDescriptor(new string[] { "mnemonic" }, "Creates a new mnemonic and Two-Factor seed")]
+    //[CommandDescriptor(new string[] { "mnemonic" }, "Creates a new mnemonic and passphrase")]
     class WalletCreateMnemonicCommand : Command
     {
         private readonly IConsole _console;
@@ -44,14 +44,14 @@ namespace CLi.ApplicationLayer.Commands.Wallet
             _console.ForegroundColor = ConsoleColor.Magenta;
 
             _console.WriteLine("");
-            _console.WriteLine("Two-Factor Seed Phrase");
+            _console.WriteLine("Passphrase");
 
             Options(out lang, out wCount, 1);
 
             var passphrase = await _walletService.CreateMnemonic(lang, wCount);
 
             _console.WriteLine("Seed phrase: " + string.Join(" ", mnemonic));
-            _console.WriteLine("Two-Factor:  " + string.Join(" ", passphrase));
+            _console.WriteLine("Passphrase:  " + string.Join(" ", passphrase));
 
             _console.ForegroundColor = ConsoleColor.White;
         }
