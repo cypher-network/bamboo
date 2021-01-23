@@ -31,8 +31,7 @@ namespace BAMWallet.Rpc
 
             public void ConfigureServices(IServiceCollection services)
             {
-                services
-                    .AddMvcCore()
+                services.AddMvcCore()
                     .AddApiExplorer();
 
                 services.AddSwaggerGen(options =>
@@ -56,55 +55,52 @@ namespace BAMWallet.Rpc
                     });
                 });
 
-                services.AddHttpContextAccessor();
-                services.AddSingleton<ISafeguardDownloadingFlagProvider, SafeguardDownloadingFlagProvider>();
-                services.AddHostedService<SafeguardService>();
-                services.AddSingleton<IWalletService, WalletService>();
-                services.AddOptions();
+                services.AddHttpContextAccessor()
+                    .AddSingleton<ISafeguardDownloadingFlagProvider, SafeguardDownloadingFlagProvider>()
+                    .AddHostedService<SafeguardService>()
+                    .AddSingleton<IWalletService, WalletService>()
+                    .AddOptions();
             }
 
             public void Configure(IApplicationBuilder app)
             {
                 var pathBase = Configuration["PATH_BASE"];
                 if (!string.IsNullOrEmpty(pathBase))
-                {
                     app.UsePathBase(pathBase);
-                }
 
-                app.UseSwagger();
-                app.UseSwaggerUI(c =>
-                {
-                    c.SwaggerEndpoint($"{ (!string.IsNullOrEmpty(pathBase) ? pathBase : string.Empty) }/swagger/v1/swagger.json", "BAMWalletRest.API V1");
-                    c.OAuthClientId("walletrestswaggerui");
-                    c.OAuthAppName("Bamboo Wallet Rest Swagger UI");
-                });
-
-                app.UseStaticFiles();
-                app.UseRouting();
-                app.UseEndpoints(endpoints =>
-                {
-                    endpoints.MapControllerRoute(
-                        name: "default",
-                        pattern: "{controller=Home}/{action=Index}/{id?}");
-                });
+                app.UseSwagger()
+                    .UseSwaggerUI(c =>
+                    {
+                        c.SwaggerEndpoint($"{ (!string.IsNullOrEmpty(pathBase) ? pathBase : string.Empty) }/swagger/v1/swagger.json", "BAMWalletRest.API V1");
+                        c.OAuthClientId("walletrestswaggerui");
+                        c.OAuthAppName("Bamboo Wallet Rest Swagger UI");
+                    })
+                    .UseStaticFiles()
+                    .UseRouting()
+                    .UseEndpoints(endpoints =>
+                    {
+                        endpoints.MapControllerRoute(
+                            name: "default",
+                            pattern: "{controller=Home}/{action=Index}/{id?}");
+                    });
             }
         }
 
         private readonly IConfigurationSection _restAPISection;
 
-        public int EnableRestAPI { get; }
+        public bool EnableRestAPI { get; }
         public string Endpoint { get; }
 
         public SelfHosted(IConfiguration configuration)
         {
             _restAPISection = configuration.GetSection("network");
-            EnableRestAPI = _restAPISection.GetValue<int>("enabled_restAPI");
+            EnableRestAPI = _restAPISection.GetValue<bool>("enabled_restAPI");
             Endpoint = _restAPISection.GetValue<string>("restApi_endpoint");
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            if (EnableRestAPI == 1)
+            if (EnableRestAPI == true)
             {
                 WebHost.CreateDefaultBuilder()
                     .UseKestrel()

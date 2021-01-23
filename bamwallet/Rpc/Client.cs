@@ -16,6 +16,7 @@ using Newtonsoft.Json.Linq;
 using Dawn;
 
 using BAMWallet.Helper;
+using System.Linq;
 
 namespace BAMWallet.Rpc
 {
@@ -96,12 +97,12 @@ namespace BAMWallet.Rpc
         /// <param name="baseAddress">Base address.</param>
         /// <param name="path">Path.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
-        public async Task<IEnumerable<T>> GetRangeAsync<T>(Uri baseAddress, string path, CancellationToken cancellationToken) where T : class
+        public async Task<IEnumerable<T>> GetRangeAsync<T>(Uri baseAddress, string path, CancellationToken cancellationToken) where T : new()
         {
             Guard.Argument(baseAddress, nameof(baseAddress)).NotNull();
             Guard.Argument(path, nameof(path)).NotNull().NotEmpty();
 
-            IEnumerable<T> results = null;
+            IEnumerable<T> results = Enumerable.Empty<T>();
 
             using var client = new HttpClient
             {
@@ -152,36 +153,36 @@ namespace BAMWallet.Rpc
 
             byte[] protoBuf = default;
 
-            using (var client = new HttpClient())
+            using var client = new HttpClient
             {
-                client.BaseAddress = baseAddress;
-                client.DefaultRequestHeaders.Accept.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                BaseAddress = baseAddress
+            };
+            client.DefaultRequestHeaders.Accept.Clear();
+            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-                try
+            try
+            {
+                var proto = Util.SerializeProto(payload);
+
+                using var response = await client.PostAsJsonAsync(path, proto, cancellationToken);
+
+                var read = response.Content.ReadAsStringAsync(cancellationToken).Result;
+                var jObject = JObject.Parse(read);
+                var jToken = jObject.GetValue("protobuf");
+                var byteArray = Convert.FromBase64String(jToken.Value<string>());
+
+                if (response.IsSuccessStatusCode)
+                    protoBuf = byteArray;
+                else
                 {
-                    var proto = Util.SerializeProto(payload);
-
-                    using var response = await client.PostAsJsonAsync(path, proto, cancellationToken);
-
-                    var read = response.Content.ReadAsStringAsync(cancellationToken).Result;
-                    var jObject = JObject.Parse(read);
-                    var jToken = jObject.GetValue("protobuf");
-                    var byteArray = Convert.FromBase64String(jToken.Value<string>());
-
-                    if (response.IsSuccessStatusCode)
-                        protoBuf = byteArray;
-                    else
-                    {
-                        var content = await response.Content.ReadAsStringAsync(cancellationToken);
-                        _logger.LogError($"Result: {content}\n StatusCode: {(int)response.StatusCode}");
-                        throw new Exception(content);
-                    }
+                    var content = await response.Content.ReadAsStringAsync(cancellationToken);
+                    _logger.LogError($"Result: {content}\n StatusCode: {(int)response.StatusCode}");
+                    throw new Exception(content);
                 }
-                catch (Exception ex)
-                {
-                    _logger.LogError($"Message: {ex.Message}\n Stack: {ex.StackTrace}");
-                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Message: {ex.Message}\n Stack: {ex.StackTrace}");
             }
 
             return protoBuf;

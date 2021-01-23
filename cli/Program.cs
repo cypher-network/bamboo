@@ -51,6 +51,7 @@ namespace Cli
             catch (Exception ex)
             {
                 Log.Fatal(ex, "Host terminated unexpectedly");
+
                 return 1;
             }
             finally
@@ -64,25 +65,22 @@ namespace Cli
             var builder = new HostBuilder()
                 .ConfigureAppConfiguration((hostingContext, config) =>
                 {
-                    config.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
-                    config.SetBasePath(Directory.GetCurrentDirectory());
+                    config.SetBasePath(Directory.GetCurrentDirectory())
+                        .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                        .AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
 
                     if (args != null)
-                    {
                         config.AddCommandLine(args);
-                    }
                 })
                 .ConfigureLogging(logging =>
                 {
-                    logging.ClearProviders();
-                    logging.AddSerilog();
-                    logging.SetMinimumLevel(LogLevel.Trace);
+                    logging.ClearProviders()
+                        .AddSerilog()
+                        .SetMinimumLevel(LogLevel.Trace);
                 })
                 .ConfigureServices((hostContext, services) =>
                 {
-                    services.AddOptions();
-
-                    services
+                    services.AddOptions()
                         .AddSingleton<ISafeguardDownloadingFlagProvider, SafeguardDownloadingFlagProvider>()
                         .AddHostedService<SafeguardService>()
                         .AddSingleton<IWalletService, WalletService>()
@@ -94,11 +92,10 @@ namespace Cli
                         })
                         .AddLogging(config =>
                         {
-                            config.ClearProviders();
-                            config.AddProvider(new SerilogLoggerProvider(Log.Logger));
-                        });
-
-                    services.Add(new ServiceDescriptor(typeof(IConsole), PhysicalConsole.Singleton));
+                            config.ClearProviders()
+                                .AddProvider(new SerilogLoggerProvider(Log.Logger));
+                        })
+                        .Add(new ServiceDescriptor(typeof(IConsole), PhysicalConsole.Singleton));
                 })
                 .UseSerilog((context, configuration) => configuration
                 .Enrich.FromLogContext()
