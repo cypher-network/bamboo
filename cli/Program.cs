@@ -27,6 +27,8 @@ using CLi.ApplicationLayer.Commands;
 using BAMWallet.HD;
 using BAMWallet.Services;
 
+// test commit 1
+
 namespace Cli
 {
     class Program
