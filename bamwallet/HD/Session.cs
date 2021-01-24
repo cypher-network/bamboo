@@ -5,8 +5,11 @@ using System;
 using System.Collections.Generic;
 using System.Security;
 
+using LiteDB;
 using Newtonsoft.Json.Linq;
 
+using BAMWallet.Extentions;
+using BAMWallet.Helper;
 using BAMWallet.Model;
 
 namespace BAMWallet.HD
@@ -19,12 +22,14 @@ namespace BAMWallet.HD
         public Guid SessionId { get; set; }
         public SessionType SessionType { get; set; }
         public WalletTransaction WalletTransaction { get; set; }
+        public LiteRepository Database { get; set; }
 
         public Session(SecureString identifier, SecureString passphrase)
         {
             Identifier = identifier;
             Passphrase = passphrase;
             SessionId = Guid.NewGuid();
+            Database = Util.LiteRepositoryFactory(identifier, passphrase);
         }
 
         /// <summary>

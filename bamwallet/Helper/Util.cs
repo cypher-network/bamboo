@@ -93,12 +93,13 @@ namespace BAMWallet.Helper
             return wallet;
         }
 
-        public static LiteRepository LiteRepositoryFactory(SecureString secret, string identifier)
+        public static LiteRepository LiteRepositoryFactory(SecureString identifier, SecureString passphrase)
         {
             var connectionString = new ConnectionString
             {
-                Filename = WalletPath(identifier),
-                Password = secret.ToUnSecureString()
+                Filename = WalletPath(identifier.ToUnSecureString()),
+                Password = passphrase.ToUnSecureString(),
+                Connection = ConnectionType.Shared
             };
 
             return new LiteRepository(connectionString);
