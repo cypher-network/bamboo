@@ -122,9 +122,7 @@ namespace BAMWallet.HD
             {
                 var session = Session(sessionId);
 
-                using var db = Util.LiteRepositoryFactory(session.Passphrase, session.Identifier.ToUnSecureString());
-
-                var walletTxns = db.Query<WalletTransaction>().ToList();
+                var walletTxns = session.Database.Query<WalletTransaction>().ToList();
                 if (walletTxns?.Any() != true)
                 {
                     return TaskResult<ulong>.CreateSuccess(0);
@@ -153,14 +151,12 @@ namespace BAMWallet.HD
             {
                 var session = Session(sessionId);
 
-                using var db = Util.LiteRepositoryFactory(session.Passphrase, session.Identifier.ToUnSecureString());
-
                 var next = LastKeySet(session.SessionId);
                 var keyPath = new KeyPath(next.KeyPath);
                 var index = keyPath.Indexes[3] + 1;
                 var keySet = CreateKeySet(new KeyPath($"m/44'/847177'/{index}'/0/0"), next.RootKey.HexToByte(), next.ChainCode.HexToByte());
 
-                db.Insert(keySet);
+                session.Database.Insert(keySet);
 
                 next.ChainCode.ZeroString();
                 next.RootKey.ZeroString();
@@ -226,10 +222,8 @@ namespace BAMWallet.HD
 
             try
             {
-                using (var db = Util.LiteRepositoryFactory(passphrase, walletId.ToUnSecureString()))
-                {
-                    db.Insert(keySet);
-                }
+                var db = Util.LiteRepositoryFactory(walletId, passphrase);
+                db.Insert(keySet);
 
                 keySet.ChainCode.ZeroString();
                 keySet.RootKey.ZeroString();
@@ -287,18 +281,14 @@ namespace BAMWallet.HD
             ulong total;
 
             var session = Session(sessionId);
-
-            using (var db = Util.LiteRepositoryFactory(session.Passphrase, session.Identifier.ToUnSecureString()))
+            var txns = session.Database.Query<WalletTransaction>().Where(x => x.SenderAddress == address).ToEnumerable();
+            if (txns?.Any() != true)
             {
-                var txns = db.Query<WalletTransaction>().Where(x => x.SenderAddress == address).ToEnumerable();
-                if (txns?.Any() != true)
-                {
-                    return 0;
-                }
-
-                var outputs = txns.Select(a => a.Change);
-                total = Util.Sum(outputs);
+                return 0;
             }
+
+            var outputs = txns.Select(a => a.Change);
+            total = Util.Sum(outputs);
 
             return total;
         }
@@ -317,16 +307,13 @@ namespace BAMWallet.HD
 
             WalletTransaction walletTx;
 
-            using (var db = Util.LiteRepositoryFactory(session.Passphrase, session.Identifier.ToUnSecureString()))
+            var transactions = session.Database.Query<WalletTransaction>().Where(x => x.Id == session.SessionId && x.WalletType == transactionType).ToList();
+            if (transactions?.Any() != true)
             {
-                var transactions = db.Query<WalletTransaction>().Where(x => x.Id == session.SessionId && x.WalletType == transactionType).ToList();
-                if (transactions?.Any() != true)
-                {
-                    return null;
-                }
-
-                walletTx = transactions.Last();
+                return null;
             }
+
+            walletTx = transactions.Last();
 
             return walletTx;
         }
@@ -344,10 +331,7 @@ namespace BAMWallet.HD
 
             Transaction transaction = null;
 
-            using (var db = Util.LiteRepositoryFactory(session.Passphrase, session.Identifier.ToUnSecureString()))
-            {
-                transaction = db.Query<Transaction>().Where(x => x.Id == session.SessionId).FirstOrDefault();
-            }
+            transaction = session.Database.Query<Transaction>().Where(x => x.Id == session.SessionId).FirstOrDefault();
 
             return transaction;
         }
@@ -390,9 +374,7 @@ namespace BAMWallet.HD
 
             var session = Session(sessionId);
 
-            using var db = Util.LiteRepositoryFactory(session.Passphrase, session.Identifier.ToUnSecureString());
-
-            var keys = db.Query<KeySet>().ToList();
+            var keys = session.Database.Query<KeySet>().ToList();
             if (keys == null)
                 return Enumerable.Empty<KeySet>();
 
@@ -431,13 +413,10 @@ namespace BAMWallet.HD
                 var session = Session(sessionId);
 
                 List<WalletTransaction> walletTransactions;
-                using (var db = Util.LiteRepositoryFactory(session.Passphrase, session.Identifier.ToUnSecureString()))
+                walletTransactions = session.Database.Query<WalletTransaction>().ToList();
+                if (walletTransactions?.Any() != true)
                 {
-                    walletTransactions = db.Query<WalletTransaction>().ToList();
-                    if (walletTransactions?.Any() != true)
-                    {
-                        return TaskResult<bool>.CreateFailure(new Exception("There are no wallet transactions."));
-                    }
+                    return TaskResult<bool>.CreateFailure(new Exception("There are no wallet transactions."));
                 }
 
                 var changeList = new Dictionary<ulong, WalletTransaction>();
@@ -999,13 +978,10 @@ namespace BAMWallet.HD
 
             var session = Session(sessionId);
 
-            using (var db = Util.LiteRepositoryFactory(session.Passphrase, session.Identifier.ToUnSecureString()))
+            walletTransactions = session.Database.Query<WalletTransaction>().OrderBy(x => x.DateTime).ToList();
+            if (walletTransactions?.Any() != true)
             {
-                walletTransactions = db.Query<WalletTransaction>().OrderBy(x => x.DateTime).ToList();
-                if (walletTransactions?.Any() != true)
-                {
-                    return null;
-                }
+                return null;
             }
 
             var (spend, scan) = Unlock(session.SessionId);
@@ -1065,9 +1041,7 @@ namespace BAMWallet.HD
 
             var session = Session(sessionId);
 
-            using var db = Util.LiteRepositoryFactory(session.Passphrase, session.Identifier.ToUnSecureString());
-
-            return db.Query<WalletTransaction>().ToList().Count;
+            return session.Database.Query<WalletTransaction>().ToList().Count;
         }
 
         /// <summary>
@@ -1081,8 +1055,7 @@ namespace BAMWallet.HD
 
             var session = Session(sessionId);
 
-            using var db = Util.LiteRepositoryFactory(session.Passphrase, session.Identifier.ToUnSecureString());
-            var keySet = db.Query<KeySet>().ToList().Last();
+            var keySet = session.Database.Query<KeySet>().ToList().Last();
 
             return keySet;
         }
@@ -1098,8 +1071,7 @@ namespace BAMWallet.HD
 
             var session = Session(sessionId);
 
-            using var db = Util.LiteRepositoryFactory(session.Passphrase, session.Identifier.ToUnSecureString());
-            var keySet = db.Query<KeySet>().FirstOrDefault();
+            var keySet = session.Database.Query<KeySet>().FirstOrDefault();
 
             if (session.WalletTransaction == null)
             {
@@ -1130,13 +1102,11 @@ namespace BAMWallet.HD
 
                 keySet = KeySet(session.SessionId);
 
-                using var db = Util.LiteRepositoryFactory(session.Passphrase, session.Identifier.ToUnSecureString());
-
                 var txCount = Count(session.SessionId);
                 if (txCount > 0)
                 {
                     keySet.KeyPath = IncrementKeyPath(keySet.KeyPath).ToString();
-                    db.Update(keySet);
+                    session.Database.Update(keySet);
                 }
             }
             catch (Exception ex)
@@ -1192,17 +1162,14 @@ namespace BAMWallet.HD
             {
                 var session = Session(sessionId);
 
-                using (var db = Util.LiteRepositoryFactory(session.Passphrase, session.Identifier.ToUnSecureString()))
+                var walletTransactions = session.Database.Query<WalletTransaction>().ToList();
+                if (walletTransactions.Any())
                 {
-                    var walletTransactions = db.Query<WalletTransaction>().ToList();
-                    if (walletTransactions.Any())
+                    var walletTransaction = walletTransactions.FirstOrDefault(x => x.TxId.SequenceEqual(paymentId.HexToByte()) && x.WalletType == WalletType.Receive);
+                    if (walletTransaction != null)
                     {
-                        var walletTransaction = walletTransactions.FirstOrDefault(x => x.TxId.SequenceEqual(paymentId.HexToByte()) && x.WalletType == WalletType.Receive);
-                        if (walletTransaction != null)
-                        {
-                            SetLastError(session, TaskResult<Vout>.CreateFailure(new Exception($"Transaction with paymentId: {paymentId} already exists")));
-                            return;
-                        }
+                        SetLastError(session, TaskResult<Vout>.CreateFailure(new Exception($"Transaction with paymentId: {paymentId} already exists")));
+                        return;
                     }
                 }
 
@@ -1403,10 +1370,7 @@ namespace BAMWallet.HD
             try
             {
                 var session = Session(sessionId);
-                using (var db = Util.LiteRepositoryFactory(session.Passphrase, session.Identifier.ToUnSecureString()))
-                {
-                    db.Insert(data);
-                }
+                session.Database.Insert(data);
             }
             catch (Exception ex)
             {
@@ -1430,18 +1394,16 @@ namespace BAMWallet.HD
             {
                 var session = Session(sessionId);
 
-                using var db = Util.LiteRepositoryFactory(session.Passphrase, session.Identifier.ToUnSecureString());
-
-                var transaction = db.Query<Transaction>().Where(s => s.Id == session.SessionId).FirstOrDefault();
+                var transaction = session.Database.Query<Transaction>().Where(s => s.Id == session.SessionId).FirstOrDefault();
                 if (transaction != null)
                 {
-                    db.Delete<Transaction>(new LiteDB.BsonValue(transaction.Id));
+                    session.Database.Delete<Transaction>(new LiteDB.BsonValue(transaction.Id));
                 }
 
-                var walletTransaction = db.Query<WalletTransaction>().Where(s => s.Id == session.SessionId).FirstOrDefault();
+                var walletTransaction = session.Database.Query<WalletTransaction>().Where(s => s.Id == session.SessionId).FirstOrDefault();
                 if (walletTransaction != null)
                 {
-                    db.Delete<WalletTransaction>(new LiteDB.BsonValue(walletTransaction.Id));
+                    session.Database.Delete<WalletTransaction>(new LiteDB.BsonValue(walletTransaction.Id));
                 }
             }
             catch (Exception ex)

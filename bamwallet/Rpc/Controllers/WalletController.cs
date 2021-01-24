@@ -57,9 +57,9 @@ namespace BAMWallet.Controllers
             });
         }
 
-        // TODO: issue with AddKeySet - tries to open the db multiple times
+        // TODO: need help from pp to determine the best way to implement this
         //[HttpPost("createAddress", Name = "CreateWalletAddress")]
-        //public async Task<IActionResult> CreateWalletAddress([FromBody] Credentials credentials)
+        //public IActionResult CreateWalletAddress([FromBody] Credentials credentials)
         //{
         //    var session = _walletService.SessionAddOrUpdate(new Session(credentials.Identifier.ToSecureString(),
         //        credentials.Passphrase.ToSecureString()));
