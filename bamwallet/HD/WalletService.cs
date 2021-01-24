@@ -77,33 +77,32 @@ namespace BAMWallet.HD
         {
             Guard.Argument(session, nameof(session)).NotNull();
 
-            var mSession = Sessions.AddOrUpdate(session.SessionId, session,
-                            (Key, existingVal) =>
-                            {
-                                if (session != existingVal)
-                                    throw new ArgumentException("Duplicate sessions are not allowed: {0}.", session.SessionId.ToString());
+            var mSession = Sessions.AddOrUpdate(session.SessionId, session, (Key, existingVal) =>
+            {
+                if (session != existingVal)
+                    throw new ArgumentException("Duplicate sessions are not allowed: {0}.", session.SessionId.ToString());
 
-                                try
-                                {
-                                    existingVal.WalletTransaction.Balance = session.WalletTransaction.Balance;
-                                    existingVal.WalletTransaction.Change = session.WalletTransaction.Change;
-                                    existingVal.WalletTransaction.DateTime = session.WalletTransaction.DateTime;
-                                    existingVal.WalletTransaction.Fee = session.WalletTransaction.Fee;
-                                    existingVal.WalletTransaction.Id = session.SessionId;
-                                    existingVal.WalletTransaction.Memo = session.WalletTransaction.Memo;
-                                    existingVal.WalletTransaction.Payment = session.WalletTransaction.Payment;
-                                    existingVal.WalletTransaction.RecipientAddress = session.WalletTransaction.RecipientAddress;
-                                    existingVal.WalletTransaction.SenderAddress = session.WalletTransaction.SenderAddress;
-                                    existingVal.WalletTransaction.Spent = session.WalletTransaction.Spent;
-                                    existingVal.WalletTransaction.TxId = session.WalletTransaction.TxId ?? Array.Empty<byte>();
-                                    existingVal.WalletTransaction.Vout = session.WalletTransaction.Vout ?? null;
-                                    existingVal.WalletTransaction.WalletType = session.WalletTransaction.WalletType;
-                                }
-                                catch (Exception)
-                                { }
+                try
+                {
+                    existingVal.WalletTransaction.Balance = session.WalletTransaction.Balance;
+                    existingVal.WalletTransaction.Change = session.WalletTransaction.Change;
+                    existingVal.WalletTransaction.DateTime = session.WalletTransaction.DateTime;
+                    existingVal.WalletTransaction.Fee = session.WalletTransaction.Fee;
+                    existingVal.WalletTransaction.Id = session.SessionId;
+                    existingVal.WalletTransaction.Memo = session.WalletTransaction.Memo;
+                    existingVal.WalletTransaction.Payment = session.WalletTransaction.Payment;
+                    existingVal.WalletTransaction.RecipientAddress = session.WalletTransaction.RecipientAddress;
+                    existingVal.WalletTransaction.SenderAddress = session.WalletTransaction.SenderAddress;
+                    existingVal.WalletTransaction.Spent = session.WalletTransaction.Spent;
+                    existingVal.WalletTransaction.TxId = session.WalletTransaction.TxId ?? Array.Empty<byte>();
+                    existingVal.WalletTransaction.Vout = session.WalletTransaction.Vout ?? null;
+                    existingVal.WalletTransaction.WalletType = session.WalletTransaction.WalletType;
+                }
+                catch (Exception)
+                { }
 
-                                return existingVal;
-                            });
+                return existingVal;
+            });
 
             return mSession;
         }
@@ -394,10 +393,8 @@ namespace BAMWallet.HD
             using var db = Util.LiteRepositoryFactory(session.Passphrase, session.Identifier.ToUnSecureString());
 
             var keys = db.Query<KeySet>().ToList();
-            if (keys?.Any() != true)
-            {
+            if (keys == null)
                 return Enumerable.Empty<KeySet>();
-            }
 
             return keys;
         }
@@ -414,10 +411,8 @@ namespace BAMWallet.HD
             var session = Session(sessionId);
 
             var keys = KeySets(session.SessionId);
-            if (keys?.Any() != true)
-            {
+            if (keys == null)
                 return Enumerable.Empty<string>();
-            }
 
             return keys.Select(k => k.StealthAddress);
         }

@@ -268,7 +268,7 @@ namespace BAMWallet.Helper
             }
         }
 
-        public static IEnumerable<T> DeserializeListProto<T>(byte[] data) where T : class
+        public static IEnumerable<T> DeserializeListProto<T>(byte[] data) where T : new()
         {
             List<T> list = new List<T>();
 

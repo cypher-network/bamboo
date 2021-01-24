@@ -58,15 +58,17 @@
   <ItemGroup>
     <Folder Include="Helper\" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\bamwallet\bamwallet.csproj">
-      <ReferenceSourceTarget></ReferenceSourceTarget>
-    </ProjectReference>
-  </ItemGroup>
     <ItemGroup>
     <None Include="**/*" />
   </ItemGroup>
     <ItemGroup>
+      <ProjectReference Include="..\bamwallet\bamwallet.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+    <None Update="appsettings.Local.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <DependentUpon>appsettings.json</DependentUpon>
+    </None>
     <None Update="Runners\bamboo.cmd">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
