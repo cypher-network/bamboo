@@ -1038,11 +1038,12 @@ namespace BAMWallet.HD
                 x.Fee = Util.MessageAmount(x.Vout[0], scan);
                 x.Payment = Util.MessageAmount(x.Vout[1], scan);
                 x.Change = Util.MessageAmount(x.Vout[2], scan);
-                x.Balance = x.Fee + x.Payment + x.Change;
 
                 ulong fee = x.Fee = x.Vout[0].T == CoinType.fee ? x.Fee : 0;
 
-                sent = received - x.Change - sent - fee;
+                sent = received - x.Change - fee;
+
+                received = x.Change;
 
                 balanceSheets.Add(new BalanceSheet
                 {
