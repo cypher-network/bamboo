@@ -5,10 +5,14 @@ using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 using System.Threading.Tasks;
 
+using NBitcoin;
+
 using BAMWallet.Extentions;
 using BAMWallet.HD;
 using BAMWallet.Helper;
 using BAMWallet.Model;
+using Dawn;
+using Newtonsoft.Json;
 
 namespace BAMWallet.Controllers
 {
@@ -23,50 +27,111 @@ namespace BAMWallet.Controllers
             _walletService = walletService;
         }
 
-        [HttpPost("address", Name = "GetWalletAddresses")]
-        public IActionResult GetWalletAddresses([FromBody] Credentials credentials)
+        [HttpPost("address", Name = "Addresses")]
+        public IActionResult Addresses([FromBody] Credentials credentials)
         {
+            Guard.Argument(credentials, nameof(credentials)).NotNull();
+
             var session = _walletService.SessionAddOrUpdate(new Session(credentials.Identifier.ToSecureString(),
                 credentials.Passphrase.ToSecureString()));
-            var addresses = _walletService.Addresses(session.SessionId);
 
-            if (addresses.Any())
-                return new OkObjectResult(addresses);
+            var request = _walletService.Addresses(session.SessionId);
+            if (!request.Success)
+                return new BadRequestObjectResult(request.NonSuccessMessage);
 
-            return new NotFoundResult();
+            if (request.Result.Any() != true)
+                return new NotFoundResult();
+         
+            return new OkObjectResult(request.Result);
         }
 
-        [HttpGet("create", Name = "CreateWallet")]
-        public async Task<IActionResult> CreateWallet()
+        [HttpPost("balance", Name = "Balance")]
+        public IActionResult Balance([FromBody] Credentials credentials)
         {
-            string[] mnemonicDefault = await _walletService.CreateMnemonic(NBitcoin.Language.English, NBitcoin.WordCount.TwentyFour);
-            string[] passphraseDefault = await _walletService.CreateMnemonic(NBitcoin.Language.English, NBitcoin.WordCount.Twelve);
-            string joinMmnemonic = string.Join(" ", mnemonicDefault);
-            string joinPassphrase = string.Join(" ", passphraseDefault);
+            Guard.Argument(credentials, nameof(credentials)).NotNull();
+
+            var session = _walletService.SessionAddOrUpdate(new Session(credentials.Identifier.ToSecureString(),
+                credentials.Passphrase.ToSecureString()));
+
+            var total = _walletService.AvailableBalance(session.SessionId);
+            if (!total.Success)
+                return new BadRequestObjectResult(total.NonSuccessMessage);
+
+            return new OkObjectResult($"{total.Result.DivWithNaT():F9}");
+        }
+
+        [HttpGet("create", Name = "Create")]
+        public async Task<IActionResult> Create(string mnemonic = null, string passphrase = null)
+        {
+            string[] mnemonicDefault = await _walletService.CreateMnemonic(Language.English, WordCount.TwentyFour);
+            string[] passphraseDefault = await _walletService.CreateMnemonic(Language.English, WordCount.Twelve);
+            string joinMmnemonic = string.Join(" ", mnemonic ?? string.Join(' ', mnemonicDefault));
+            string joinPassphrase = string.Join(" ", passphrase ?? string.Join(' ', passphraseDefault));
             string id = _walletService.CreateWallet(joinMmnemonic.ToSecureString(), joinPassphrase.ToSecureString());
             var session = _walletService.SessionAddOrUpdate(new Session(id.ToSecureString(),
                 joinPassphrase.ToSecureString()));
-            var address = _walletService.Addresses(session.SessionId).First();
+
+            var request = _walletService.Addresses(session.SessionId);
+            if (!request.Success)
+                return new BadRequestObjectResult(request.NonSuccessMessage);
+
+            if (request.Result.Any() != true)
+                return new NotFoundResult();
+
             return new OkObjectResult(new
             {
                 path = Util.WalletPath(id),
                 identifier = id,
                 mnemonic = joinMmnemonic,
                 passphrase = joinPassphrase,
-                address
+                address = request.Result
             });
         }
 
-        // TODO: need help from pp to determine the best way to implement this
-        //[HttpPost("createAddress", Name = "CreateWalletAddress")]
-        //public IActionResult CreateWalletAddress([FromBody] Credentials credentials)
-        //{
-        //    var session = _walletService.SessionAddOrUpdate(new Session(credentials.Identifier.ToSecureString(),
-        //        credentials.Passphrase.ToSecureString()));
-        //    _walletService.AddKeySet(session.SessionId);
-        //    var last = _walletService.LastKeySet(session.SessionId);
-        //    return new OkObjectResult(last.StealthAddress);
-        //}
+        [HttpGet("mnemonic", Name = "CreateMnemonic")]
+        public async Task<IActionResult> CreateMnemonic(Language language = Language.English,
+            WordCount mnemonicWordCount = WordCount.TwentyFour,
+            WordCount passphraseWordCount = WordCount.Twelve)
+        {
+            var mnemonic = await _walletService.CreateMnemonic(language, mnemonicWordCount);
+            var passphrase = await _walletService.CreateMnemonic(language, passphraseWordCount);
+
+            return new ObjectResult(new
+            {
+                mnemonic,
+                passphrase
+            });
+        }
+
+        // TODO: does this method expose too much (full path)? is this even required?
+        [HttpGet("list", Name = "List")]
+        public IActionResult List()
+        {
+            var request = _walletService.WalletList();
+
+            if (!request.Success)
+                return new BadRequestObjectResult(request.NonSuccessMessage);
+
+            if (request.Result.Any() != true)
+                return new NotFoundResult();
+
+            return new OkObjectResult(request.Result);
+        }
+
+        [HttpPost("history", Name = "History")]
+        public IActionResult History([FromBody] Credentials credentials)
+        {
+            Guard.Argument(credentials, nameof(credentials)).NotNull();
+
+            var session = _walletService.SessionAddOrUpdate(new Session(credentials.Identifier.ToSecureString(),
+                credentials.Passphrase.ToSecureString()));
+
+            var request = _walletService.History(session.SessionId);
+            if (!request.Success)
+                return new BadRequestObjectResult(request.NonSuccessMessage);
+
+            return new OkObjectResult(request.Result);
+        }
 
         [HttpPost("transaction", Name = "CreateTransacrtion")]
         public IActionResult CreateTransaction([FromBody] byte[] sendPayment)
@@ -91,6 +156,72 @@ namespace BAMWallet.Controllers
             var txByteArray = Util.SerializeProto(transaction);
 
             return new ObjectResult(new { protobuf = txByteArray });
+        }
+
+        [HttpPost("receive", Name = "Receive")]
+        public async Task<IActionResult> Receive([FromBody] Receive receive)
+        {
+            Guard.Argument(receive.Identifier, nameof(receive.Identifier)).NotNull().NotEmpty().NotWhiteSpace();
+            Guard.Argument(receive.Passphrase, nameof(receive.Passphrase)).NotNull().NotEmpty().NotWhiteSpace();
+            Guard.Argument(receive.PaymentId, nameof(receive.PaymentId)).NotNull().NotEmpty().NotWhiteSpace();
+
+            var session = _walletService.SessionAddOrUpdate(new Session(receive.Identifier.ToSecureString(),
+                receive.Passphrase.ToSecureString()));
+
+            var request = await _walletService.ReceivePayment(session.SessionId, receive.PaymentId);
+            if (!request.Success)
+                return new BadRequestObjectResult(request.NonSuccessMessage);
+
+            var transaction = _walletService.LastWalletTransaction(session.SessionId, WalletType.Receive);
+            var txnReceivedAmount = transaction == null ? 0.ToString() : transaction.Payment.DivWithNaT().ToString("F9");
+            var txnMemo = transaction == null ? "" : transaction.Memo;
+            var balance = _walletService.AvailableBalance(session.SessionId);
+
+            return new OkObjectResult(new
+            {
+                memo = txnMemo,
+                received = txnReceivedAmount,
+                balance = $"{balance.Result.DivWithNaT():F9}"
+            });
+        }
+
+        [HttpPost("spend", Name = "Spend")]
+        public async Task<IActionResult> Spend([FromBody] Spend spend)
+        {
+            Guard.Argument(spend.Identifier, nameof(spend.Identifier)).NotNull().NotEmpty().NotWhiteSpace();
+            Guard.Argument(spend.Passphrase, nameof(spend.Passphrase)).NotNull().NotEmpty().NotWhiteSpace();
+            Guard.Argument(spend.Address, nameof(spend.Address)).NotNull().NotEmpty().NotWhiteSpace();
+            Guard.Argument(spend.Amount, nameof(spend.Amount)).Positive();
+
+            var session = _walletService.SessionAddOrUpdate(new Session(spend.Identifier.ToSecureString(),
+                spend.Passphrase.ToSecureString())
+            {
+                SessionType = SessionType.Coin,
+                WalletTransaction = new WalletTransaction
+                {
+                    Memo = spend.Memo,
+                    Payment = spend.Amount.ConvertToUInt64(),
+                    RecipientAddress = spend.Address,
+                    WalletType = WalletType.Send
+                }
+            });
+
+            var createPayment = _walletService.CreatePayment(session.SessionId);
+            if (!createPayment.Success)
+                return new BadRequestObjectResult(createPayment.NonSuccessMessage);
+
+            var send = await _walletService.Send(session.SessionId);
+            if (!send.Success)
+                return new BadRequestObjectResult(send.NonSuccessMessage);
+
+            var balance = _walletService.AvailableBalance(session.SessionId);
+            var walletTx = _walletService.LastWalletTransaction(session.SessionId, WalletType.Send);
+            
+            return new OkObjectResult(new
+            {
+                balance = $"{balance.Result.DivWithNaT():F9}",
+                paymentId = walletTx?.TxId.ByteToHex()
+            });
         }
     }
 }

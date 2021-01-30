@@ -350,17 +350,22 @@ namespace BAMWallet.HD
         /// 
         /// </summary>
         /// <returns></returns>
-        public IEnumerable<string> WalletList()
+        public TaskResult<IEnumerable<string>> WalletList()
         {
             var wallets = Path.Combine(Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory), "wallets");
-            string[] files = Directory.GetFiles(wallets, "*.db");
+            string[] files;
 
-            if (files?.Any() != true)
+            try
             {
-                return Enumerable.Empty<string>();
+                files = Directory.GetFiles(wallets, "*.db");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return TaskResult<IEnumerable<string>>.CreateFailure(ex);
             }
 
-            return files;
+            return TaskResult<IEnumerable<string>>.CreateSuccess(files);
         }
 
         /// <summary>
@@ -386,17 +391,27 @@ namespace BAMWallet.HD
         /// </summary>
         /// <param name="sessionId"></param>
         /// <returns></returns>
-        public IEnumerable<string> Addresses(Guid sessionId)
+        public TaskResult<IEnumerable<string>> Addresses(Guid sessionId)
         {
             Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
 
-            var session = Session(sessionId);
+            var addresses = Enumerable.Empty<string>();
 
-            var keys = KeySets(session.SessionId);
-            if (keys == null)
-                return Enumerable.Empty<string>();
+            try
+            {
+                var session = Session(sessionId);
 
-            return keys.Select(k => k.StealthAddress);
+                var keys = KeySets(session.SessionId);
+                if (keys != null)
+                    addresses = keys.Select(k => k.StealthAddress);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return TaskResult<IEnumerable<string>>.CreateFailure(ex);
+            }
+
+            return TaskResult<IEnumerable<string>>.CreateSuccess(addresses);
         }
 
         /// <summary>
@@ -973,24 +988,26 @@ namespace BAMWallet.HD
         /// </summary>
         /// <param name="sessionId"></param>
         /// <returns></returns>
-        public IEnumerable<BalanceSheet> History(Guid sessionId)
+        public TaskResult<IEnumerable<BalanceSheet>> History(Guid sessionId)
         {
             Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
 
+            var balanceSheets = new List<BalanceSheet>();
             List<WalletTransaction> walletTransactions;
 
             var session = Session(sessionId);
 
-            walletTransactions = session.Database.Query<WalletTransaction>().OrderBy(x => x.DateTime).ToList();
+            walletTransactions = session.Database.Query<WalletTransaction>()
+                .OrderBy(x => x.DateTime)
+                .ToList();
             if (walletTransactions?.Any() != true)
             {
-                return null;
+                return TaskResult<IEnumerable<BalanceSheet>>.CreateSuccess(balanceSheets);
             }
 
             ulong received = 0, sent = 0;
 
             var (spend, scan) = Unlock(session.SessionId);
-            var balanceSheets = new List<BalanceSheet>();
 
             walletTransactions.Where(tx => tx.WalletType == WalletType.Receive).ToList().ForEach(x =>
             {
@@ -1038,7 +1055,7 @@ namespace BAMWallet.HD
                 });
             });
 
-            return balanceSheets;
+            return TaskResult<IEnumerable<BalanceSheet>>.CreateSuccess(balanceSheets);
         }
 
         /// <summary>
@@ -1164,7 +1181,7 @@ namespace BAMWallet.HD
         /// <param name="sessionId"></param>
         /// <param name="paymentId"></param>
         /// <returns></returns>
-        public async Task ReceivePayment(Guid sessionId, string paymentId)
+        public async Task<TaskResult<WalletTransaction>> ReceivePayment(Guid sessionId, string paymentId)
         {
             Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
             Guard.Argument(paymentId, nameof(paymentId)).NotNull().NotEmpty().NotWhiteSpace();
@@ -1179,8 +1196,9 @@ namespace BAMWallet.HD
                     var walletTransaction = walletTransactions.FirstOrDefault(x => x.TxId.SequenceEqual(paymentId.HexToByte()) && x.WalletType == WalletType.Receive);
                     if (walletTransaction != null)
                     {
-                        SetLastError(session, TaskResult<Vout>.CreateFailure(new Exception($"Transaction with paymentId: {paymentId} already exists")));
-                        return;
+                        var vout = TaskResult<WalletTransaction>.CreateFailure(new Exception($"Transaction with paymentId: {paymentId} already exists"));
+                        SetLastError(session, vout);
+                        return vout;
                     }
                 }
 
@@ -1190,8 +1208,9 @@ namespace BAMWallet.HD
                 var vouts = await _client.GetRangeAsync<Vout>(baseAddress, path, new System.Threading.CancellationToken());
                 if (vouts.Any() != true)
                 {
-                    SetLastError(session, TaskResult<Vout>.CreateFailure(new Exception($"Failed to find transaction with paymentId: {paymentId}")));
-                    return;
+                    var vout = TaskResult<WalletTransaction>.CreateFailure(new Exception($"Failed to find transaction with paymentId: {paymentId}"));
+                    SetLastError(session, vout);
+                    return vout;
                 }
 
                 var (spend, scan) = Unlock(session.SessionId);
@@ -1207,9 +1226,7 @@ namespace BAMWallet.HD
                 }
 
                 if (vOutList.Any() != true)
-                {
-                    return;
-                }
+                    return TaskResult<WalletTransaction>.CreateFailure("vOutList empty");
 
                 session.WalletTransaction = new WalletTransaction
                 {
@@ -1225,23 +1242,24 @@ namespace BAMWallet.HD
                 var saved = Save(session.SessionId, session.WalletTransaction);
                 if (!saved.Success)
                 {
-                    throw new Exception("Could not save wallet transaction");
+                    SetLastError(session, saved);
+                    return TaskResult<WalletTransaction>.CreateFailure(saved);
                 }
+
+                return TaskResult<WalletTransaction>.CreateSuccess(session.WalletTransaction);
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Message: {ex.Message}\n Stack: {ex.StackTrace}");
                 throw;
             }
-
-            return;
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="sessionId"></param>
-        public void CreatePayment(Guid sessionId)
+        public TaskResult<WalletTransaction> CreatePayment(Guid sessionId)
         {
             Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
 
@@ -1254,37 +1272,37 @@ namespace BAMWallet.HD
                 if (!balance.Success)
                 {
                     SetLastError(session, balance);
-                    return;
+                    return TaskResult<WalletTransaction>.CreateFailure(balance);
                 }
 
                 var calculated = CalculateChange(session.SessionId);
                 if (!calculated.Success)
                 {
                     SetLastError(session, calculated);
-                    return;
+                    return TaskResult<WalletTransaction>.CreateFailure(calculated);
                 }
 
                 var transaction = CreateTransaction(session.SessionId);
                 if (!transaction.Success)
                 {
                     SetLastError(session, transaction);
-                    return;
+                    return TaskResult<WalletTransaction>.CreateFailure(transaction);
                 }
 
                 var saved = Save(session.SessionId, session.WalletTransaction);
                 if (!saved.Success)
                 {
                     SetLastError(session, saved);
-                    return;
+                    return TaskResult<WalletTransaction>.CreateFailure(transaction);
                 }
+
+                return TaskResult<WalletTransaction>.CreateSuccess(session.WalletTransaction);
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Message: {ex.Message}\n Stack: {ex.StackTrace}");
                 throw;
             }
-
-            return;
         }
 
         /// <summary>
@@ -1292,7 +1310,7 @@ namespace BAMWallet.HD
         /// </summary>
         /// <param name="sessionId"></param>
         /// <returns></returns>
-        public async Task Send(Guid sessionId)
+        public async Task<TaskResult<bool>> Send(Guid sessionId)
         {
             Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
 
@@ -1307,11 +1325,13 @@ namespace BAMWallet.HD
             var posted = await _client.PostAsync(transaction, baseAddress, path, new System.Threading.CancellationToken());
             if (posted == null)
             {
-                SetLastError(session, TaskResult<bool>.CreateFailure(new Exception($"Unable to send transaction with paymentId: {transaction.TxnId.ByteToHex()}")));
+                var fail = TaskResult<bool>.CreateFailure(new Exception($"Unable to send transaction with paymentId: {transaction.TxnId.ByteToHex()}"));
+                SetLastError(session, fail);
                 RollBackOne(session.SessionId);
+                return fail;
             }
 
-            return;
+            return TaskResult<bool>.CreateSuccess(true);
         }
 
         /// <summary>

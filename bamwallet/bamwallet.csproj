@@ -31,7 +31,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Folder Include="HD\" />
-    <Folder Include="Model\" />
     <Folder Include="Helper\" />
     <Folder Include="Rpc\" />
     <Folder Include="Extentions\" />

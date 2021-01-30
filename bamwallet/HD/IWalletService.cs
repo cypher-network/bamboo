@@ -27,9 +27,9 @@ namespace BAMWallet.HD
         ulong TotalAmount(Guid sessionId, string address);
         WalletTransaction LastWalletTransaction(Guid sessionId, WalletType transactionType);
         TaskResult<bool> CalculateChange(Guid sessionId);
-        IEnumerable<string> WalletList();
-        IEnumerable<BalanceSheet> History(Guid sessionId);
-        IEnumerable<string> Addresses(Guid sessionId);
+        TaskResult<IEnumerable<string>> WalletList();
+        TaskResult<IEnumerable<BalanceSheet>> History(Guid sessionId);
+        TaskResult<IEnumerable<string>> Addresses(Guid sessionId);
         IEnumerable<KeySet> KeySets(Guid sessionId);
         KeySet LastKeySet(Guid sessionId);
         KeySet KeySet(Guid sessionId);
@@ -41,9 +41,9 @@ namespace BAMWallet.HD
         Client HttpClient();
         Session SessionAddOrUpdate(Session session);
         TaskResult<bool> Save<T>(Guid sessionId, T data);
-        void CreatePayment(Guid sessionId);
-        Task Send(Guid sessionId);
-        Task ReceivePayment(Guid sessionId, string paymentId);
+        TaskResult<WalletTransaction> CreatePayment(Guid sessionId);
+        Task<TaskResult<bool>> Send(Guid sessionId);
+        Task<TaskResult<WalletTransaction>> ReceivePayment(Guid sessionId, string paymentId);
         TaskResult<Transaction> CreateTransaction(Guid sessionId);
         ulong Fee(int nByte);
         PubKey ScanPublicKey(string address);
