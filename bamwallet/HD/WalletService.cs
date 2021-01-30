@@ -1,4 +1,4 @@
-﻿// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0. 
+// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0. 
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
 using System;
@@ -953,7 +953,7 @@ namespace BAMWallet.HD
             try
             {
                 var (spend, scan) = Unlock(sessionId);
-                ulong received = 0, fee = 0, payment = 0;
+                ulong received = 0, fee = 0, payment = 0, change = 0, sent = 0;
 
                 transactions.Where(tx => tx.WalletType == WalletType.Receive).ToList().ForEach(x =>
                 {
@@ -967,9 +967,12 @@ namespace BAMWallet.HD
                 {
                     fee += Util.MessageAmount(x.Vout[0], scan);
                     payment += Util.MessageAmount(x.Vout[1], scan);
+                    change = Util.MessageAmount(x.Vout[2], scan);
+
+                    sent += received - change;                    
                 });
 
-                total = received - payment - fee;
+                total = change;
             }
             catch (Exception ex)
             {
@@ -1002,6 +1005,8 @@ namespace BAMWallet.HD
                 return TaskResult<IEnumerable<BalanceSheet>>.CreateSuccess(balanceSheets);
             }
 
+            ulong received = 0, sent = 0;
+
             var (spend, scan) = Unlock(session.SessionId);
 
             walletTransactions.Where(tx => tx.WalletType == WalletType.Receive).ToList().ForEach(x =>
@@ -1024,6 +1029,8 @@ namespace BAMWallet.HD
                     MoneyIn = x.Payment.DivWithNaT().ToString("F9"),
                     Balance = x.Payment.DivWithNaT().ToString("F9")
                 });
+
+                received += x.Payment;
             });
 
             walletTransactions.Where(tx => tx.WalletType == WalletType.Send).ToList().ForEach(x =>
@@ -1033,12 +1040,16 @@ namespace BAMWallet.HD
                 x.Change = Util.MessageAmount(x.Vout[2], scan);
                 x.Balance = x.Fee + x.Payment + x.Change;
 
+                ulong fee = x.Fee = x.Vout[0].T == CoinType.fee ? x.Fee : 0;
+
+                sent = received - x.Change - sent - fee;
+
                 balanceSheets.Add(new BalanceSheet
                 {
                     DateTime = x.DateTime,
                     CoinType = session.SessionType == SessionType.Coin ? CoinType.Coin.ToString() : CoinType.Coinstake.ToString(),
                     Memo = x.Memo,
-                    MoneyOut = $"-{x.Payment.DivWithNaT():F9}",
+                    MoneyOut = $"-{sent.DivWithNaT():F9}",
                     Fee = $"-{x.Fee.DivWithNaT():F9}",
                     Balance = x.Change.DivWithNaT().ToString("F9")
                 });
