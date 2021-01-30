@@ -954,10 +954,10 @@ namespace BAMWallet.HD
                     payment += Util.MessageAmount(x.Vout[1], scan);
                     change = Util.MessageAmount(x.Vout[2], scan);
 
-                    sent += received - change;
+                    sent += received - change;                    
                 });
 
-                total = received - sent;
+                total = change;
             }
             catch (Exception ex)
             {
@@ -1023,7 +1023,9 @@ namespace BAMWallet.HD
                 x.Change = Util.MessageAmount(x.Vout[2], scan);
                 x.Balance = x.Fee + x.Payment + x.Change;
 
-                sent += received - x.Change;
+                ulong fee = x.Fee = x.Vout[0].T == CoinType.fee ? x.Fee : 0;
+
+                sent = received - x.Change - sent - fee;
 
                 balanceSheets.Add(new BalanceSheet
                 {
