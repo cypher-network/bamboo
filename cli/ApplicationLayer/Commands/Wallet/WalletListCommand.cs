@@ -34,23 +34,30 @@ namespace CLi.ApplicationLayer.Commands.Wallet
 
         public override Task Execute()
         {
-            var keys = _walletService.WalletList();
+            var request = _walletService.WalletList();
 
-            if (keys?.Any() == true)
+            if (!request.Success)
             {
-                var table = new ConsoleTable("Path");
-
-                foreach (var key in keys)
-                    table.AddRow(key);
-
-                _console.WriteLine($"\n{table}");
+                _console.ForegroundColor = ConsoleColor.Red;
+                _console.WriteLine("Wallet list request failed.");
+                _console.ForegroundColor = ConsoleColor.White;
+                return Task.CompletedTask;
             }
-            else
+
+            if (!request.Result.Any())
             {
                 _console.ForegroundColor = ConsoleColor.Red;
                 _console.WriteLine("No wallets have been created.");
                 _console.ForegroundColor = ConsoleColor.White;
+                return Task.CompletedTask;
             }
+
+            var table = new ConsoleTable("Path");
+
+            foreach (var key in request.Result)
+                table.AddRow(key);
+
+            _console.WriteLine($"\n{table}");
 
             return Task.CompletedTask;
         }

@@ -350,17 +350,22 @@ namespace BAMWallet.HD
         /// 
         /// </summary>
         /// <returns></returns>
-        public IEnumerable<string> WalletList()
+        public TaskResult<IEnumerable<string>> WalletList()
         {
             var wallets = Path.Combine(Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory), "wallets");
-            string[] files = Directory.GetFiles(wallets, "*.db");
+            string[] files;
 
-            if (files?.Any() != true)
+            try
             {
-                return Enumerable.Empty<string>();
+                files = Directory.GetFiles(wallets, "*.db");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return TaskResult<IEnumerable<string>>.CreateFailure(ex);
             }
 
-            return files;
+            return TaskResult<IEnumerable<string>>.CreateSuccess(files);
         }
 
         /// <summary>
@@ -386,17 +391,27 @@ namespace BAMWallet.HD
         /// </summary>
         /// <param name="sessionId"></param>
         /// <returns></returns>
-        public IEnumerable<string> Addresses(Guid sessionId)
+        public TaskResult<IEnumerable<string>> Addresses(Guid sessionId)
         {
             Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
 
-            var session = Session(sessionId);
+            var addresses = Enumerable.Empty<string>();
 
-            var keys = KeySets(session.SessionId);
-            if (keys == null)
-                return Enumerable.Empty<string>();
+            try
+            {
+                var session = Session(sessionId);
 
-            return keys.Select(k => k.StealthAddress);
+                var keys = KeySets(session.SessionId);
+                if (keys != null)
+                    addresses = keys.Select(k => k.StealthAddress);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return TaskResult<IEnumerable<string>>.CreateFailure(ex);
+            }
+
+            return TaskResult<IEnumerable<string>>.CreateSuccess(addresses);
         }
 
         /// <summary>
@@ -970,22 +985,24 @@ namespace BAMWallet.HD
         /// </summary>
         /// <param name="sessionId"></param>
         /// <returns></returns>
-        public IEnumerable<BalanceSheet> History(Guid sessionId)
+        public TaskResult<IEnumerable<BalanceSheet>> History(Guid sessionId)
         {
             Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
 
+            var balanceSheets = new List<BalanceSheet>();
             List<WalletTransaction> walletTransactions;
 
             var session = Session(sessionId);
 
-            walletTransactions = session.Database.Query<WalletTransaction>().OrderBy(x => x.DateTime).ToList();
+            walletTransactions = session.Database.Query<WalletTransaction>()
+                .OrderBy(x => x.DateTime)
+                .ToList();
             if (walletTransactions?.Any() != true)
             {
-                return null;
+                return TaskResult<IEnumerable<BalanceSheet>>.CreateSuccess(balanceSheets);
             }
 
             var (spend, scan) = Unlock(session.SessionId);
-            var balanceSheets = new List<BalanceSheet>();
 
             walletTransactions.Where(tx => tx.WalletType == WalletType.Receive).ToList().ForEach(x =>
             {
@@ -1027,7 +1044,7 @@ namespace BAMWallet.HD
                 });
             });
 
-            return balanceSheets;
+            return TaskResult<IEnumerable<BalanceSheet>>.CreateSuccess(balanceSheets);
         }
 
         /// <summary>

@@ -27,9 +27,9 @@ namespace BAMWallet.HD
         ulong TotalAmount(Guid sessionId, string address);
         WalletTransaction LastWalletTransaction(Guid sessionId, WalletType transactionType);
         TaskResult<bool> CalculateChange(Guid sessionId);
-        IEnumerable<string> WalletList();
-        IEnumerable<BalanceSheet> History(Guid sessionId);
-        IEnumerable<string> Addresses(Guid sessionId);
+        TaskResult<IEnumerable<string>> WalletList();
+        TaskResult<IEnumerable<BalanceSheet>> History(Guid sessionId);
+        TaskResult<IEnumerable<string>> Addresses(Guid sessionId);
         IEnumerable<KeySet> KeySets(Guid sessionId);
         KeySet LastKeySet(Guid sessionId);
         KeySet KeySet(Guid sessionId);

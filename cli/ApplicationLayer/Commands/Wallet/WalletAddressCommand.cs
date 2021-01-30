@@ -36,25 +36,31 @@ namespace CLi.ApplicationLayer.Commands.Wallet
         {
             using var identifier = Prompt.GetPasswordAsSecureString("Identifier:", ConsoleColor.Yellow);
             using var passphrase = Prompt.GetPasswordAsSecureString("Passphrase:", ConsoleColor.Yellow);
-
             var session = _walletService.SessionAddOrUpdate(new Session(identifier, passphrase));
-            var addresses = _walletService.Addresses(session.SessionId);
 
-            if (addresses?.Any() == true)
+            var request = _walletService.Addresses(session.SessionId);
+            if (!request.Success)
             {
-                var table = new ConsoleTable("Address");
-
-                foreach (var address in addresses)
-                    table.AddRow(address);
-
-                _console.WriteLine($"\n{table}");
+                _console.ForegroundColor = ConsoleColor.Red;
+                _console.WriteLine("Address request failed.");
+                _console.ForegroundColor = ConsoleColor.White;
+                return Task.CompletedTask;
             }
-            else
+
+            if (!request.Result.Any())
             {
                 _console.ForegroundColor = ConsoleColor.Red;
                 _console.WriteLine("No address can be found.");
                 _console.ForegroundColor = ConsoleColor.White;
+                return Task.CompletedTask;
             }
+
+            var table = new ConsoleTable("Address");
+
+            foreach (var address in request.Result)
+                table.AddRow(address);
+
+            _console.WriteLine($"\n{table}");
 
             return Task.CompletedTask;
         }

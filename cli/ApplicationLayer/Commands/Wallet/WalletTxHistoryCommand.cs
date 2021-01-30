@@ -40,17 +40,24 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                 try
                 {
                     var session = _walletService.SessionAddOrUpdate(new Session(identifier, passphrase));
-                    var final = _walletService.History(session.SessionId).ToList();
+                    var request = _walletService.History(session.SessionId);
 
-                    if (final?.Any() == true)
+                    if (!request.Success)
                     {
-                        var table = ConsoleTable.From(final).ToString();
-                        _console.WriteLine($"\n{table}");
-
+                        _console.ForegroundColor = ConsoleColor.Red;
+                        _console.WriteLine("Wallet history request failed.");
+                        _console.ForegroundColor = ConsoleColor.White;
                         return Task.CompletedTask;
                     }
 
-                    NoTxn();
+                    if (!request.Result.Any())
+                    {
+                        NoTxn();
+                        return Task.CompletedTask;
+                    }
+
+                    var table = ConsoleTable.From(request.Result).ToString();
+                    _console.WriteLine($"\n{table}");
                 }
                 catch (Exception)
                 {
