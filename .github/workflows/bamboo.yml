@@ -1,27 +1,32 @@
-name: build bamboo wallet
+name: "build wallet"
 
 on:
   push:
+    branches:
+      - "master"
     tags-ignore:
-      - 'v*'
+      - "*"
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: "ubuntu-latest"
     steps:
-    - name: Setup .NET Core 5.0
-      uses: actions/setup-dotnet@v1
+    - name: "Setup .NET Core 5.0"
+      uses: "actions/setup-dotnet@v1"
       with:
-        dotnet-version: '5.0.101' # SDK Version to use.
-    - name: Checkout latest
-      uses: actions/checkout@master
-    - name: build bamboo
+        dotnet-version: "5.0.101"
+    
+    - name: "Checkout latest"
+      uses: "actions/checkout@master"
+    
+    - name: "Build"
       run:  |
         dotnet restore bamboo.sln
         dotnet publish cli --output publish/cli --configuration Release
-    - name: Archive build artifacts
-      uses: actions/upload-artifact@v2
+    
+    - name: "Archive build artifacts"
+      uses: "actions/upload-artifact@v2"
       with:
-        name: dist
+        name: "dist"
         path: |
           ${{ github.workspace }}/publish/cli/
