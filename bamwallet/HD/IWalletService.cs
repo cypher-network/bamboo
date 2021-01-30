@@ -41,9 +41,9 @@ namespace BAMWallet.HD
         Client HttpClient();
         Session SessionAddOrUpdate(Session session);
         TaskResult<bool> Save<T>(Guid sessionId, T data);
-        void CreatePayment(Guid sessionId);
-        Task Send(Guid sessionId);
-        Task ReceivePayment(Guid sessionId, string paymentId);
+        TaskResult<WalletTransaction> CreatePayment(Guid sessionId);
+        Task<TaskResult<bool>> Send(Guid sessionId);
+        Task<TaskResult<WalletTransaction>> ReceivePayment(Guid sessionId, string paymentId);
         TaskResult<Transaction> CreateTransaction(Guid sessionId);
         ulong Fee(int nByte);
         PubKey ScanPublicKey(string address);

@@ -11,6 +11,8 @@ using BAMWallet.Extentions;
 using BAMWallet.HD;
 using BAMWallet.Helper;
 using BAMWallet.Model;
+using Dawn;
+using Newtonsoft.Json;
 
 namespace BAMWallet.Controllers
 {
@@ -25,20 +27,37 @@ namespace BAMWallet.Controllers
             _walletService = walletService;
         }
 
-        [HttpPost("address", Name = "GetAddresses")]
-        public IActionResult GetAddresses([FromBody] Credentials credentials)
+        [HttpPost("address", Name = "Addresses")]
+        public IActionResult Addresses([FromBody] Credentials credentials)
         {
+            Guard.Argument(credentials, nameof(credentials)).NotNull();
+
             var session = _walletService.SessionAddOrUpdate(new Session(credentials.Identifier.ToSecureString(),
                 credentials.Passphrase.ToSecureString()));
 
             var request = _walletService.Addresses(session.SessionId);
-            if (request.Success)
-                if (request.Result.Any())
-                    return new OkObjectResult(request.Result);
-                else
-                    return new NotFoundResult();
+            if (!request.Success)
+                return new BadRequestObjectResult(request.NonSuccessMessage);
 
-            return new BadRequestObjectResult(request.NonSuccessMessage);
+            if (request.Result.Any() != true)
+                return new NotFoundResult();
+         
+            return new OkObjectResult(request.Result);
+        }
+
+        [HttpPost("balance", Name = "Balance")]
+        public IActionResult Balance([FromBody] Credentials credentials)
+        {
+            Guard.Argument(credentials, nameof(credentials)).NotNull();
+
+            var session = _walletService.SessionAddOrUpdate(new Session(credentials.Identifier.ToSecureString(),
+                credentials.Passphrase.ToSecureString()));
+
+            var total = _walletService.AvailableBalance(session.SessionId);
+            if (!total.Success)
+                return new BadRequestObjectResult(total.NonSuccessMessage);
+
+            return new OkObjectResult($"{total.Result.DivWithNaT():F9}");
         }
 
         [HttpGet("create", Name = "Create")]
@@ -53,33 +72,20 @@ namespace BAMWallet.Controllers
                 joinPassphrase.ToSecureString()));
 
             var request = _walletService.Addresses(session.SessionId);
-            if (request.Success)
-                if (request.Result.Any())
-                    return new OkObjectResult(new
-                    {
-                        path = Util.WalletPath(id),
-                        identifier = id,
-                        mnemonic = joinMmnemonic,
-                        passphrase = joinPassphrase,
-                        address = request.Result
-                    });
-                else
-                    return new NotFoundResult();
+            if (!request.Success)
+                return new BadRequestObjectResult(request.NonSuccessMessage);
 
-            return new BadRequestObjectResult(request.NonSuccessMessage);
-        }
+            if (request.Result.Any() != true)
+                return new NotFoundResult();
 
-        [HttpPost("balance", Name = "GetBalance")]
-        public IActionResult GetBalance([FromBody] Credentials credentials)
-        {
-            var session = _walletService.SessionAddOrUpdate(new Session(credentials.Identifier.ToSecureString(),
-                credentials.Passphrase.ToSecureString()));
-
-            var total = _walletService.AvailableBalance(session.SessionId);
-            if (total.Success)
-                return new OkObjectResult($"{total.Result.DivWithNaT():F9}");
-
-            return new BadRequestObjectResult(total.NonSuccessMessage);
+            return new OkObjectResult(new
+            {
+                path = Util.WalletPath(id),
+                identifier = id,
+                mnemonic = joinMmnemonic,
+                passphrase = joinPassphrase,
+                address = request.Result
+            });
         }
 
         [HttpGet("mnemonic", Name = "CreateMnemonic")]
@@ -97,31 +103,34 @@ namespace BAMWallet.Controllers
             });
         }
 
-        // TODO: does this method expose too much (full path)? is it event required?
-        [HttpGet("list", Name = "GetList")]
-        public IActionResult GetList()
+        // TODO: does this method expose too much (full path)? is this even required?
+        [HttpGet("list", Name = "List")]
+        public IActionResult List()
         {
             var request = _walletService.WalletList();
-            if (request.Success)
-                if (request.Result.Any())
-                    return new OkObjectResult(request.Result);
-                else
-                    return new NotFoundResult();
 
-            return new BadRequestObjectResult(request.NonSuccessMessage);
+            if (!request.Success)
+                return new BadRequestObjectResult(request.NonSuccessMessage);
+
+            if (request.Result.Any() != true)
+                return new NotFoundResult();
+
+            return new OkObjectResult(request.Result);
         }
 
-        [HttpPost("history", Name = "GetHistory")]
-        public IActionResult GetHistory([FromBody] Credentials credentials)
+        [HttpPost("history", Name = "History")]
+        public IActionResult History([FromBody] Credentials credentials)
         {
+            Guard.Argument(credentials, nameof(credentials)).NotNull();
+
             var session = _walletService.SessionAddOrUpdate(new Session(credentials.Identifier.ToSecureString(),
                 credentials.Passphrase.ToSecureString()));
 
             var request = _walletService.History(session.SessionId);
-            if (request.Success)
-                return new OkObjectResult(request.Result);
+            if (!request.Success)
+                return new BadRequestObjectResult(request.NonSuccessMessage);
 
-            return new BadRequestObjectResult(request.NonSuccessMessage);
+            return new OkObjectResult(request.Result);
         }
 
         [HttpPost("transaction", Name = "CreateTransacrtion")]
@@ -147,6 +156,72 @@ namespace BAMWallet.Controllers
             var txByteArray = Util.SerializeProto(transaction);
 
             return new ObjectResult(new { protobuf = txByteArray });
+        }
+
+        [HttpPost("receive", Name = "Receive")]
+        public async Task<IActionResult> Receive([FromBody] Receive receive)
+        {
+            Guard.Argument(receive.Identifier, nameof(receive.Identifier)).NotNull().NotEmpty().NotWhiteSpace();
+            Guard.Argument(receive.Passphrase, nameof(receive.Passphrase)).NotNull().NotEmpty().NotWhiteSpace();
+            Guard.Argument(receive.PaymentId, nameof(receive.PaymentId)).NotNull().NotEmpty().NotWhiteSpace();
+
+            var session = _walletService.SessionAddOrUpdate(new Session(receive.Identifier.ToSecureString(),
+                receive.Passphrase.ToSecureString()));
+
+            var request = await _walletService.ReceivePayment(session.SessionId, receive.PaymentId);
+            if (!request.Success)
+                return new BadRequestObjectResult(request.NonSuccessMessage);
+
+            var transaction = _walletService.LastWalletTransaction(session.SessionId, WalletType.Receive);
+            var txnReceivedAmount = transaction == null ? 0.ToString() : transaction.Payment.DivWithNaT().ToString("F9");
+            var txnMemo = transaction == null ? "" : transaction.Memo;
+            var balance = _walletService.AvailableBalance(session.SessionId);
+
+            return new OkObjectResult(new
+            {
+                memo = txnMemo,
+                received = txnReceivedAmount,
+                balance = $"{balance.Result.DivWithNaT():F9}"
+            });
+        }
+
+        [HttpPost("spend", Name = "Spend")]
+        public async Task<IActionResult> Spend([FromBody] Spend spend)
+        {
+            Guard.Argument(spend.Identifier, nameof(spend.Identifier)).NotNull().NotEmpty().NotWhiteSpace();
+            Guard.Argument(spend.Passphrase, nameof(spend.Passphrase)).NotNull().NotEmpty().NotWhiteSpace();
+            Guard.Argument(spend.Address, nameof(spend.Address)).NotNull().NotEmpty().NotWhiteSpace();
+            Guard.Argument(spend.Amount, nameof(spend.Amount)).Positive();
+
+            var session = _walletService.SessionAddOrUpdate(new Session(spend.Identifier.ToSecureString(),
+                spend.Passphrase.ToSecureString())
+            {
+                SessionType = SessionType.Coin,
+                WalletTransaction = new WalletTransaction
+                {
+                    Memo = spend.Memo,
+                    Payment = spend.Amount.ConvertToUInt64(),
+                    RecipientAddress = spend.Address,
+                    WalletType = WalletType.Send
+                }
+            });
+
+            var createPayment = _walletService.CreatePayment(session.SessionId);
+            if (!createPayment.Success)
+                return new BadRequestObjectResult(createPayment.NonSuccessMessage);
+
+            var send = await _walletService.Send(session.SessionId);
+            if (!send.Success)
+                return new BadRequestObjectResult(send.NonSuccessMessage);
+
+            var balance = _walletService.AvailableBalance(session.SessionId);
+            var walletTx = _walletService.LastWalletTransaction(session.SessionId, WalletType.Send);
+            
+            return new OkObjectResult(new
+            {
+                balance = $"{balance.Result.DivWithNaT():F9}",
+                paymentId = walletTx?.TxId.ByteToHex()
+            });
         }
     }
 }
