@@ -122,7 +122,7 @@ namespace BAMWallet.HD
             {
                 var session = Session(sessionId);
 
-                var walletTxns = session.Database.Query<WalletTransaction>().ToList();
+                var walletTxns = session.Database.Query<WalletTransaction>().OrderBy(d => d.DateTime).ToList();
                 if (walletTxns?.Any() != true)
                 {
                     return TaskResult<ulong>.CreateSuccess(0);
