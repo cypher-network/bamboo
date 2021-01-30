@@ -1,6 +1,9 @@
 name: build bamboo wallet
 
-on: [push]
+on:
+  push:
+    tags-ignore:
+      - 'v*'
 
 jobs:
   build:
