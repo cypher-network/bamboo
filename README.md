@@ -1,6 +1,9 @@
 
 ## Bamboo CLi Wallet.
 
+[![Build wallet](https://github.com/cypher-network/bamboo/workflows/build%20wallet/badge.svg)](https://github.com/cypher-network/bamboo/commits/master/)
+[![GitHub release](https://img.shields.io/github/release/cypher-network/bamboo.svg)](https://GitHub.com/cypher-network/bamboo/releases/)
+
 ## Contribution
 
 Thank you for considering to help out with the source code!
