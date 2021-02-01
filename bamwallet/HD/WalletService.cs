@@ -1,4 +1,4 @@
-// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0. 
+﻿// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0. 
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
 using System;
@@ -505,7 +505,7 @@ namespace BAMWallet.HD
             var blinds = new Span<byte[]>(new byte[4][]);
             var sk = new Span<byte[]>(new byte[2][]);
             int nRows = 2; // last row sums commitments
-            int nCols = 2; // ring size
+            int nCols = 22; // ring size
             int index = Libsecp256k1Zkp.Net.Util.Rand(0, nCols) % nCols;
             var m = new byte[nRows * nCols * 33];
             var pcm_in = new Span<byte[]>(new byte[nCols * 1][]);
