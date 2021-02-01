@@ -15,6 +15,7 @@ using Microsoft.Extensions.Logging;
 using BAMWallet.Rpc;
 using BAMWallet.Helper;
 using BAMWallet.Model;
+using BAMWallet.Extentions;
 
 namespace BAMWallet.Services
 {

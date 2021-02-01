@@ -969,10 +969,10 @@ namespace BAMWallet.HD
                     payment += Util.MessageAmount(x.Vout[1], scan);
                     change = Util.MessageAmount(x.Vout[2], scan);
 
-                    sent += received - change;                    
+                    sent += received - change;
                 });
 
-                total = change;
+                total = change == 0 ? received : change;
             }
             catch (Exception ex)
             {
@@ -1445,6 +1445,6 @@ namespace BAMWallet.HD
             }
 
             return TaskResult<bool>.CreateSuccess(true);
-        }
+        }    
     }
 }
