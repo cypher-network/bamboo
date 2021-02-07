@@ -92,7 +92,7 @@ namespace BAMWallet.Services
                 var baseAddress = _client.GetBaseAddress();
                 var path = _apiGatewaySection.GetSection(RestCall.Routing).GetValue<string>(RestCall.RestSafeguardTransactions.ToString());
 
-                var blockHeaders = await _client.GetRangeAsync<Model.BlockHeader>(baseAddress, path, stoppingToken);
+                var blockHeaders = await _client.GetRangeAsync<BlockHeader>(baseAddress, path, stoppingToken);
                 if (blockHeaders.Any())
                 {
                     var fileStream = SafeguardData(GetDays());
