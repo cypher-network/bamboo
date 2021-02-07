@@ -1,4 +1,4 @@
-// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0. 
+﻿// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0. 
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
 using System;
@@ -1321,7 +1321,7 @@ namespace BAMWallet.HD
             var transaction = Transaction(session.SessionId);
 
             var baseAddress = _client.GetBaseAddress();
-            var path = _apiGatewaySection.GetSection(RestCall.Routing).GetValue<string>(RestCall.GetTransactionId.ToString());
+            var path = _apiGatewaySection.GetSection(RestCall.Routing).GetValue<string>(RestCall.PostTransaction.ToString());
 
             var posted = await _client.PostAsync(transaction, baseAddress, path, new System.Threading.CancellationToken());
             if (posted == null)
