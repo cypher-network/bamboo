@@ -52,6 +52,11 @@ namespace BAMWallet.Model
                 .Append(Mix)
                 .Append(Ver);
 
+                foreach (var bp in Bp)
+                {
+                    ts.Append(bp.Proof);
+                }
+
                 foreach (var vin in Vin)
                 {
                     ts.Append(vin.Key.K_Image);
