@@ -165,9 +165,6 @@ namespace BAMWallet.Rpc
                 using var response = await client.PostAsJsonAsync(path, proto, cancellationToken);
 
                 var read = response.Content.ReadAsStringAsync(cancellationToken).Result;
-                var jObject = JObject.Parse(read);
-                var jToken = jObject.GetValue("protobuf");
-                var byteArray = Convert.FromBase64String(jToken.Value<string>());
 
                 if (response.IsSuccessStatusCode)
                     return true;
