@@ -146,12 +146,10 @@ namespace BAMWallet.Rpc
         /// <param name="path"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task<byte[]> PostAsync<T>(T payload, Uri baseAddress, string path, CancellationToken cancellationToken)
+        public async Task<bool> PostAsync<T>(T payload, Uri baseAddress, string path, CancellationToken cancellationToken)
         {
             Guard.Argument(baseAddress, nameof(baseAddress)).NotNull();
             Guard.Argument(path, nameof(path)).NotNull().NotEmpty();
-
-            byte[] protoBuf = default;
 
             using var client = new HttpClient
             {
@@ -172,11 +170,11 @@ namespace BAMWallet.Rpc
                 var byteArray = Convert.FromBase64String(jToken.Value<string>());
 
                 if (response.IsSuccessStatusCode)
-                    protoBuf = byteArray;
+                    return true;
                 else
                 {
                     var content = await response.Content.ReadAsStringAsync(cancellationToken);
-                    _logger.LogError($"Result: {content}\n StatusCode: {(int)response.StatusCode}");
+                    _logger.LogError($"Result: {content}\n StatusCode: {(int) response.StatusCode}");
                     throw new Exception(content);
                 }
             }
@@ -185,7 +183,7 @@ namespace BAMWallet.Rpc
                 _logger.LogError($"Message: {ex.Message}\n Stack: {ex.StackTrace}");
             }
 
-            return protoBuf;
+            return false;
         }
 
     }
