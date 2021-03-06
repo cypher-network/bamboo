@@ -16,7 +16,7 @@ namespace BAMWallet.Extentions
     {
         public static StringContent AsJson(this object o)
           => new StringContent(JsonConvert.SerializeObject(o), Encoding.UTF8, "application/json");
-       
+
 
         public static IEnumerable<IEnumerable<T>> Split<T>(this T[] array, int size)
         {

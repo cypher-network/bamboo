@@ -7,7 +7,7 @@ namespace BAMWallet.Model
 {
     [ProtoContract]
     public class RCT
-    {        
+    {
         [ProtoMember(1)]
         public byte[] M { get; set; }
         [ProtoMember(2)]

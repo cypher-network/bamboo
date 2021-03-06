@@ -4,7 +4,7 @@
 namespace BAMWallet.Model
 {
     public enum CoinType
-    {        
+    {
         Coin,
         Coinbase,
         Coinstake,

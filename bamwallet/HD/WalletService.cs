@@ -1445,6 +1445,6 @@ namespace BAMWallet.HD
             }
 
             return TaskResult<bool>.CreateSuccess(true);
-        }    
+        }
     }
 }
