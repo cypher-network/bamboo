@@ -17,6 +17,7 @@ using Newtonsoft.Json.Linq;
 using Dawn;
 
 using BAMWallet.Helper;
+using ProtoBuf.Meta;
 
 namespace BAMWallet.Rpc
 {
@@ -153,25 +154,41 @@ namespace BAMWallet.Rpc
 
             using var client = new HttpClient
             {
-                BaseAddress = baseAddress
+                BaseAddress = baseAddress,
+                DefaultRequestHeaders =
+                {
+                    Accept =
+                    {
+                        new MediaTypeWithQualityHeaderValue("application/x-protobuf")
+                    }
+                }
             };
-            client.DefaultRequestHeaders.Accept.Clear();
-            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
             try
             {
                 var proto = Util.SerializeProto(payload);
 
-                using var response = await client.PostAsJsonAsync(path, proto, cancellationToken);
+                var request = new HttpRequestMessage(HttpMethod.Post, path)
+                {
+                    Content = new ByteArrayContent(proto.ToArray())
+                    {
+                        Headers =
+                        {
+                            ContentType = new MediaTypeHeaderValue("application/x-protobuf")
+                        }
+                    }
+                };
 
-                var read = response.Content.ReadAsStringAsync(cancellationToken).Result;
+                using var response = await client.SendAsync(request, cancellationToken);
+
+                var _ = response.Content.ReadAsStringAsync(cancellationToken).Result;
 
                 if (response.IsSuccessStatusCode)
                     return true;
                 else
                 {
                     var content = await response.Content.ReadAsStringAsync(cancellationToken);
-                    _logger.LogError($"Result: {content}\n StatusCode: {(int) response.StatusCode}");
+                    _logger.LogError($"Result: {content}\n StatusCode: {(int)response.StatusCode}");
                     throw new Exception(content);
                 }
             }
