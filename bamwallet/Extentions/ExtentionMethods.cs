@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Mime;
 using System.Runtime.CompilerServices;
 using System.Text;
 
@@ -15,8 +16,8 @@ namespace BAMWallet.Extentions
     public static class ExtentionMethods
     {
         public static StringContent AsJson(this object o)
-          => new StringContent(JsonConvert.SerializeObject(o), Encoding.UTF8, "application/json");
-       
+          => new(JsonConvert.SerializeObject(o), Encoding.UTF8, MediaTypeNames.Application.Json);
+
 
         public static IEnumerable<IEnumerable<T>> Split<T>(this T[] array, int size)
         {
