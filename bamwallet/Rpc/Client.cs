@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.Mime;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -51,10 +52,15 @@ namespace BAMWallet.Rpc
 
             using var client = new HttpClient
             {
-                BaseAddress = baseAddress
+                BaseAddress = baseAddress,
+                DefaultRequestHeaders =
+                {
+                    Accept =
+                    {
+                        new MediaTypeWithQualityHeaderValue(MediaTypeNames.Application.Json)
+                    }
+                }
             };
-            client.DefaultRequestHeaders.Accept.Clear();
-            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
             try
             {
@@ -107,10 +113,15 @@ namespace BAMWallet.Rpc
 
             using var client = new HttpClient
             {
-                BaseAddress = baseAddress
+                BaseAddress = baseAddress,
+                DefaultRequestHeaders =
+                {
+                    Accept =
+                    {
+                        new MediaTypeWithQualityHeaderValue(MediaTypeNames.Application.Json)
+                    }
+                }
             };
-            client.DefaultRequestHeaders.Accept.Clear();
-            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
             try
             {
