@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.Mime;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -52,10 +53,15 @@ namespace BAMWallet.Rpc
 
             using var client = new HttpClient
             {
-                BaseAddress = baseAddress
+                BaseAddress = baseAddress,
+                DefaultRequestHeaders =
+                {
+                    Accept =
+                    {
+                        new MediaTypeWithQualityHeaderValue(MediaTypeNames.Application.Json)
+                    }
+                }
             };
-            client.DefaultRequestHeaders.Accept.Clear();
-            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
             try
             {
@@ -108,10 +114,15 @@ namespace BAMWallet.Rpc
 
             using var client = new HttpClient
             {
-                BaseAddress = baseAddress
+                BaseAddress = baseAddress,
+                DefaultRequestHeaders =
+                {
+                    Accept =
+                    {
+                        new MediaTypeWithQualityHeaderValue(MediaTypeNames.Application.Json)
+                    }
+                }
             };
-            client.DefaultRequestHeaders.Accept.Clear();
-            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
             try
             {
@@ -148,19 +159,22 @@ namespace BAMWallet.Rpc
         /// <param name="path"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task<byte[]> PostAsync<T>(T payload, Uri baseAddress, string path, CancellationToken cancellationToken) where T : class
+        public async Task<bool> PostAsync<T>(T payload, Uri baseAddress, string path, CancellationToken cancellationToken)
         {
             Guard.Argument(baseAddress, nameof(baseAddress)).NotNull();
             Guard.Argument(path, nameof(path)).NotNull().NotEmpty();
 
-            byte[] protoBuf = default;
-
             using var client = new HttpClient
             {
-                BaseAddress = baseAddress
+                BaseAddress = baseAddress,
+                DefaultRequestHeaders =
+                {
+                    Accept =
+                    {
+                        new MediaTypeWithQualityHeaderValue("application/x-protobuf")
+                    }
+                }
             };
-            client.DefaultRequestHeaders.Accept.Clear();
-            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
             try
             {
@@ -170,13 +184,12 @@ namespace BAMWallet.Rpc
 
                 using var response = await client.PostAsJsonAsync(path, buffer, cancellationToken);
 
-                var read = response.Content.ReadAsStringAsync(cancellationToken).Result;
-                var jObject = JObject.Parse(read);
-                var jToken = jObject.GetValue("protobuf");
-                var byteArray = Convert.FromBase64String(jToken.Value<string>());
+                using var response = await client.SendAsync(request, cancellationToken);
+
+                var _ = response.Content.ReadAsStringAsync(cancellationToken).Result;
 
                 if (response.IsSuccessStatusCode)
-                    protoBuf = byteArray;
+                    return true;
                 else
                 {
                     var content = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -189,7 +202,7 @@ namespace BAMWallet.Rpc
                 _logger.LogError($"Message: {ex.Message}\n Stack: {ex.StackTrace}");
             }
 
-            return protoBuf;
+            return false;
         }
 
     }

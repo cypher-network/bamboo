@@ -1316,9 +1316,14 @@ namespace BAMWallet.HD
             var path = _apiGatewaySection.GetSection(RestCall.Routing)
                 .GetValue<string>(RestCall.PostTransaction.ToString());
 
-            var posted =
-                await _client.PostAsync(transaction, baseAddress, path, new System.Threading.CancellationToken());
-            if (posted != null) return TaskResult<bool>.CreateSuccess(true);
+            var posted = await _client.PostAsync(transaction, baseAddress, path, new System.Threading.CancellationToken());
+            if (!posted)
+            {
+                var fail = TaskResult<bool>.CreateFailure(new Exception($"Unable to send transaction with paymentId: {transaction.TxnId.ByteToHex()}"));
+                SetLastError(session, fail);
+                RollBackOne(session.SessionId);
+                return fail;
+            }
 
             var fail = TaskResult<bool>.CreateFailure(
                 new Exception($"Unable to send transaction with paymentId: {transaction.TxnId.ByteToHex()}"));
