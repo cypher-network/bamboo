@@ -2,6 +2,7 @@
 /.vscode
 /.vs
 /.DS_Store
+/.idea
 
 # misc
 /bin
@@ -12,7 +13,7 @@
 *.zip
 /CLI/.vs
 /CLI/nuget.config
-
+/bamwallet/.DS_Store
 *.dll
 *.pdb
 

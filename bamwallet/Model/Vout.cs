@@ -1,28 +1,20 @@
 ﻿// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0. 
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
-using ProtoBuf;
+using FlatSharp.Attributes;
 
 namespace BAMWallet.Model
 {
-    [ProtoContract]
-    public class Vout
+    [FlatBufferTable]
+    public class Vout : object
     {
-        [ProtoMember(1)]
-        public ulong A { get; set; }
-        [ProtoMember(2)]
-        public byte[] C { get; set; }
-        [ProtoMember(3)]
-        public byte[] E { get; set; }
-        [ProtoMember(4)]
-        public long L { get; set; }
-        [ProtoMember(5)]
-        public byte[] N { get; set; }
-        [ProtoMember(6)]
-        public byte[] P { get; set; }
-        [ProtoMember(7)]
-        public string S { get; set; }
-        [ProtoMember(8)]
-        public CoinType T { get; set; }
+        [FlatBufferItem(0)] public virtual ulong A { get; set; }
+        [FlatBufferItem(1)] public virtual byte[] C { get; set; }
+        [FlatBufferItem(2)] public virtual byte[] E { get; set; }
+        [FlatBufferItem(3)] public virtual long L { get; set; }
+        [FlatBufferItem(4)] public virtual byte[] N { get; set; }
+        [FlatBufferItem(5)] public virtual byte[] P { get; set; }
+        [FlatBufferItem(6)] public virtual string S { get; set; }
+        [FlatBufferItem(7, DefaultValue = CoinType.Coin)] public virtual CoinType T { get; set; }
     }
 }

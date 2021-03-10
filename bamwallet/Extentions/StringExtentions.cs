@@ -6,7 +6,7 @@ using System.Security;
 namespace BAMWallet.Extentions
 {
     public static class StringExtentions
-    {      
+    {
         public static SecureString ToSecureString(this string value)
         {
             var secureString = new SecureString();

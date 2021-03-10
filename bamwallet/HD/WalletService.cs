@@ -26,7 +26,7 @@ using BAMWallet.Model;
 using BAMWallet.Rpc;
 using BAMWallet.Extentions;
 using BAMWallet.Services;
-
+using FlatSharp;
 using Libsecp256k1Zkp.Net;
 
 namespace BAMWallet.HD
@@ -44,7 +44,8 @@ namespace BAMWallet.HD
 
         private ConcurrentDictionary<Guid, Session> Sessions { get; }
 
-        public WalletService(ISafeguardDownloadingFlagProvider safeguardDownloadingFlagProvider, IConfiguration configuration, ILogger<WalletService> logger)
+        public WalletService(ISafeguardDownloadingFlagProvider safeguardDownloadingFlagProvider,
+            IConfiguration configuration, ILogger<WalletService> logger)
         {
             _safeguardDownloadingFlagProvider = safeguardDownloadingFlagProvider;
 
@@ -80,7 +81,8 @@ namespace BAMWallet.HD
             var mSession = Sessions.AddOrUpdate(session.SessionId, session, (Key, existingVal) =>
             {
                 if (session != existingVal)
-                    throw new ArgumentException("Duplicate sessions are not allowed: {0}.", session.SessionId.ToString());
+                    throw new ArgumentException("Duplicate sessions are not allowed: {0}.",
+                        session.SessionId.ToString());
 
                 try
                 {
@@ -99,7 +101,8 @@ namespace BAMWallet.HD
                     existingVal.WalletTransaction.WalletType = session.WalletTransaction.WalletType;
                 }
                 catch (Exception)
-                { }
+                {
+                }
 
                 return existingVal;
             });
@@ -154,7 +157,8 @@ namespace BAMWallet.HD
                 var next = LastKeySet(session.SessionId);
                 var keyPath = new KeyPath(next.KeyPath);
                 var index = keyPath.Indexes[3] + 1;
-                var keySet = CreateKeySet(new KeyPath($"m/44'/847177'/{index}'/0/0"), next.RootKey.HexToByte(), next.ChainCode.HexToByte());
+                var keySet = CreateKeySet(new KeyPath($"m/44'/847177'/{index}'/0/0"), next.RootKey.HexToByte(),
+                    next.ChainCode.HexToByte());
 
                 session.Database.Insert(keySet);
 
@@ -218,7 +222,8 @@ namespace BAMWallet.HD
 
             concatenateMnemonic.ZeroString();
 
-            var keySet = CreateKeySet(new KeyPath($"{HDPath}0"), hdRoot.PrivateKey.ToHex().HexToByte(), hdRoot.ChainCode);
+            var keySet = CreateKeySet(new KeyPath($"{HDPath}0"), hdRoot.PrivateKey.ToHex().HexToByte(),
+                hdRoot.ChainCode);
 
             try
             {
@@ -281,7 +286,8 @@ namespace BAMWallet.HD
             ulong total;
 
             var session = Session(sessionId);
-            var txns = session.Database.Query<WalletTransaction>().Where(x => x.SenderAddress == address).ToEnumerable();
+            var txns = session.Database.Query<WalletTransaction>().Where(x => x.SenderAddress == address)
+                .ToEnumerable();
             if (txns?.Any() != true)
             {
                 return 0;
@@ -307,7 +313,8 @@ namespace BAMWallet.HD
 
             WalletTransaction walletTx;
 
-            var transactions = session.Database.Query<WalletTransaction>().Where(x => x.Id == session.SessionId && x.WalletType == transactionType).ToList();
+            var transactions = session.Database.Query<WalletTransaction>()
+                .Where(x => x.Id == session.SessionId && x.WalletType == transactionType).ToList();
             if (transactions?.Any() != true)
             {
                 return null;
@@ -352,7 +359,7 @@ namespace BAMWallet.HD
         /// <returns></returns>
         public TaskResult<IEnumerable<string>> WalletList()
         {
-            var wallets = Path.Combine(Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory), "wallets");
+            var wallets = Path.Combine(Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory) ?? string.Empty, "wallets");
             string[] files;
 
             try
@@ -427,8 +434,7 @@ namespace BAMWallet.HD
             {
                 var session = Session(sessionId);
 
-                List<WalletTransaction> walletTransactions;
-                walletTransactions = session.Database.Query<WalletTransaction>().ToList();
+                var walletTransactions = session.Database.Query<WalletTransaction>().ToList();
                 if (walletTransactions?.Any() != true)
                 {
                     return TaskResult<bool>.CreateFailure(new Exception("There are no wallet transactions."));
@@ -458,8 +464,8 @@ namespace BAMWallet.HD
                 var reward = session.SessionType == SessionType.Coinstake ? session.WalletTransaction.Reward : 0;
                 var balance = AvailableBalance(session.SessionId).Result;
                 var closest = changeList.OrderByDescending(x => x.Key).Last().Key;
-                var vOutChange = changeList.FirstOrDefault(x => x.Key == closest);
-                var spending = vOutChange.Value.Vout.FirstOrDefault(x => Util.MessageAmount(x, scan) == closest);
+                var (key, vector) = changeList.FirstOrDefault(x => x.Key == closest);
+                var spending = vector.Vout.FirstOrDefault(x => Util.MessageAmount(x, scan) == closest);
 
                 session.WalletTransaction = new WalletTransaction
                 {
@@ -475,7 +481,7 @@ namespace BAMWallet.HD
                     SenderAddress = session.WalletTransaction.SenderAddress,
                     Spending = spending,
                     Spent = balance - payment == 0,
-                    Vout = vOutChange.Value.Vout
+                    Vout = vector.Vout
                 };
 
                 SessionAddOrUpdate(session);
@@ -498,33 +504,33 @@ namespace BAMWallet.HD
         {
             Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
 
-            using var secp256k1 = new Secp256k1();
+            using var secp256K1 = new Secp256k1();
             using var pedersen = new Pedersen();
             using var mlsag = new MLSAG();
 
             var blinds = new Span<byte[]>(new byte[4][]);
             var sk = new Span<byte[]>(new byte[2][]);
-            int nRows = 2; // last row sums commitments
-            int nCols = 22; // ring size
-            int index = Libsecp256k1Zkp.Net.Util.Rand(0, nCols) % nCols;
+            const int nRows = 2; // last row sums commitments
+            const int nCols = 22; // ring size
+            var index = Libsecp256k1Zkp.Net.Util.Rand(0, nCols) % nCols;
             var m = new byte[nRows * nCols * 33];
-            var pcm_in = new Span<byte[]>(new byte[nCols * 1][]);
-            var pcm_out = new Span<byte[]>(new byte[3][]);
-            var randSeed = secp256k1.Randomize32();
-            var preimage = secp256k1.Randomize32();
+            var pcmIn = new Span<byte[]>(new byte[nCols * 1][]);
+            var pcmOut = new Span<byte[]>(new byte[3][]);
+            var randSeed = secp256K1.Randomize32();
+            var preimage = secp256K1.Randomize32();
             var pc = new byte[32];
             var ki = new byte[33 * 1];
             var ss = new byte[nCols * nRows * 32];
             var blindSum = new byte[32];
             var blindSumChange = new byte[32];
-            var pk_in = new Span<byte[]>(new byte[nCols * 1][]);
+            var pkIn = new Span<byte[]>(new byte[nCols * 1][]);
 
             while (_safeguardDownloadingFlagProvider.IsDownloading)
             {
                 System.Threading.Thread.Sleep(100);
             }
 
-            m = M(sessionId, blinds, sk, nRows, nCols, index, m, pcm_in, pk_in);
+            m = M(sessionId, blinds, sk, nRows, nCols, index, m, pcmIn, pkIn);
 
             var session = Session(sessionId);
 
@@ -532,16 +538,18 @@ namespace BAMWallet.HD
             var payment = session.WalletTransaction.Payment;
             var change = session.WalletTransaction.Change;
 
-            blinds[1] = pedersen.BlindSwitch(fee, secp256k1.CreatePrivateKey());
-            blinds[2] = pedersen.BlindSwitch(payment, secp256k1.CreatePrivateKey());
-            blinds[3] = pedersen.BlindSwitch(change, secp256k1.CreatePrivateKey());
+            blinds[1] = pedersen.BlindSwitch(fee, secp256K1.CreatePrivateKey());
+            blinds[2] = pedersen.BlindSwitch(payment, secp256K1.CreatePrivateKey());
+            blinds[3] = pedersen.BlindSwitch(change, secp256K1.CreatePrivateKey());
 
-            pcm_out[0] = pedersen.Commit(fee, blinds[1]);
-            pcm_out[1] = pedersen.Commit(payment, blinds[2]);
-            pcm_out[2] = pedersen.Commit(change, blinds[3]);
+            pcmOut[0] = pedersen.Commit(fee, blinds[1]);
+            pcmOut[1] = pedersen.Commit(payment, blinds[2]);
+            pcmOut[2] = pedersen.Commit(change, blinds[3]);
 
-            var commitSumBalance = pedersen.CommitSum(new List<byte[]> { pcm_out[0], pcm_out[1], pcm_out[2] }, new List<byte[]> { });
-            if (!pedersen.VerifyCommitSum(new List<byte[]> { commitSumBalance }, new List<byte[]> { pcm_out[0], pcm_out[1], pcm_out[2] }))
+            var commitSumBalance = pedersen.CommitSum(new List<byte[]> { pcmOut[0], pcmOut[1], pcmOut[2] },
+                new List<byte[]> { });
+            if (!pedersen.VerifyCommitSum(new List<byte[]> { commitSumBalance },
+                new List<byte[]> { pcmOut[0], pcmOut[1], pcmOut[2] }))
             {
                 return TaskResult<Transaction>.CreateFailure(JObject.FromObject(new
                 {
@@ -550,7 +558,7 @@ namespace BAMWallet.HD
                 }));
             }
 
-            var bulletChange = BulletProof(change, blinds[3], pcm_out[2]);
+            var bulletChange = BulletProof(change, blinds[3], pcmOut[2]);
             if (!bulletChange.Success)
             {
                 return TaskResult<Transaction>.CreateFailure(JObject.FromObject(new
@@ -560,7 +568,8 @@ namespace BAMWallet.HD
                 }));
             }
 
-            var success = mlsag.Prepare(m, blindSum, pcm_out.Length, pcm_out.Length, nCols, nRows, pcm_in, pcm_out, blinds);
+            var success = mlsag.Prepare(m, blindSum, pcmOut.Length, pcmOut.Length, nCols, nRows, pcmIn, pcmOut,
+                blinds);
             if (!success)
             {
                 return TaskResult<Transaction>.CreateFailure(JObject.FromObject(new
@@ -592,23 +601,20 @@ namespace BAMWallet.HD
                 }));
             }
 
-            var offsets = Offsets(pcm_in, pk_in, nRows, nCols);
-            var transaction = TransactionFactory(session.SessionId, m, nCols, pcm_out, blinds, preimage, pc, ki, ss, bulletChange.Result.proof, offsets);
-            var kbOverflow = Util.SerializeProto(transaction).Length > FeeNByte;
+            var offsets = Offsets(pcmIn, pkIn, nRows, nCols);
+            var transaction = TransactionFactory(session.SessionId, m, nCols, pcmOut, blinds, preimage, pc, ki, ss,
+                bulletChange.Result.proof, offsets);
 
-            if (!kbOverflow)
+            var saved = Save(session.SessionId, transaction);
+            if (saved.Success)
             {
-                var saved = Save(session.SessionId, transaction);
-                if (saved.Success)
-                {
-                    return TaskResult<Transaction>.CreateSuccess(transaction);
-                }
+                return TaskResult<Transaction>.CreateSuccess(transaction);
             }
 
             return TaskResult<Transaction>.CreateFailure(JObject.FromObject(new
             {
                 success = false,
-                message = "Transaction overflow."
+                message = "Unable to save the transaction."
             }));
         }
 
@@ -618,7 +624,7 @@ namespace BAMWallet.HD
         /// <param name="sessionId"></param>
         /// <param name="m"></param>
         /// <param name="nCols"></param>
-        /// <param name="pcm_out"></param>
+        /// <param name="pcmOut"></param>
         /// <param name="blinds"></param>
         /// <param name="preimage"></param>
         /// <param name="pc"></param>
@@ -627,7 +633,8 @@ namespace BAMWallet.HD
         /// <param name="bp"></param>
         /// <param name="offsets"></param>
         /// <returns></returns>
-        private Transaction TransactionFactory(Guid sessionId, byte[] m, int nCols, Span<byte[]> pcm_out, Span<byte[]> blinds, byte[] preimage, byte[] pc, byte[] ki, byte[] ss, byte[] bp, byte[] offsets)
+        private Transaction TransactionFactory(Guid sessionId, byte[] m, int nCols, Span<byte[]> pcmOut,
+            Span<byte[]> blinds, byte[] preimage, byte[] pc, byte[] ki, byte[] ss, byte[] bp, byte[] offsets)
         {
             Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
 
@@ -642,55 +649,37 @@ namespace BAMWallet.HD
 
             var tx = new Transaction
             {
-                Bp = new Bp[]
-                {
-                    new Bp
-                    {
-                         Proof = bp
-                    }
-                },
+                Bp = new[] { new Bp { Proof = bp } },
                 Mix = nCols,
-                Rct = new RCT[]
-                {
-                    new RCT
-                    {
-                         I = preimage,
-                         M = m,
-                         P = pc,
-                         S = ss
-                    }
-                },
+                Rct = new[] { new RCT { I = preimage, M = m, P = pc, S = ss } },
                 Ver = 0x1,
-                Vin = new Vin[]
+                Vin = new[] { new Vin { Key = new Aux { KImage = ki, KOffsets = offsets } } },
+                Vout = new[]
                 {
-                    new Vin
+                    new Vout
                     {
-                         Key = new Aux
-                         {
-                              K_Image = ki,
-                              K_Offsets = offsets
-                         }
-                    }
-                },
-                Vout = new Vout[]
-                {
-                   new Vout
-                   {
-                        A = session.SessionType == SessionType.Coin ? session.WalletTransaction.Fee : session.WalletTransaction.Reward,
-                        C = pcm_out[0],
+                        A = session.SessionType == SessionType.Coin
+                            ? session.WalletTransaction.Fee
+                            : session.WalletTransaction.Reward,
+                        C = pcmOut[0],
                         E = stealthFee.Metadata.EphemKey.ToBytes(),
                         L = feeLockTime.Value,
-                        N = ScanPublicKey(session.WalletTransaction.SenderAddress).Encrypt(Util.Message(session.SessionType == SessionType.Coin ? session.WalletTransaction.Fee : session.WalletTransaction.Reward, blinds[1], string.Empty)),
+                        N = ScanPublicKey(session.WalletTransaction.SenderAddress).Encrypt(
+                            Util.Message(
+                                session.SessionType == SessionType.Coin
+                                    ? session.WalletTransaction.Fee
+                                    : session.WalletTransaction.Reward, blinds[1], string.Empty)),
                         P = outPkFee.ToBytes(),
                         S = new Script(Op.GetPushOp(feeLockTime.Value), OpcodeType.OP_CHECKLOCKTIMEVERIFY).ToString(),
                         T = session.SessionType == SessionType.Coin ? CoinType.fee : CoinType.Coinbase
-                   },
-                   new Vout
-                   {
+                    },
+                    new Vout
+                    {
                         A = session.SessionType == SessionType.Coinstake ? session.WalletTransaction.Payment : 0,
-                        C = pcm_out[1],
+                        C = pcmOut[1],
                         E = stealthPayment.Metadata.EphemKey.ToBytes(),
-                        N = ScanPublicKey(session.WalletTransaction.RecipientAddress).Encrypt(Util.Message(session.WalletTransaction.Payment, blinds[2], session.WalletTransaction.Memo)),
+                        N = ScanPublicKey(session.WalletTransaction.RecipientAddress).Encrypt(
+                            Util.Message(session.WalletTransaction.Payment, blinds[2], session.WalletTransaction.Memo)),
                         P = outPkPayment.ToBytes(),
                         S = null,
                         T = session.SessionType == SessionType.Coin ? CoinType.Coin : CoinType.Coinstake
@@ -698,18 +687,20 @@ namespace BAMWallet.HD
                     new Vout
                     {
                         A = 0,
-                        C = pcm_out[2],
+                        C = pcmOut[2],
                         E = stealthChange.Metadata.EphemKey.ToBytes(),
                         L = changeLockTime.Value,
-                        N = ScanPublicKey(session.WalletTransaction.SenderAddress).Encrypt(Util.Message(session.WalletTransaction.Change, blinds[3], string.Empty)),
+                        N = ScanPublicKey(session.WalletTransaction.SenderAddress)
+                            .Encrypt(Util.Message(session.WalletTransaction.Change, blinds[3], string.Empty)),
                         P = outPkChange.ToBytes(),
-                        S = new Script(Op.GetPushOp(changeLockTime.Value), OpcodeType.OP_CHECKLOCKTIMEVERIFY).ToString(),
+                        S = new Script(Op.GetPushOp(changeLockTime.Value), OpcodeType.OP_CHECKLOCKTIMEVERIFY)
+                            .ToString(),
                         T = CoinType.Coin
                     }
-                }
+                },
+                Id = session.SessionId
             };
 
-            tx.Id = session.SessionId;
             tx.TxnId = tx.ToHash();
 
             session.WalletTransaction.TxId = tx.TxnId;
@@ -730,18 +721,19 @@ namespace BAMWallet.HD
         /// <param name="nCols"></param>s
         /// <param name="index"></param>
         /// <param name="m"></param>
-        /// <param name="pcm_in"></param>
-        /// <param name="pk_in"></param>
+        /// <param name="pcmIn"></param>
+        /// <param name="pkIn"></param>
         /// <returns></returns>
-        private unsafe byte[] M(Guid sessionId, Span<byte[]> blinds, Span<byte[]> sk, int nRows, int nCols, int index, byte[] m, Span<byte[]> pcm_in, Span<byte[]> pk_in)
+        private unsafe byte[] M(Guid sessionId, Span<byte[]> blinds, Span<byte[]> sk, int nRows, int nCols, int index,
+            byte[] m, Span<byte[]> pcmIn, Span<byte[]> pkIn)
         {
             using var pedersen = new Pedersen();
 
             var session = Session(sessionId);
-            var transactions = SafeguardService.GetTransactions();
+            var transactions = SafeguardService.GetTransactions().ToArray();
 
-            for (int k = 0; k < nRows - 1; ++k)
-                for (int i = 0; i < nCols; ++i)
+            for (var k = 0; k < nRows - 1; ++k)
+                for (var i = 0; i < nCols; ++i)
                 {
                     if (i == index)
                     {
@@ -752,10 +744,10 @@ namespace BAMWallet.HD
                         sk[0] = oneTimeSpendKey.ToHex().HexToByte();
                         blinds[0] = message.Blind;
 
-                        pcm_in[i + k * nCols] = pedersen.Commit(message.Amount, message.Blind);
-                        pk_in[i + k * nCols] = oneTimeSpendKey.PubKey.ToBytes();
+                        pcmIn[i + k * nCols] = pedersen.Commit(message.Amount, message.Blind);
+                        pkIn[i + k * nCols] = oneTimeSpendKey.PubKey.ToBytes();
 
-                        fixed (byte* mm = m, pk = pk_in[i + k * nCols])
+                        fixed (byte* mm = m, pk = pkIn[i + k * nCols])
                         {
                             Libsecp256k1Zkp.Net.Util.MemCpy(&mm[(i + k * nCols) * 33], pk, 33);
                         }
@@ -763,12 +755,12 @@ namespace BAMWallet.HD
                         continue;
                     }
 
-                    RollRingMember(transactions, pcm_in, pk_in, out Vout vout);
+                    RollRingMember(transactions, pcmIn, pkIn, out var vout);
 
-                    pcm_in[i + k * nCols] = vout.C;
-                    pk_in[i + k * nCols] = vout.P;
+                    pcmIn[i + k * nCols] = vout.C;
+                    pkIn[i + k * nCols] = vout.P;
 
-                    fixed (byte* mm = m, pk = pk_in[i + k * nCols])
+                    fixed (byte* mm = m, pk = pkIn[i + k * nCols])
                     {
                         Libsecp256k1Zkp.Net.Util.MemCpy(&mm[(i + k * nCols) * 33], pk, 33);
                     }
@@ -781,18 +773,20 @@ namespace BAMWallet.HD
         /// 
         /// </summary>
         /// <param name="transactions"></param>
-        /// <param name="pcm_in"></param>
-        /// <param name="pk_in"></param>
+        /// <param name="pcmIn"></param>
+        /// <param name="pkIn"></param>
         /// <param name="vout"></param>
-        private static void RollRingMember(IEnumerable<Transaction> transactions, Span<byte[]> pcm_in, Span<byte[]> pk_in, out Vout vout)
+        private static void RollRingMember(IEnumerable<Transaction> transactions, Span<byte[]> pcmIn,
+            Span<byte[]> pkIn, out Vout vout)
         {
             var voutIndex = Libsecp256k1Zkp.Net.Util.Rand(0, 2);
-            var vouts = transactions.ElementAt(Libsecp256k1Zkp.Net.Util.Rand(0, transactions.Count())).Vout;
+            var enumerable = transactions as Transaction[] ?? transactions.ToArray();
+            var vouts = enumerable.ElementAt(Libsecp256k1Zkp.Net.Util.Rand(0, enumerable.Count())).Vout;
 
-            if (pcm_in.IsEmpty != true && pk_in.IsEmpty != true)
+            if (pcmIn.IsEmpty != true && pkIn.IsEmpty != true)
             {
-                var pcm = pcm_in.GetEnumerator();
-                var pk = pk_in.GetEnumerator();
+                var pcm = pcmIn.GetEnumerator();
+                var pk = pkIn.GetEnumerator();
 
                 while (pcm.MoveNext())
                 {
@@ -800,21 +794,18 @@ namespace BAMWallet.HD
                     {
                         if (pcm.Current.SequenceEqual(vouts[voutIndex].C))
                         {
-                            RollRingMember(transactions, pcm_in, pk_in, out _);
+                            RollRingMember(enumerable, pcmIn, pkIn, out _);
                             break;
                         }
                     }
 
                     pk.MoveNext();
 
-                    if (pk.Current != null)
-                    {
-                        if (pk.Current.SequenceEqual(vouts[voutIndex].P))
-                        {
-                            RollRingMember(transactions, pcm_in, pk_in, out _);
-                            break;
-                        }
-                    }
+                    if (pk.Current == null) continue;
+                    if (!pk.Current.SequenceEqual(vouts[voutIndex].P)) continue;
+
+                    RollRingMember(enumerable, pcmIn, pkIn, out _);
+                    break;
                 }
             }
 
@@ -879,7 +870,7 @@ namespace BAMWallet.HD
         /// <param name="nRows"></param>
         /// <param name="nCols"></param>
         /// <returns></returns>
-        private unsafe static byte[] Offsets(Span<byte[]> pcin, Span<byte[]> pkin, int nRows, int nCols)
+        private static unsafe byte[] Offsets(Span<byte[]> pcin, Span<byte[]> pkin, int nRows, int nCols)
         {
             int i = 0, k = 0;
             byte[] offsets = new byte[nRows * nCols * 33];
@@ -928,7 +919,8 @@ namespace BAMWallet.HD
         /// <param name="passphrase"></param>
         /// <param name="concatenateMnemonic"></param>
         /// <param name="hdRoot"></param>
-        private static void CreateHDRootKey(SecureString mnemonic, SecureString passphrase, out string concatenateMnemonic, out ExtKey hdRoot)
+        private static void CreateHDRootKey(SecureString mnemonic, SecureString passphrase,
+            out string concatenateMnemonic, out ExtKey hdRoot)
         {
             Guard.Argument(mnemonic, nameof(mnemonic)).NotNull();
             Guard.Argument(passphrase, nameof(passphrase)).NotNull();
@@ -1024,7 +1016,9 @@ namespace BAMWallet.HD
                 balanceSheets.Add(new BalanceSheet
                 {
                     DateTime = x.DateTime,
-                    CoinType = session.SessionType == SessionType.Coin ? CoinType.Coin.ToString() : CoinType.Coinstake.ToString(),
+                    CoinType = session.SessionType == SessionType.Coin
+                        ? CoinType.Coin.ToString()
+                        : CoinType.Coinstake.ToString(),
                     Memo = x.Memo,
                     MoneyIn = x.Payment.DivWithNaT().ToString("F9"),
                     Balance = x.Payment.DivWithNaT().ToString("F9")
@@ -1048,7 +1042,9 @@ namespace BAMWallet.HD
                 balanceSheets.Add(new BalanceSheet
                 {
                     DateTime = x.DateTime,
-                    CoinType = session.SessionType == SessionType.Coin ? CoinType.Coin.ToString() : CoinType.Coinstake.ToString(),
+                    CoinType = session.SessionType == SessionType.Coin
+                        ? CoinType.Coin.ToString()
+                        : CoinType.Coinstake.ToString(),
                     Memo = x.Memo,
                     MoneyOut = $"-{sent.DivWithNaT():F9}",
                     Fee = $"-{x.Fee.DivWithNaT():F9}",
@@ -1102,11 +1098,7 @@ namespace BAMWallet.HD
 
             var keySet = session.Database.Query<KeySet>().FirstOrDefault();
 
-            if (session.WalletTransaction == null)
-            {
-                session.WalletTransaction = new WalletTransaction();
-            }
-
+            session.WalletTransaction ??= new WalletTransaction();
             session.WalletTransaction.SenderAddress = keySet.StealthAddress;
 
             SessionAddOrUpdate(session);
@@ -1194,22 +1186,28 @@ namespace BAMWallet.HD
                 var walletTransactions = session.Database.Query<WalletTransaction>().ToList();
                 if (walletTransactions.Any())
                 {
-                    var walletTransaction = walletTransactions.FirstOrDefault(x => x.TxId.SequenceEqual(paymentId.HexToByte()) && x.WalletType == WalletType.Receive);
+                    var walletTransaction = walletTransactions.FirstOrDefault(x =>
+                        x.TxId.SequenceEqual(paymentId.HexToByte()) && x.WalletType == WalletType.Receive);
                     if (walletTransaction != null)
                     {
-                        var vout = TaskResult<WalletTransaction>.CreateFailure(new Exception($"Transaction with paymentId: {paymentId} already exists"));
+                        var vout = TaskResult<WalletTransaction>.CreateFailure(
+                            new Exception($"Transaction with paymentId: {paymentId} already exists"));
                         SetLastError(session, vout);
                         return vout;
                     }
                 }
 
                 var baseAddress = _client.GetBaseAddress();
-                var path = string.Format(_apiGatewaySection.GetSection(RestCall.Routing).GetValue<string>(RestCall.GetTransactionId.ToString()), paymentId);
+                var path = string.Format(
+                    _apiGatewaySection.GetSection(RestCall.Routing)
+                        .GetValue<string>(RestCall.GetTransactionId.ToString()), paymentId);
 
-                var vouts = await _client.GetRangeAsync<Vout>(baseAddress, path, new System.Threading.CancellationToken());
-                if (vouts.Any() != true)
+                var vouts = await _client.GetRangeAsync<Vout>(baseAddress, path,
+                    new System.Threading.CancellationToken());
+                if (vouts == null)
                 {
-                    var vout = TaskResult<WalletTransaction>.CreateFailure(new Exception($"Failed to find transaction with paymentId: {paymentId}"));
+                    var vout = TaskResult<WalletTransaction>.CreateFailure(
+                        new Exception($"Failed to find transaction with paymentId: {paymentId}"));
                     SetLastError(session, vout);
                     return vout;
                 }
@@ -1217,7 +1215,7 @@ namespace BAMWallet.HD
                 var (spend, scan) = Unlock(session.SessionId);
                 var vOutList = new List<Vout>();
 
-                foreach (var v in vouts)
+                foreach (var v in vouts.Data)
                 {
                     var uncover = spend.Uncover(scan, new PubKey(v.E));
                     if (uncover.PubKey.ToBytes().SequenceEqual(v.P))
@@ -1241,13 +1239,10 @@ namespace BAMWallet.HD
                 SessionAddOrUpdate(session);
 
                 var saved = Save(session.SessionId, session.WalletTransaction);
-                if (!saved.Success)
-                {
-                    SetLastError(session, saved);
-                    return TaskResult<WalletTransaction>.CreateFailure(saved);
-                }
+                if (saved.Success) return TaskResult<WalletTransaction>.CreateSuccess(session.WalletTransaction);
 
-                return TaskResult<WalletTransaction>.CreateSuccess(session.WalletTransaction);
+                SetLastError(session, saved);
+                return TaskResult<WalletTransaction>.CreateFailure(saved);
             }
             catch (Exception ex)
             {
@@ -1291,13 +1286,10 @@ namespace BAMWallet.HD
                 }
 
                 var saved = Save(session.SessionId, session.WalletTransaction);
-                if (!saved.Success)
-                {
-                    SetLastError(session, saved);
-                    return TaskResult<WalletTransaction>.CreateFailure(transaction);
-                }
+                if (saved.Success) return TaskResult<WalletTransaction>.CreateSuccess(session.WalletTransaction);
 
-                return TaskResult<WalletTransaction>.CreateSuccess(session.WalletTransaction);
+                SetLastError(session, saved);
+                return TaskResult<WalletTransaction>.CreateFailure(transaction);
             }
             catch (Exception ex)
             {
@@ -1321,18 +1313,18 @@ namespace BAMWallet.HD
             var transaction = Transaction(session.SessionId);
 
             var baseAddress = _client.GetBaseAddress();
-            var path = _apiGatewaySection.GetSection(RestCall.Routing).GetValue<string>(RestCall.PostTransaction.ToString());
+            var path = _apiGatewaySection.GetSection(RestCall.Routing)
+                .GetValue<string>(RestCall.PostTransaction.ToString());
 
-            var posted = await _client.PostAsync(transaction, baseAddress, path, new System.Threading.CancellationToken());
-            if (posted == null)
-            {
-                var fail = TaskResult<bool>.CreateFailure(new Exception($"Unable to send transaction with paymentId: {transaction.TxnId.ByteToHex()}"));
-                SetLastError(session, fail);
-                RollBackOne(session.SessionId);
-                return fail;
-            }
+            var posted =
+                await _client.PostAsync(transaction, baseAddress, path, new System.Threading.CancellationToken());
+            if (posted != null) return TaskResult<bool>.CreateSuccess(true);
 
-            return TaskResult<bool>.CreateSuccess(true);
+            var fail = TaskResult<bool>.CreateFailure(
+                new Exception($"Unable to send transaction with paymentId: {transaction.TxnId.ByteToHex()}"));
+            SetLastError(session, fail);
+            RollBackOne(session.SessionId);
+            return fail;
         }
 
         /// <summary>
@@ -1426,13 +1418,15 @@ namespace BAMWallet.HD
             {
                 var session = Session(sessionId);
 
-                var transaction = session.Database.Query<Transaction>().Where(s => s.Id == session.SessionId).FirstOrDefault();
+                var transaction = session.Database.Query<Transaction>().Where(s => s.Id == session.SessionId)
+                    .FirstOrDefault();
                 if (transaction != null)
                 {
                     session.Database.Delete<Transaction>(new LiteDB.BsonValue(transaction.Id));
                 }
 
-                var walletTransaction = session.Database.Query<WalletTransaction>().Where(s => s.Id == session.SessionId).FirstOrDefault();
+                var walletTransaction = session.Database.Query<WalletTransaction>()
+                    .Where(s => s.Id == session.SessionId).FirstOrDefault();
                 if (walletTransaction != null)
                 {
                     session.Database.Delete<WalletTransaction>(new LiteDB.BsonValue(walletTransaction.Id));
@@ -1445,6 +1439,6 @@ namespace BAMWallet.HD
             }
 
             return TaskResult<bool>.CreateSuccess(true);
-        }    
+        }
     }
 }

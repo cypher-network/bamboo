@@ -73,7 +73,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                     _console.ForegroundColor = ConsoleColor.Green;
                     _console.WriteLine($"{joinPassphrase}");
                     _console.ForegroundColor = ConsoleColor.White;
-                   
+
 
                     _console.WriteLine();
 

@@ -1,16 +1,14 @@
 ﻿// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0. 
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
-using ProtoBuf;
+using FlatSharp.Attributes;
 
 namespace BAMWallet.Model
 {
-    [ProtoContract]
-    public class Credentials
+    [FlatBufferTable]
+    public class Credentials : object
     {
-        [ProtoMember(1)]
-        public string Identifier { get; set; }
-        [ProtoMember(2)]
-        public string Passphrase { get; set; }
+        [FlatBufferItem(0)] public virtual string Identifier { get; set; }
+        [FlatBufferItem(1)] public virtual string Passphrase { get; set; }
     }
 }

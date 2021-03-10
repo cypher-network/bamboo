@@ -16,6 +16,7 @@ using BAMWallet.Rpc;
 using BAMWallet.Helper;
 using BAMWallet.Model;
 using BAMWallet.Extentions;
+using FlatSharp;
 
 namespace BAMWallet.Services
 {
@@ -42,7 +43,7 @@ namespace BAMWallet.Services
         public static Stream GetSafeguardData()
         {
             var safeGuardPath = SafeguardFilePath();
-            var filePath = Directory.EnumerateFiles(safeGuardPath, "*.protobufs").Last();
+            var filePath = Directory.EnumerateFiles(safeGuardPath, "*.flatbuffers").Last();
             var file = File.Open(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
 
             return file;
@@ -52,24 +53,14 @@ namespace BAMWallet.Services
         /// 
         /// </summary>
         /// <returns></returns>
-        public static IEnumerable<Transaction> GetTransactions()
+        public static Transaction[] GetTransactions()
         {
-            var transactions = Enumerable.Empty<Transaction>();
             var byteArray = Util.ReadFully(GetSafeguardData());
+            var blockHeaders = FlatBufferSerializer.Default.Parse<GenericList<BlockHeader>>(byteArray);
 
-            try
-            {
-                var blockHeaders = Util.DeserializeListProto<BlockHeader>(byteArray);
+            blockHeaders.Data.Shuffle();
 
-                blockHeaders.ToList().Shuffle();
-                transactions = blockHeaders.SelectMany(x => x.Transactions);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-
-            return transactions;
+            return blockHeaders.Data.SelectMany(x => x.Transactions).ToArray();
         }
 
         /// <summary>
@@ -77,7 +68,7 @@ namespace BAMWallet.Services
         /// </summary>
         /// <param name="stoppingToken"></param>
         /// <returns></returns>
-        protected async override Task ExecuteAsync(CancellationToken stoppingToken)
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             try
             {
@@ -90,14 +81,19 @@ namespace BAMWallet.Services
                 _safeguardDownloadingFlagService.IsDownloading = true;
 
                 var baseAddress = _client.GetBaseAddress();
-                var path = _apiGatewaySection.GetSection(RestCall.Routing).GetValue<string>(RestCall.RestSafeguardTransactions.ToString());
+                var path = _apiGatewaySection.GetSection(RestCall.Routing).GetValue<string>(RestCall.RestSafeguardTransactions);
 
                 var blockHeaders = await _client.GetRangeAsync<BlockHeader>(baseAddress, path, stoppingToken);
-                if (blockHeaders.Any())
+                if (blockHeaders != null)
                 {
                     var fileStream = SafeguardData(GetDays());
 
-                    await fileStream.WriteAsync(Util.SerializeProto(blockHeaders), stoppingToken);
+                    var maxBytesNeeded = FlatBufferSerializer.Default.GetMaxSize(blockHeaders);
+                    var buffer = new byte[maxBytesNeeded];
+
+                    FlatBufferSerializer.Default.Serialize(blockHeaders, buffer);
+
+                    await fileStream.WriteAsync(buffer, stoppingToken);
                     await fileStream.FlushAsync(stoppingToken);
                     fileStream.Close();
 
@@ -154,7 +150,7 @@ namespace BAMWallet.Services
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="dateTime"></param>
+        /// <param name="date"></param>
         /// <returns></returns>
         private static Stream SafeguardData(DateTime date)
         {
@@ -171,7 +167,7 @@ namespace BAMWallet.Services
                 }
             }
 
-            var file = File.Open($"{safeGuardPath}/{date:dd-MM-yyyy}.protobufs", FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
+            var file = File.Open($"{safeGuardPath}/{date:dd-MM-yyyy}.flatbuffers", FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
 
             return file;
         }

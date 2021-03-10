@@ -12,6 +12,7 @@ using BAMWallet.HD;
 using BAMWallet.Helper;
 using BAMWallet.Model;
 using Dawn;
+using FlatSharp;
 using Newtonsoft.Json;
 
 namespace BAMWallet.Controllers
@@ -41,7 +42,7 @@ namespace BAMWallet.Controllers
 
             if (request.Result.Any() != true)
                 return new NotFoundResult();
-         
+
             return new OkObjectResult(request.Result);
         }
 
@@ -133,10 +134,10 @@ namespace BAMWallet.Controllers
             return new OkObjectResult(request.Result);
         }
 
-        [HttpPost("transaction", Name = "CreateTransacrtion")]
-        public IActionResult CreateTransaction([FromBody] byte[] sendPayment)
+        [HttpPost("transaction", Name = "CreateTransaction")]
+        public IActionResult CreateTransaction([FromBody] byte[] data)
         {
-            var payment = Util.DeserializeProto<SendPayment>(sendPayment);
+            var payment = FlatBufferSerializer.Default.Parse<SendPayment>(data);
             var session = _walletService.SessionAddOrUpdate(new Session(payment.Credentials.Identifier.ToSecureString(), payment.Credentials.Passphrase.ToSecureString())
             {
                 SessionType = payment.SessionType,
@@ -153,9 +154,12 @@ namespace BAMWallet.Controllers
             _walletService.CreatePayment(session.SessionId);
 
             var transaction = _walletService.Transaction(session.SessionId);
-            var txByteArray = Util.SerializeProto(transaction);
+            var maxBytesNeeded = FlatBufferSerializer.Default.GetMaxSize(transaction);
+            var buffer = new byte[maxBytesNeeded];
 
-            return new ObjectResult(new { protobuf = txByteArray });
+            FlatBufferSerializer.Default.Serialize(transaction, buffer);
+
+            return new ObjectResult(new { flatbuffer = buffer });
         }
 
         [HttpPost("receive", Name = "Receive")]
@@ -216,7 +220,7 @@ namespace BAMWallet.Controllers
 
             var balance = _walletService.AvailableBalance(session.SessionId);
             var walletTx = _walletService.LastWalletTransaction(session.SessionId, WalletType.Send);
-            
+
             return new OkObjectResult(new
             {
                 balance = $"{balance.Result.DivWithNaT():F9}",

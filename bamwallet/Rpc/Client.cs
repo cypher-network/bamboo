@@ -17,6 +17,8 @@ using Newtonsoft.Json.Linq;
 using Dawn;
 
 using BAMWallet.Helper;
+using BAMWallet.Model;
+using FlatSharp;
 
 namespace BAMWallet.Rpc
 {
@@ -68,7 +70,7 @@ namespace BAMWallet.Rpc
                     result = Util.DeserializeProto<T>(byteArray);
                 else
                 {
-                    var content = await response.Content.ReadAsStringAsync();
+                    var content = await response.Content.ReadAsStringAsync(cancellationToken);
                     _logger.LogError($"Result: {content}\n StatusCode: {(int)response.StatusCode}");
                     throw new Exception(content);
                 }
@@ -97,12 +99,12 @@ namespace BAMWallet.Rpc
         /// <param name="baseAddress">Base address.</param>
         /// <param name="path">Path.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
-        public async Task<IEnumerable<T>> GetRangeAsync<T>(Uri baseAddress, string path, CancellationToken cancellationToken) where T : new()
+        public async Task<GenericList<T>> GetRangeAsync<T>(Uri baseAddress, string path, CancellationToken cancellationToken)
         {
             Guard.Argument(baseAddress, nameof(baseAddress)).NotNull();
             Guard.Argument(path, nameof(path)).NotNull().NotEmpty();
 
-            IEnumerable<T> results = Enumerable.Empty<T>();
+            GenericList<T> results = null;
 
             using var client = new HttpClient
             {
@@ -117,14 +119,14 @@ namespace BAMWallet.Rpc
                 using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
                 var read = response.Content.ReadAsStringAsync(cancellationToken).Result;
                 var jObject = JObject.Parse(read);
-                var jToken = jObject.GetValue("protobufs");
+                var jToken = jObject.GetValue("flatbuffers");
                 var byteArray = Convert.FromBase64String(jToken.Value<string>());
 
                 if (response.IsSuccessStatusCode)
-                    results = Util.DeserializeListProto<T>(byteArray);
+                    results = FlatBufferSerializer.Default.Parse<GenericList<T>>(byteArray);
                 else
                 {
-                    var content = await response.Content.ReadAsStringAsync();
+                    var content = await response.Content.ReadAsStringAsync(cancellationToken);
                     _logger.LogError($"Result: {content}\n StatusCode: {(int)response.StatusCode}");
                     throw new Exception(content);
                 }
@@ -146,7 +148,7 @@ namespace BAMWallet.Rpc
         /// <param name="path"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task<byte[]> PostAsync<T>(T payload, Uri baseAddress, string path, CancellationToken cancellationToken)
+        public async Task<byte[]> PostAsync<T>(T payload, Uri baseAddress, string path, CancellationToken cancellationToken) where T : class
         {
             Guard.Argument(baseAddress, nameof(baseAddress)).NotNull();
             Guard.Argument(path, nameof(path)).NotNull().NotEmpty();
@@ -162,9 +164,11 @@ namespace BAMWallet.Rpc
 
             try
             {
-                var proto = Util.SerializeProto(payload);
+                var maxBytesNeeded = FlatBufferSerializer.Default.GetMaxSize(payload);
+                var buffer = new byte[maxBytesNeeded];
+                FlatBufferSerializer.Default.Serialize(payload, buffer);
 
-                using var response = await client.PostAsJsonAsync(path, proto, cancellationToken);
+                using var response = await client.PostAsJsonAsync(path, buffer, cancellationToken);
 
                 var read = response.Content.ReadAsStringAsync(cancellationToken).Result;
                 var jObject = JObject.Parse(read);

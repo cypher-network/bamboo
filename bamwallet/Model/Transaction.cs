@@ -2,32 +2,22 @@
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
 using System;
-
+using FlatSharp.Attributes;
 using LiteDB;
-
-using ProtoBuf;
 
 namespace BAMWallet.Model
 {
-    [ProtoContract]
-    public class Transaction
+    [FlatBufferTable]
+    public class Transaction : object
     {
-        [BsonId]
-        public Guid Id { get; set; }
-        [ProtoMember(1)]
-        public byte[] TxnId { get; set; }
-        [ProtoMember(2)]
-        public Bp[] Bp { get; set; }
-        [ProtoMember(3)]
-        public int Ver { get; set; }
-        [ProtoMember(4)]
-        public int Mix { get; set; }
-        [ProtoMember(5)]
-        public Vin[] Vin { get; set; }
-        [ProtoMember(6)]
-        public Vout[] Vout { get; set; }
-        [ProtoMember(7)]
-        public RCT[] Rct { get; set; }
+        [BsonId] public Guid Id { get; set; }
+        [FlatBufferItem(0)] public virtual byte[] TxnId { get; set; }
+        [FlatBufferItem(1)] public virtual Bp[] Bp { get; set; }
+        [FlatBufferItem(2)] public virtual int Ver { get; set; }
+        [FlatBufferItem(3)] public virtual int Mix { get; set; }
+        [FlatBufferItem(4)] public virtual Vin[] Vin { get; set; }
+        [FlatBufferItem(5)] public virtual Vout[] Vout { get; set; }
+        [FlatBufferItem(6)] public virtual RCT[] Rct { get; set; }
 
         /// <summary>
         /// 
@@ -59,8 +49,8 @@ namespace BAMWallet.Model
 
                 foreach (var vin in Vin)
                 {
-                    ts.Append(vin.Key.K_Image);
-                    ts.Append(vin.Key.K_Offsets);
+                    ts.Append(vin.Key.KImage);
+                    ts.Append(vin.Key.KOffsets);
                 }
 
                 foreach (var vout in Vout)

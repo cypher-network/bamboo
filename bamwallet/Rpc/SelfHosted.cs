@@ -14,6 +14,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore;
 
 using BAMWallet.HD;
+using BAMWallet.Rpc.Formatters;
 using BAMWallet.Services;
 
 namespace BAMWallet.Rpc
@@ -33,6 +34,11 @@ namespace BAMWallet.Rpc
             {
                 services.AddMvcCore()
                     .AddApiExplorer();
+
+                services.AddMvcCore(options =>
+                {
+                    options.InputFormatters.Insert(0, new BinaryInputFormatter());
+                });
 
                 services.AddSwaggerGen(options =>
                 {
