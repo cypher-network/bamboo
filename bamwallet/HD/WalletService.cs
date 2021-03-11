@@ -1325,11 +1325,7 @@ namespace BAMWallet.HD
                 return fail;
             }
 
-            var fail = TaskResult<bool>.CreateFailure(
-                new Exception($"Unable to send transaction with paymentId: {transaction.TxnId.ByteToHex()}"));
-            SetLastError(session, fail);
-            RollBackOne(session.SessionId);
-            return fail;
+            return TaskResult<bool>.CreateSuccess(true);
         }
 
         /// <summary>
