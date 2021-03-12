@@ -159,7 +159,7 @@ namespace BAMWallet.Rpc
         /// <param name="path"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task<bool> PostAsync<T>(T payload, Uri baseAddress, string path, CancellationToken cancellationToken) where T: class
+        public async Task<bool> PostAsync<T>(T payload, Uri baseAddress, string path, CancellationToken cancellationToken) where T : class
         {
             Guard.Argument(baseAddress, nameof(baseAddress)).NotNull();
             Guard.Argument(path, nameof(path)).NotNull().NotEmpty();
@@ -183,7 +183,7 @@ namespace BAMWallet.Rpc
                 FlatBufferSerializer.Default.Serialize(payload, buffer);
 
                 using var response = await client.PostAsJsonAsync(path, buffer, cancellationToken);
-                
+
                 var _ = response.Content.ReadAsStringAsync(cancellationToken).Result;
 
                 if (response.IsSuccessStatusCode)

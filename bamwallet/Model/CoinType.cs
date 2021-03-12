@@ -11,7 +11,7 @@ namespace BAMWallet.Model
         Coin,
         Coinbase,
         Coinstake,
-        fee,
+        Fee,
         Genesis
     }
 }
