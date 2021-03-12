@@ -671,7 +671,7 @@ namespace BAMWallet.HD
                                     : session.WalletTransaction.Reward, blinds[1], string.Empty)),
                         P = outPkFee.ToBytes(),
                         S = new Script(Op.GetPushOp(feeLockTime.Value), OpcodeType.OP_CHECKLOCKTIMEVERIFY).ToString(),
-                        T = session.SessionType == SessionType.Coin ? CoinType.Fee : CoinType.Coinbase
+                        T = session.SessionType == SessionType.Coin ? CoinType.fee : CoinType.Coinbase
                     },
                     new Vout
                     {
@@ -1033,7 +1033,7 @@ namespace BAMWallet.HD
                 x.Payment = Util.MessageAmount(x.Vout[1], scan);
                 x.Change = Util.MessageAmount(x.Vout[2], scan);
 
-                ulong fee = x.Fee = x.Vout[0].T == CoinType.Fee ? x.Fee : 0;
+                ulong fee = x.Fee = x.Vout[0].T == CoinType.fee ? x.Fee : 0;
 
                 sent = received - x.Change - fee;
 
