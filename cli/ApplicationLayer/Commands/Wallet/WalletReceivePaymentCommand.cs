@@ -35,7 +35,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
         public WalletReceivePaymentCommand(IServiceProvider serviceProvider)
         {
             _walletService = serviceProvider.GetService<IWalletService>();
-            _logger = serviceProvider.GetService<ILogger>();
+            _logger = serviceProvider.GetService<ILogger<WalletReceivePaymentCommand>>();
         }
 
         public override async Task Execute()
