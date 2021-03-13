@@ -44,7 +44,7 @@ namespace BAMWallet.Rpc
         /// <param name="path">Path.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <typeparam name="T">The 1st type parameter.</typeparam>
-        public async Task<T> GetAsync<T>(Uri baseAddress, string path, CancellationToken cancellationToken)
+        public async Task<T> GetAsync<T>(Uri baseAddress, string path, CancellationToken cancellationToken) where T : class
         {
             Guard.Argument(baseAddress, nameof(baseAddress)).NotNull();
             Guard.Argument(path, nameof(path)).NotNull().NotEmpty();
@@ -69,11 +69,11 @@ namespace BAMWallet.Rpc
                 using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
                 var read = response.Content.ReadAsStringAsync(cancellationToken).Result;
                 var jObject = JObject.Parse(read);
-                var jToken = jObject.GetValue("protobuf");
+                var jToken = jObject.GetValue("flatbuffers");
                 var byteArray = Convert.FromBase64String(jToken.Value<string>());
 
                 if (response.IsSuccessStatusCode)
-                    result = Util.DeserializeProto<T>(byteArray);
+                    result = Util.DeserializeFlatBuffer<T>(byteArray);
                 else
                 {
                     var content = await response.Content.ReadAsStringAsync(cancellationToken);

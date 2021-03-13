@@ -59,19 +59,21 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                     var table = ConsoleTable.From(request.Result).ToString();
                     _console.WriteLine($"\n{table}");
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    NoTxn();
+                    NoTxn(ex);
                 }
             }
 
             return Task.CompletedTask;
         }
 
-        private void NoTxn()
+        private void NoTxn(Exception ex = null)
         {
             _console.ForegroundColor = ConsoleColor.Red;
             _console.WriteLine($"\nWallet has no transactions.\n");
+            if (ex != null)
+                _console.WriteLine(ex.Message);
             _console.ForegroundColor = ConsoleColor.White;
         }
     }

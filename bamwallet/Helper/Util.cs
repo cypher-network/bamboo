@@ -15,7 +15,7 @@ using Newtonsoft.Json;
 
 using LiteDB;
 
-using ProtoBuf;
+using FlatSharp;
 
 using BAMWallet.Model;
 using BAMWallet.Extentions;
@@ -238,15 +238,14 @@ namespace BAMWallet.Helper
             return sum;
         }
 
-        public static byte[] SerializeProto<T>(T data)
+        public static byte[] SerializeFlatBuffer<T>(T data) where T : class
         {
             try
             {
-                using (var ms = new MemoryStream())
-                {
-                    Serializer.Serialize(ms, data);
-                    return ms.ToArray();
-                }
+                int maxSize = FlatBufferSerializer.Default.GetMaxSize(data);
+                byte[] buffer = new byte[maxSize];
+                FlatBufferSerializer.Default.Serialize(data, buffer);
+                return buffer;
             }
             catch (Exception)
             {
@@ -254,14 +253,11 @@ namespace BAMWallet.Helper
             }
         }
 
-        public static T DeserializeProto<T>(byte[] data)
+        public static T DeserializeFlatBuffer<T>(byte[] data) where T : class
         {
             try
             {
-                using (var ms = new MemoryStream(data))
-                {
-                    return Serializer.Deserialize<T>(ms);
-                }
+                return FlatBufferSerializer.Default.Parse<T>(data);
             }
             catch (Exception)
             {
@@ -269,28 +265,29 @@ namespace BAMWallet.Helper
             }
         }
 
-        public static IEnumerable<T> DeserializeListProto<T>(byte[] data) where T : new()
-        {
-            List<T> list = new List<T>();
+        // not in use?
+        //public static IEnumerable<T> DeserializeListProto<T>(byte[] data) where T : new()
+        //{
+        //    List<T> list = new List<T>();
 
-            try
-            {
-                using (var ms = new MemoryStream(data))
-                {
-                    T item;
-                    while ((item = Serializer.DeserializeWithLengthPrefix<T>(ms, PrefixStyle.Base128, fieldNumber: 1)) != null)
-                    {
-                        list.Add(item);
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+        //    try
+        //    {
+        //        using (var ms = new MemoryStream(data))
+        //        {
+        //            T item;
+        //            while ((item = Serializer.DeserializeWithLengthPrefix<T>(ms, PrefixStyle.Base128, fieldNumber: 1)) != null)
+        //            {
+        //                list.Add(item);
+        //            }
+        //        }
+        //    }
+        //    catch (Exception)
+        //    {
+        //        throw;
+        //    }
 
-            return list.AsEnumerable();
-        }
+        //    return list.AsEnumerable();
+        //}
 
         public static unsafe byte[] GetBytes(string str)
         {
@@ -363,7 +360,7 @@ namespace BAMWallet.Helper
 
             try
             {
-                message = DeserializeProto<WalletTransactionMessage>(scan.Decrypt(vout.N));
+                message = DeserializeFlatBuffer<WalletTransactionMessage>(scan.Decrypt(vout.N));
             }
             catch
             { }
@@ -377,7 +374,7 @@ namespace BAMWallet.Helper
 
             try
             {
-                amount = DeserializeProto<WalletTransactionMessage>(scan.Decrypt(vout.N)).Amount;
+                amount = DeserializeFlatBuffer<WalletTransactionMessage>(scan.Decrypt(vout.N)).Amount;
             }
             catch
             { }
@@ -391,7 +388,7 @@ namespace BAMWallet.Helper
 
             try
             {
-                message = DeserializeProto<WalletTransactionMessage>(scan.Decrypt(vout.N)).Memo;
+                message = DeserializeFlatBuffer<WalletTransactionMessage>(scan.Decrypt(vout.N)).Memo;
             }
             catch
             { }
@@ -401,7 +398,7 @@ namespace BAMWallet.Helper
 
         public static byte[] Message(ulong amount, byte[] blind, string memo)
         {
-            return SerializeProto(new WalletTransactionMessage { Amount = amount, Blind = blind, Memo = memo });
+            return SerializeFlatBuffer(new WalletTransactionMessage { Amount = amount, Blind = blind, Memo = memo });
         }
     }
 }

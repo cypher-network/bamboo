@@ -1,15 +1,15 @@
-﻿using ProtoBuf;
+﻿using FlatSharp.Attributes;
 
 namespace BAMWallet.Model
 {
-    [ProtoContract]
-    public class PoSCommitedSum
+    [FlatBufferTable]
+    public class PoSCommitedSum : object
     {
-        [ProtoMember(1)]
-        public string Balance { get; set; }
-        [ProtoMember(2)]
-        public string Difficulty { get; set; }
-        [ProtoMember(3)]
-        public string Difference { get; set; }
+        [FlatBufferItem(1)]
+        public virtual string Balance { get; set; }
+        [FlatBufferItem(2)]
+        public virtual string Difficulty { get; set; }
+        [FlatBufferItem(3)]
+        public virtual string Difference { get; set; }
     }
 }
