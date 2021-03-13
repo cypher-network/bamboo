@@ -26,7 +26,6 @@ using BAMWallet.Model;
 using BAMWallet.Rpc;
 using BAMWallet.Extentions;
 using BAMWallet.Services;
-using FlatSharp;
 using Libsecp256k1Zkp.Net;
 
 namespace BAMWallet.HD
@@ -1220,7 +1219,18 @@ namespace BAMWallet.HD
                     var uncover = spend.Uncover(scan, new PubKey(v.E));
                     if (uncover.PubKey.ToBytes().SequenceEqual(v.P))
                     {
-                        vOutList.Add(v);
+                        // there has to be a better way...
+                        vOutList.Add(new Vout
+                        {
+                            A = v.A,
+                            C = v.C,
+                            E = v.E,
+                            L = v.L,
+                            N = v.N,
+                            P = v.P,
+                            S = v.S,
+                            T = v.T
+                        });
                     }
                 }
 
