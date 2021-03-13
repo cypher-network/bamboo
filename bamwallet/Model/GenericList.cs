@@ -7,7 +7,7 @@ using FlatSharp.Attributes;
 namespace BAMWallet.Model
 {
     [FlatBufferTable]
-    public class GenericList<T>
+    public class GenericList<T> : object
     {
         [FlatBufferItem(0)]
         public virtual IList<T> Data { get; set; } = new List<T>();

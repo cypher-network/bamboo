@@ -9,10 +9,10 @@ namespace BAMWallet.Model
     public class WalletTransactionMessage : object
     {
         [FlatBufferItem(1)]
-        public ulong Amount { get; set; }
+        public virtual ulong Amount { get; set; }
         [FlatBufferItem(2)]
-        public byte[] Blind { get; set; }
+        public virtual byte[] Blind { get; set; }
         [FlatBufferItem(3)]
-        public string Memo { get; set; }
+        public virtual string Memo { get; set; }
     }
 }
