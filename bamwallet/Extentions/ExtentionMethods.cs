@@ -18,6 +18,9 @@ namespace BAMWallet.Extentions
         public static StringContent AsJson(this object o)
           => new(JsonConvert.SerializeObject(o), Encoding.UTF8, MediaTypeNames.Application.Json);
 
+        public static string AsJsonString(this object o) => JsonConvert.SerializeObject(o);
+
+        public static T Cast<T>(this object o) => JsonConvert.DeserializeObject<T>(o.AsJsonString());
 
         public static IEnumerable<IEnumerable<T>> Split<T>(this T[] array, int size)
         {
@@ -40,7 +43,6 @@ namespace BAMWallet.Extentions
                 action();
             }
         }
-
 
         public static byte[] ToBytes<T>(this T arg) => Encoding.UTF8.GetBytes(arg.ToString());
     }

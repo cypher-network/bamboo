@@ -151,12 +151,6 @@ namespace BAMWallet.Helper
             }
         }
 
-        public static T Cast<T>(this object obj)
-        {
-            var json = JsonConvert.SerializeObject(obj);
-            return JsonConvert.DeserializeObject<T>(json);
-        }
-
         public static async Task<string> StreamToStringAsync(Stream stream)
         {
             string content = null;
