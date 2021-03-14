@@ -151,6 +151,12 @@ namespace BAMWallet.Helper
             }
         }
 
+        public static T Cast<T>(this object obj)
+        {
+            var json = JsonConvert.SerializeObject(obj);
+            return JsonConvert.DeserializeObject<T>(json);
+        }
+
         public static async Task<string> StreamToStringAsync(Stream stream)
         {
             string content = null;
@@ -363,7 +369,9 @@ namespace BAMWallet.Helper
                 message = DeserializeFlatBuffer<WalletTransactionMessage>(scan.Decrypt(vout.N));
             }
             catch
-            { }
+            {
+                throw;
+            }
 
             return message;
         }
@@ -377,7 +385,9 @@ namespace BAMWallet.Helper
                 amount = DeserializeFlatBuffer<WalletTransactionMessage>(scan.Decrypt(vout.N)).Amount;
             }
             catch
-            { }
+            {
+                throw;
+            }
 
             return amount;
         }
@@ -391,7 +401,9 @@ namespace BAMWallet.Helper
                 message = DeserializeFlatBuffer<WalletTransactionMessage>(scan.Decrypt(vout.N)).Memo;
             }
             catch
-            { }
+            {
+                throw;
+            }
 
             return message;
         }

@@ -1213,24 +1213,17 @@ namespace BAMWallet.HD
 
                 var (spend, scan) = Unlock(session.SessionId);
                 var vOutList = new List<Vout>();
+                var msg = new WalletTransactionMessage();
 
                 foreach (var v in vouts.Data)
                 {
                     var uncover = spend.Uncover(scan, new PubKey(v.E));
                     if (uncover.PubKey.ToBytes().SequenceEqual(v.P))
                     {
-                        // there has to be a better way...
-                        vOutList.Add(new Vout
-                        {
-                            A = v.A,
-                            C = v.C,
-                            E = v.E,
-                            L = v.L,
-                            N = v.N,
-                            P = v.P,
-                            S = v.S,
-                            T = v.T
-                        });
+                        msg = Util.Message(v, scan);
+
+                        var vAdd = v.Cast<Vout>();
+                        vOutList.Add(vAdd);
                     }
                 }
 
