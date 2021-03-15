@@ -124,9 +124,9 @@ namespace BAMWallet.Helper
             {
                 message = DeserializeFlatBuffer<WalletTransactionMessage>(scan.Decrypt(vout.N));
             }
-            catch
+            catch (Exception)
             {
-                throw;
+                // Ignore
             }
 
             return message;
@@ -140,9 +140,9 @@ namespace BAMWallet.Helper
             {
                 amount = DeserializeFlatBuffer<WalletTransactionMessage>(scan.Decrypt(vout.N)).Amount;
             }
-            catch
+            catch (Exception)
             {
-                throw;
+                // Ignore
             }
 
             return amount;
@@ -156,9 +156,9 @@ namespace BAMWallet.Helper
             {
                 message = DeserializeFlatBuffer<WalletTransactionMessage>(scan.Decrypt(vout.N)).Memo;
             }
-            catch
+            catch (Exception)
             {
-                throw;
+                // Ignore
             }
 
             return message;

@@ -978,9 +978,9 @@ namespace BAMWallet.HD
                 return TaskResult<IEnumerable<BalanceSheet>>.CreateSuccess(balanceSheets);
             }
 
-            ulong received = 0, sent = 0;
+            ulong received = 0, sent;
 
-            var (spend, scan) = Unlock(session.SessionId);
+            var (_, scan) = Unlock(session.SessionId);
 
             walletTransactions.Where(tx => tx.WalletType == WalletType.Receive).ToList().ForEach(x =>
             {
@@ -988,10 +988,8 @@ namespace BAMWallet.HD
                 {
                     x.Payment += Util.MessageAmount(v, scan);
 
-                    if (string.IsNullOrEmpty(x.Memo))
-                    {
-                        x.Memo = Util.MessageMemo(v, scan);
-                    }
+                    if (!string.IsNullOrEmpty(x.Memo)) continue;
+                    x.Memo = Util.MessageMemo(v, scan);
                 }
 
                 balanceSheets.Add(new BalanceSheet
@@ -1014,10 +1012,9 @@ namespace BAMWallet.HD
                 x.Payment = Util.MessageAmount(x.Vout[1], scan);
                 x.Change = Util.MessageAmount(x.Vout[2], scan);
 
-                ulong fee = x.Fee = x.Vout[0].T == CoinType.fee ? x.Fee : 0;
+                var fee = x.Fee = x.Vout[0].T == CoinType.fee ? x.Fee : 0;
 
                 sent = received - x.Change - fee;
-
                 received = x.Change;
 
                 balanceSheets.Add(new BalanceSheet
