@@ -17,6 +17,7 @@ using McMaster.Extensions.CommandLineUtils;
 using ConsoleTables;
 
 using BAMWallet.HD;
+using Kurukuru;
 
 namespace CLi.ApplicationLayer.Commands.Wallet
 {
@@ -32,14 +33,17 @@ namespace CLi.ApplicationLayer.Commands.Wallet
             _walletService = serviceProvider.GetService<IWalletService>();
         }
 
-        public override Task Execute()
+        public override async Task Execute()
         {
-            using (var identifier = Prompt.GetPasswordAsSecureString("Identifier:", ConsoleColor.Yellow))
-            using (var passphrase = Prompt.GetPasswordAsSecureString("Passphrase:", ConsoleColor.Yellow))
+            using var identifier = Prompt.GetPasswordAsSecureString("Identifier:", ConsoleColor.Yellow);
+            using var passphrase = Prompt.GetPasswordAsSecureString("Passphrase:", ConsoleColor.Yellow);
+            
+            try
             {
-                try
+                var session = _walletService.SessionAddOrUpdate(new Session(identifier, passphrase));
+
+                await Spinner.StartAsync("Looking up history ...",  spinner =>
                 {
-                    var session = _walletService.SessionAddOrUpdate(new Session(identifier, passphrase));
                     var request = _walletService.History(session.SessionId);
 
                     if (!request.Success)
@@ -47,25 +51,25 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                         _console.ForegroundColor = ConsoleColor.Red;
                         _console.WriteLine("Wallet history request failed.");
                         _console.ForegroundColor = ConsoleColor.White;
-                        return Task.CompletedTask;
+                        return null;
                     }
 
                     if (!request.Result.Any())
                     {
                         NoTxn();
-                        return Task.CompletedTask;
+                        return null;
                     }
 
                     var table = ConsoleTable.From(request.Result).ToString();
                     _console.WriteLine($"\n{table}");
-                }
-                catch (Exception ex)
-                {
-                    NoTxn(ex);
-                }
-            }
 
-            return Task.CompletedTask;
+                    return Task.CompletedTask;
+                });
+            }
+            catch (Exception ex)
+            {
+                NoTxn(ex);
+            }
         }
 
         private void NoTxn(Exception ex = null)
