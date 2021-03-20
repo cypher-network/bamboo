@@ -329,7 +329,8 @@ namespace BAMWallet.HD
             Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
 
             var session = Session(sessionId);
-            var transaction = session.Database.Query<Transaction>().Where(x => x.Id == session.SessionId).FirstOrDefault();
+            var transaction = session.Database.Query<Transaction>().Where(x => x.Id == session.SessionId)
+                .FirstOrDefault();
 
             return transaction;
         }
@@ -350,7 +351,8 @@ namespace BAMWallet.HD
         /// <returns></returns>
         public TaskResult<IEnumerable<string>> WalletList()
         {
-            var wallets = Path.Combine(Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory) ?? string.Empty, "wallets");
+            var wallets = Path.Combine(Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory) ?? string.Empty,
+                "wallets");
             string[] files;
 
             try
@@ -659,7 +661,7 @@ namespace BAMWallet.HD
                                     : session.WalletTransaction.Reward, blinds[1], string.Empty)),
                         P = outPkFee.ToBytes(),
                         S = new Script(Op.GetPushOp(feeLockTime.Value), OpcodeType.OP_CHECKLOCKTIMEVERIFY).ToString(),
-                        T = session.SessionType == SessionType.Coin ? CoinType.fee : CoinType.Coinbase
+                        T = session.SessionType == SessionType.Coin ? CoinType.Fee : CoinType.Coinbase
                     },
                     new Vout
                     {
@@ -1012,7 +1014,7 @@ namespace BAMWallet.HD
                 x.Payment = Util.MessageAmount(x.Vout[1], scan);
                 x.Change = Util.MessageAmount(x.Vout[2], scan);
 
-                var fee = x.Fee = x.Vout[0].T == CoinType.fee ? x.Fee : 0;
+                var fee = x.Fee = x.Vout[0].T == CoinType.Fee ? x.Fee : 0;
 
                 sent = received - x.Change - fee;
                 received = x.Change;
@@ -1200,6 +1202,7 @@ namespace BAMWallet.HD
                     var vAdd = v.Cast<Vout>();
                     vOutList.Add(vAdd);
                 }
+                
 
                 if (vOutList.Any() != true)
                     return TaskResult<WalletTransaction>.CreateFailure("vOutList empty");
@@ -1293,10 +1296,12 @@ namespace BAMWallet.HD
             var path = _apiGatewaySection.GetSection(RestCall.Routing)
                 .GetValue<string>(RestCall.PostTransaction.ToString());
 
-            var posted = await _client.PostAsync(transaction, baseAddress, path, new System.Threading.CancellationToken());
+            var posted =
+                await _client.PostAsync(transaction, baseAddress, path, new System.Threading.CancellationToken());
             if (posted) return TaskResult<bool>.CreateSuccess(true);
 
-            var fail = TaskResult<bool>.CreateFailure(new Exception($"Unable to send transaction with paymentId: {transaction.TxnId.ByteToHex()}"));
+            var fail = TaskResult<bool>.CreateFailure(
+                new Exception($"Unable to send transaction with paymentId: {transaction.TxnId.ByteToHex()}"));
             SetLastError(session, fail);
             RollBackOne(session.SessionId);
 
