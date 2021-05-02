@@ -1160,19 +1160,7 @@ namespace BAMWallet.HD
             {
                 var session = Session(sessionId);
 
-                var walletTransactions = session.Database.Query<WalletTransaction>().ToList();
-                if (walletTransactions.Any())
-                {
-                    var walletTransaction = walletTransactions.FirstOrDefault(x =>
-                        x.TxId.SequenceEqual(paymentId.HexToByte()) && x.WalletType == WalletType.Receive);
-                    if (walletTransaction != null)
-                    {
-                        var vout = TaskResult<WalletTransaction>.CreateFailure(
-                            new Exception($"Transaction with paymentId: {paymentId} already exists"));
-                        SetLastError(session, vout);
-                        return vout;
-                    }
-                }
+                if (AlreadyReceivedPayment(paymentId, session, out var taskResult)) return taskResult;
 
                 var baseAddress = _client.GetBaseAddress();
                 var path = string.Format(
@@ -1219,6 +1207,31 @@ namespace BAMWallet.HD
             {
                 _logger.LogError($"Message: {ex.Message}\n Stack: {ex.StackTrace}");
                 throw;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="paymentId"></param>
+        /// <param name="session"></param>
+        /// <param name="taskResult"></param>
+        /// <returns></returns>
+        private bool AlreadyReceivedPayment(string paymentId, Session session,
+            out TaskResult<WalletTransaction> taskResult)
+        {
+            taskResult = null;
+            var walletTransactions = session.Database.Query<WalletTransaction>().ToList();
+            if (!walletTransactions.Any()) return false;
+            var walletTransaction = walletTransactions.FirstOrDefault(x =>
+                x.TxId.SequenceEqual(paymentId.HexToByte()) && x.WalletType == WalletType.Receive);
+            if (walletTransaction == null) return false;
+            var output = TaskResult<WalletTransaction>.CreateFailure(
+                new Exception($"Transaction with paymentId: {paymentId} already exists"));
+            SetLastError(session, output);
+            {
+                taskResult = output;
+                return true;
             }
         }
 
