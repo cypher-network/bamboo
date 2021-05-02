@@ -77,7 +77,7 @@ namespace BAMWallet.HD
         {
             Guard.Argument(session, nameof(session)).NotNull();
 
-            var mSession = Sessions.AddOrUpdate(session.SessionId, session, (Key, existingVal) =>
+            var mSession = Sessions.AddOrUpdate(session.SessionId, session, (key, existingVal) =>
             {
                 if (session != existingVal)
                     throw new ArgumentException("Duplicate sessions are not allowed: {0}.",
@@ -125,13 +125,13 @@ namespace BAMWallet.HD
             {
                 var session = Session(sessionId);
 
-                var walletTxns = session.Database.Query<WalletTransaction>().OrderBy(d => d.DateTime).ToList();
-                if (walletTxns?.Any() != true)
+                var walletTransactions = session.Database.Query<WalletTransaction>().OrderBy(d => d.DateTime).ToList();
+                if (walletTransactions?.Any() != true)
                 {
                     return TaskResult<ulong>.CreateSuccess(0);
                 }
 
-                balance = Balance(walletTxns, sessionId);
+                balance = Balance(walletTransactions, sessionId);
             }
             catch (Exception ex)
             {
@@ -1179,39 +1179,30 @@ namespace BAMWallet.HD
                     _apiGatewaySection.GetSection(RestCall.Routing)
                         .GetValue<string>(RestCall.GetTransactionId.ToString()), paymentId);
 
-                var vouts = await _client.GetRangeAsync<Vout>(baseAddress, path,
+                var genericOutputList = await _client.GetRangeAsync<Vout>(baseAddress, path,
                     new System.Threading.CancellationToken());
-                if (vouts == null)
+                if (genericOutputList == null)
                 {
-                    var vout = TaskResult<WalletTransaction>.CreateFailure(
+                    var output = TaskResult<WalletTransaction>.CreateFailure(
                         new Exception($"Failed to find transaction with paymentId: {paymentId}"));
-                    SetLastError(session, vout);
-                    return vout;
+                    SetLastError(session, output);
+                    return output;
                 }
 
                 var (spend, scan) = Unlock(session.SessionId);
-                var vOutList = new List<Vout>();
+                var outputs = (from v in genericOutputList.Data
+                               let uncover = spend.Uncover(scan, new PubKey(v.E))
+                               where uncover.PubKey.ToBytes().SequenceEqual(v.P)
+                               select v.Cast<Vout>()).ToList();
 
-                foreach (var v in vouts.Data)
-                {
-                    var uncover = spend.Uncover(scan, new PubKey(v.E));
-                    if (!uncover.PubKey.ToBytes().SequenceEqual(v.P)) continue;
-
-                    Util.Message(v, scan);
-
-                    var vAdd = v.Cast<Vout>();
-                    vOutList.Add(vAdd);
-                }
-                
-
-                if (vOutList.Any() != true)
-                    return TaskResult<WalletTransaction>.CreateFailure("vOutList empty");
+                if (outputs.Any() != true)
+                    return TaskResult<WalletTransaction>.CreateFailure("Outputs are empty");
 
                 session.WalletTransaction = new WalletTransaction
                 {
                     SenderAddress = session.WalletTransaction.SenderAddress,
                     DateTime = DateTime.UtcNow,
-                    Vout = vOutList.ToArray(),
+                    Vout = outputs.ToArray(),
                     TxId = paymentId.HexToByte(),
                     WalletType = WalletType.Receive
                 };

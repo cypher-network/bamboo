@@ -37,34 +37,34 @@ namespace CLi.ApplicationLayer.Commands.Wallet
         {
             using var identifier = Prompt.GetPasswordAsSecureString("Identifier:", ConsoleColor.Yellow);
             using var passphrase = Prompt.GetPasswordAsSecureString("Passphrase:", ConsoleColor.Yellow);
-            
+
             try
             {
                 var session = _walletService.SessionAddOrUpdate(new Session(identifier, passphrase));
 
-                await Spinner.StartAsync("Looking up history ...",  spinner =>
-                {
-                    var request = _walletService.History(session.SessionId);
+                await Spinner.StartAsync("Looking up history ...", spinner =>
+               {
+                   var request = _walletService.History(session.SessionId);
 
-                    if (!request.Success)
-                    {
-                        _console.ForegroundColor = ConsoleColor.Red;
-                        _console.WriteLine("Wallet history request failed.");
-                        _console.ForegroundColor = ConsoleColor.White;
-                        return null;
-                    }
+                   if (!request.Success)
+                   {
+                       _console.ForegroundColor = ConsoleColor.Red;
+                       _console.WriteLine("Wallet history request failed.");
+                       _console.ForegroundColor = ConsoleColor.White;
+                       return null;
+                   }
 
-                    if (!request.Result.Any())
-                    {
-                        NoTxn();
-                        return null;
-                    }
+                   if (!request.Result.Any())
+                   {
+                       NoTxn();
+                       return null;
+                   }
 
-                    var table = ConsoleTable.From(request.Result).ToString();
-                    _console.WriteLine($"\n{table}");
+                   var table = ConsoleTable.From(request.Result).ToString();
+                   _console.WriteLine($"\n{table}");
 
-                    return Task.CompletedTask;
-                });
+                   return Task.CompletedTask;
+               });
             }
             catch (Exception ex)
             {
