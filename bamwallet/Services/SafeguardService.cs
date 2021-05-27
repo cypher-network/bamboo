@@ -6,17 +6,13 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Collections.Generic;
-
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-
 using BAMWallet.Rpc;
 using BAMWallet.Helper;
 using BAMWallet.Model;
-using BAMWallet.Extentions;
-using FlatSharp;
+using MessagePack;
 
 namespace BAMWallet.Services
 {
@@ -43,7 +39,7 @@ namespace BAMWallet.Services
         public static Stream GetSafeguardData()
         {
             var safeGuardPath = SafeguardFilePath();
-            var filePath = Directory.EnumerateFiles(safeGuardPath, "*.flatbuffers").Last();
+            var filePath = Directory.EnumerateFiles(safeGuardPath, "*.messagepack").Last();
             var file = File.Open(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
 
             return file;
@@ -56,7 +52,7 @@ namespace BAMWallet.Services
         public static Transaction[] GetTransactions()
         {
             var byteArray = Util.ReadFully(GetSafeguardData());
-            var blockHeaders = FlatBufferSerializer.Default.Parse<GenericList<BlockHeader>>(byteArray);
+            var blockHeaders = MessagePackSerializer.Deserialize<GenericList<BlockHeader>>(byteArray);
 
             blockHeaders.Data.Shuffle();
 
@@ -87,12 +83,8 @@ namespace BAMWallet.Services
                 if (blockHeaders != null)
                 {
                     var fileStream = SafeguardData(GetDays());
-
-                    var maxBytesNeeded = FlatBufferSerializer.Default.GetMaxSize(blockHeaders);
-                    var buffer = new byte[maxBytesNeeded];
-
-                    FlatBufferSerializer.Default.Serialize(blockHeaders, buffer);
-
+                    var buffer = MessagePackSerializer.Serialize(blockHeaders);
+                    
                     await fileStream.WriteAsync(buffer, stoppingToken);
                     await fileStream.FlushAsync(stoppingToken);
                     fileStream.Close();
@@ -167,7 +159,7 @@ namespace BAMWallet.Services
                 }
             }
 
-            var file = File.Open($"{safeGuardPath}/{date:dd-MM-yyyy}.flatbuffers", FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
+            var file = File.Open($"{safeGuardPath}/{date:dd-MM-yyyy}.messagepack", FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
 
             return file;
         }

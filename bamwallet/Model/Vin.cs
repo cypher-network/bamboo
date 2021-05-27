@@ -1,13 +1,13 @@
 ﻿// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0. 
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
-using FlatSharp.Attributes;
+using MessagePack;
 
 namespace BAMWallet.Model
 {
-    [FlatBufferTable]
-    public class Vin : object
+    [MessagePackObject]
+    public class Vin
     {
-        [FlatBufferItem(0)] public virtual Aux Key { get; set; }
+        [Key(0)] public KeyOffsetImage Key { get; set; }
     }
 }

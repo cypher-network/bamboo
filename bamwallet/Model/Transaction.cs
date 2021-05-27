@@ -2,22 +2,23 @@
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
 using System;
-using FlatSharp.Attributes;
 using LiteDB;
+using MessagePack;
+using NBitcoin;
 
 namespace BAMWallet.Model
 {
-    [FlatBufferTable]
-    public class Transaction : object
+    [MessagePackObject]
+    public class Transaction
     {
-        [BsonId] public Guid Id { get; set; }
-        [FlatBufferItem(0)] public virtual byte[] TxnId { get; set; }
-        [FlatBufferItem(1)] public virtual Bp[] Bp { get; set; }
-        [FlatBufferItem(2)] public virtual int Ver { get; set; }
-        [FlatBufferItem(3)] public virtual int Mix { get; set; }
-        [FlatBufferItem(4)] public virtual Vin[] Vin { get; set; }
-        [FlatBufferItem(5)] public virtual Vout[] Vout { get; set; }
-        [FlatBufferItem(6)] public virtual RCT[] Rct { get; set; }
+        [IgnoreMember] [BsonId] public Guid Id { get; set; }
+        [Key(0)] public byte[] TxnId { get; set; }
+        [Key(1)] public Bp[] Bp { get; set; }
+        [Key(2)] public int Ver { get; set; }
+        [Key(3)] public int Mix { get; set; }
+        [Key(4)] public Vin[] Vin { get; set; }
+        [Key(5)] public Vout[] Vout { get; set; }
+        [Key(6)] public RCT[] Rct { get; set; }
 
         /// <summary>
         /// 
@@ -34,51 +35,129 @@ namespace BAMWallet.Model
         /// <returns></returns>
         public byte[] Stream()
         {
-            byte[] stream;
-            using (var ts = new Helper.TangramStream())
-            {
-                ts
+            using var ts = new Helper.TangramStream();
+            ts
                 .Append(TxnId ?? Array.Empty<byte>())
                 .Append(Mix)
                 .Append(Ver);
 
-                foreach (var bp in Bp)
-                {
-                    ts.Append(bp.Proof);
-                }
-
-                foreach (var vin in Vin)
-                {
-                    ts.Append(vin.Key.KImage);
-                    ts.Append(vin.Key.KOffsets);
-                }
-
-                foreach (var vout in Vout)
-                {
-                    ts
-                      .Append(vout.A)
-                      .Append(vout.C)
-                      .Append(vout.E)
-                      .Append(vout.L)
-                      .Append(vout.N)
-                      .Append(vout.P)
-                      .Append(vout.S ?? string.Empty)
-                      .Append(vout.T.ToString());
-                }
-
-                foreach (var rct in Rct)
-                {
-                    ts
-                      .Append(rct.I)
-                      .Append(rct.M)
-                      .Append(rct.P)
-                      .Append(rct.S);
-                }
-
-                stream = ts.ToArray();
+            foreach (var bp in Bp)
+            {
+                ts.Append(bp.Proof);
             }
 
-            return stream;
+            foreach (var input in Vin)
+            {
+                ts.Append(input.Key.KImage);
+                ts.Append(input.Key.KOffsets);
+            }
+
+            foreach (var output in Vout)
+            {
+                ts
+                    .Append(output.A)
+                    .Append(output.C)
+                    .Append(output.E)
+                    .Append(output.L)
+                    .Append(output.N)
+                    .Append(output.P)
+                    .Append(output.S ?? string.Empty)
+                    .Append(output.T.ToString());
+            }
+            
+            foreach (var rct in Rct)
+            {
+                ts
+                    .Append(rct.I)
+                    .Append(rct.M)
+                    .Append(rct.P)
+                    .Append(rct.S);
+            }
+            
+            return ts.ToArray();
+        }
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="output"></param>
+        /// <param name="scan"></param>
+        /// <returns></returns>
+        public static WalletTransactionMessage Message(Vout output, Key scan)
+        {
+            WalletTransactionMessage message = null;
+
+            try
+            {
+                message = MessagePackSerializer.Deserialize<WalletTransactionMessage>(scan.Decrypt(output.N));
+                message.Output = output;
+            }
+            catch (Exception)
+            {
+                // Ignore
+            }
+
+            return message;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="output"></param>
+        /// <param name="scan"></param>
+        /// <returns></returns>
+        public static ulong Amount(Vout output, Key scan)
+        {
+            ulong amount = 0;
+
+            try
+            {
+                amount = MessagePackSerializer.Deserialize<WalletTransactionMessage>(scan.Decrypt(output.N)).Amount;
+            }
+            catch (Exception ex)
+            {
+                var e = ex.Message;
+                // Ignore
+            }
+
+            return amount;
+        }
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="output"></param>
+        /// <param name="scan"></param>
+        /// <returns></returns>
+        public static string Memo(Vout output, Key scan)
+        {
+            var message = string.Empty;
+
+            try
+            {
+                message = MessagePackSerializer.Deserialize<WalletTransactionMessage>(scan.Decrypt(output.N)).Memo;
+            }
+            catch (Exception)
+            {
+                // Ignore
+            }
+
+            return message;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="amount"></param>
+        /// <param name="blind"></param>
+        /// <param name="memo"></param>
+        /// <returns></returns>
+        public static byte[] Message(ulong amount, byte[] blind, string memo)
+        {
+            return MessagePackSerializer.Serialize(new WalletTransactionMessage
+            {
+                Amount = amount, Blind = blind, Memo = memo, Date = DateTime.UtcNow
+            });
         }
     }
 }

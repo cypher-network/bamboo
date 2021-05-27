@@ -6,11 +6,9 @@ using MessagePack;
 namespace BAMWallet.Model
 {
     [MessagePackObject]
-    public class RCT
+    public class KeyOffsetImage
     {
-        [Key(0)] public byte[] M { get; set; }
-        [Key(1)] public byte[] P { get; set; }
-        [Key(2)] public byte[] S { get; set; }
-        [Key(3)] public byte[] I { get; set; }
+        [Key(0)] public byte[] KImage { get; set; }
+        [Key(1)] public byte[] KOffsets { get; set; }
     }
 }

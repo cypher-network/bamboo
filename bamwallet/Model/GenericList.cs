@@ -2,14 +2,13 @@
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
 using System.Collections.Generic;
-using FlatSharp.Attributes;
+using MessagePack;
 
 namespace BAMWallet.Model
 {
-    [FlatBufferTable]
+    [MessagePackObject]
     public class GenericList<T> : object
     {
-        [FlatBufferItem(0)]
-        public virtual IList<T> Data { get; set; } = new List<T>();
+        [Key(0)] public IList<T> Data { get; set; } = new List<T>();
     }
 }

@@ -4,16 +4,13 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 using System.Threading.Tasks;
-
 using NBitcoin;
-
-using BAMWallet.Extentions;
+using BAMWallet.Extensions;
 using BAMWallet.HD;
 using BAMWallet.Helper;
 using BAMWallet.Model;
 using Dawn;
-using FlatSharp;
-using Newtonsoft.Json;
+using MessagePack;
 
 namespace BAMWallet.Controllers
 {
@@ -54,11 +51,11 @@ namespace BAMWallet.Controllers
             var session = _walletService.SessionAddOrUpdate(new Session(credentials.Identifier.ToSecureString(),
                 credentials.Passphrase.ToSecureString()));
 
-            var total = _walletService.AvailableBalance(session.SessionId);
+            var total = _walletService.History(session.SessionId);
             if (!total.Success)
                 return new BadRequestObjectResult(total.NonSuccessMessage);
 
-            return new OkObjectResult($"{total.Result.DivWithNaT():F9}");
+            return new OkObjectResult($"{total.Result.Last()}");
         }
 
         [HttpGet("create", Name = "Create")]
@@ -137,7 +134,7 @@ namespace BAMWallet.Controllers
         [HttpPost("transaction", Name = "CreateTransaction")]
         public IActionResult CreateTransaction([FromBody] byte[] data)
         {
-            var payment = FlatBufferSerializer.Default.Parse<SendPayment>(data);
+            var payment = MessagePackSerializer.Deserialize<SendPayment>(data);
             var session = _walletService.SessionAddOrUpdate(new Session(payment.Credentials.Identifier.ToSecureString(), payment.Credentials.Passphrase.ToSecureString())
             {
                 SessionType = payment.SessionType,
@@ -151,15 +148,12 @@ namespace BAMWallet.Controllers
                 }
             });
 
-            _walletService.CreatePayment(session.SessionId);
+            _walletService.CreateTransaction(session.SessionId);
 
-            var transaction = _walletService.Transaction(session.SessionId);
-            var maxBytesNeeded = FlatBufferSerializer.Default.GetMaxSize(transaction);
-            var buffer = new byte[maxBytesNeeded];
-
-            FlatBufferSerializer.Default.Serialize(transaction, buffer);
-
-            return new ObjectResult(new { flatbuffer = buffer });
+            var transaction = _walletService.GetTransaction(session.SessionId);
+            var buffer = MessagePackSerializer.Serialize(transaction);
+            
+            return new ObjectResult(new { messagepack = buffer });
         }
 
         [HttpPost("receive", Name = "Receive")]
@@ -179,13 +173,13 @@ namespace BAMWallet.Controllers
             var transaction = _walletService.LastWalletTransaction(session.SessionId, WalletType.Receive);
             var txnReceivedAmount = transaction == null ? 0.ToString() : transaction.Payment.DivWithNaT().ToString("F9");
             var txnMemo = transaction == null ? "" : transaction.Memo;
-            var balance = _walletService.AvailableBalance(session.SessionId);
+            var balance = _walletService.History(session.SessionId);
 
             return new OkObjectResult(new
             {
                 memo = txnMemo,
                 received = txnReceivedAmount,
-                balance = $"{balance.Result.DivWithNaT():F9}"
+                balance = $"{balance.Result.Last().Balance}"
             });
         }
 
@@ -210,7 +204,7 @@ namespace BAMWallet.Controllers
                 }
             });
 
-            var createPayment = _walletService.CreatePayment(session.SessionId);
+            var createPayment = _walletService.CreateTransaction(session.SessionId);
             if (!createPayment.Success)
                 return new BadRequestObjectResult(createPayment.NonSuccessMessage);
 
@@ -218,13 +212,13 @@ namespace BAMWallet.Controllers
             if (!send.Success)
                 return new BadRequestObjectResult(send.NonSuccessMessage);
 
-            var balance = _walletService.AvailableBalance(session.SessionId);
+            var balance = _walletService.History(session.SessionId);
             var walletTx = _walletService.LastWalletTransaction(session.SessionId, WalletType.Send);
 
             return new OkObjectResult(new
             {
-                balance = $"{balance.Result.DivWithNaT():F9}",
-                paymentId = walletTx?.TxId.ByteToHex()
+                balance = $"{balance.Result.Last().Balance}",
+                paymentId = walletTx?.Transaction.TxnId.ByteToHex()
             });
         }
     }

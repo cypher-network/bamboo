@@ -2,24 +2,17 @@
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Mime;
 using System.Threading;
 using System.Threading.Tasks;
-
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-
 using Newtonsoft.Json.Linq;
-
+using MessagePack;
 using Dawn;
-
-using BAMWallet.Helper;
 using BAMWallet.Model;
-using FlatSharp;
 
 namespace BAMWallet.Rpc
 {
@@ -69,11 +62,11 @@ namespace BAMWallet.Rpc
                 using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
                 var read = response.Content.ReadAsStringAsync(cancellationToken).Result;
                 var jObject = JObject.Parse(read);
-                var jToken = jObject.GetValue("flatbuffers");
+                var jToken = jObject.GetValue("messagepack");
                 var byteArray = Convert.FromBase64String(jToken.Value<string>());
 
                 if (response.IsSuccessStatusCode)
-                    result = Util.DeserializeFlatBuffer<T>(byteArray);
+                    result = MessagePackSerializer.Deserialize<T>(byteArray, cancellationToken: cancellationToken);
                 else
                 {
                     var content = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -130,15 +123,15 @@ namespace BAMWallet.Rpc
                 using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
                 var read = response.Content.ReadAsStringAsync(cancellationToken).Result;
                 var jObject = JObject.Parse(read);
-                var jToken = jObject.GetValue("flatbuffers");
+                var jToken = jObject.GetValue("messagepack");
                 var byteArray = Convert.FromBase64String(jToken.Value<string>());
 
                 if (response.IsSuccessStatusCode)
-                    results = FlatBufferSerializer.Default.Parse<GenericList<T>>(byteArray);
+                    results = MessagePackSerializer.Deserialize<GenericList<T>>(byteArray, cancellationToken: cancellationToken);
                 else
                 {
                     var content = await response.Content.ReadAsStringAsync(cancellationToken);
-                    _logger.LogError($"Result: {content}\n StatusCode: {(int)response.StatusCode}");
+                    _logger.LogError($"Result: {content}\n StatusCode: {(int) response.StatusCode}");
                     throw new Exception(content);
                 }
             }
@@ -178,10 +171,9 @@ namespace BAMWallet.Rpc
 
             try
             {
-                var maxBytesNeeded = FlatBufferSerializer.Default.GetMaxSize(payload);
-                var buffer = new byte[maxBytesNeeded];
-                FlatBufferSerializer.Default.Serialize(payload, buffer);
 
+                var buffer = MessagePackSerializer.Serialize(payload, cancellationToken: cancellationToken);
+                
                 using var response = await client.PostAsJsonAsync(path, buffer, cancellationToken);
 
                 var _ = response.Content.ReadAsStringAsync(cancellationToken).Result;
