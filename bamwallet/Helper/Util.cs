@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
+using System.Reflection;
 using System.Security;
 using LiteDB;
 using BAMWallet.Extensions;
@@ -36,6 +37,11 @@ namespace BAMWallet.Helper
             return wallet;
         }
 
+        public static string GetAssemblyVersion()
+        {
+            return Assembly.GetExecutingAssembly().GetName().Version.ToString();
+        }
+        
         public static void Shuffle<T>(this IList<T> list)
         {
             var rng = new Random();

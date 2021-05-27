@@ -37,7 +37,7 @@ namespace Cli
             try
             {
                 Log.Information("Starting host");
-
+                Log.Information($"Version: {BAMWallet.Helper.Util.GetAssemblyVersion()}");
                 await CreateHostBuilder(args);
 
                 return 0;
