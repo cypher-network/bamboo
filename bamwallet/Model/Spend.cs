@@ -6,7 +6,7 @@ namespace BAMWallet.Model
     public class Spend : Credentials
     {
         public string Address { get; set; }
-        public double Amount { get; set; }
+        public decimal Amount { get; set; }
         public string Memo { get; set; }
     }
 }

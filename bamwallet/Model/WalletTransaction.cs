@@ -22,8 +22,7 @@ namespace BAMWallet.Model
         public string SenderAddress { get; set; }
         public bool Spent { get; set; }
         public Vout Spending { get; set; }
-        public byte[] TxId { get; set; }
-        public Vout[] Vout { get; set; }
+        public Transaction Transaction { get; set; }  
         public WalletType WalletType { get; set; }
     }
 }

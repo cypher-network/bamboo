@@ -7,6 +7,7 @@
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
 
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.Logging;
@@ -20,7 +21,7 @@ using McMaster.Extensions.CommandLineUtils;
 
 using BAMWallet.HD;
 using BAMWallet.Model;
-using BAMWallet.Extentions;
+using BAMWallet.Extensions;
 
 namespace CLi.ApplicationLayer.Commands.Wallet
 {
@@ -66,9 +67,9 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                         var transaction = _walletService.LastWalletTransaction(session.SessionId, WalletType.Receive);
                         var txnReceivedAmount = transaction == null ? 0.ToString() : transaction.Payment.DivWithNaT().ToString("F9");
                         var txnMemo = transaction == null ? "" : transaction.Memo;
-                        var balance = _walletService.AvailableBalance(session.SessionId);
+                        var balance = _walletService.History(session.SessionId);
 
-                        spinner.Succeed($"Memo: {txnMemo}  Received: {txnReceivedAmount}  Available Balance: {balance.Result.DivWithNaT():F9}");
+                        spinner.Succeed($"Memo: {txnMemo}  Received: {txnReceivedAmount}  Available Balance: {balance.Result.Last().Balance}");
                     }
                     catch (Exception ex)
                     {

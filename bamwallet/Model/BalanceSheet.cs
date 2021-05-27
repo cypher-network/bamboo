@@ -7,13 +7,13 @@ namespace BAMWallet.Model
 {
     public class BalanceSheet
     {
-        public DateTime DateTime { get; set; }
-        public string CoinType { get; set; }
+        public string Date { get; set; }
         public string Memo { get; set; }
         public string MoneyOut { get; set; }
         public string Fee { get; set; }
         public string MoneyIn { get; set; }
         public string Reward { get; set; }
         public string Balance { get; set; }
+        public Vout[] Outputs { get; set; }
     }
 }

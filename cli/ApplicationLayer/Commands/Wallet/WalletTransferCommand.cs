@@ -7,6 +7,7 @@
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
 
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.Logging;
@@ -20,7 +21,7 @@ using Kurukuru;
 
 using BAMWallet.HD;
 using BAMWallet.Model;
-using BAMWallet.Extentions;
+using BAMWallet.Extensions;
 
 namespace CLi.ApplicationLayer.Commands.Wallet
 {
@@ -49,7 +50,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
             var amount = Prompt.GetString("Amount:", null, ConsoleColor.Red);
             var memo = Prompt.GetString("Memo:", null, ConsoleColor.Green);
 
-            if (double.TryParse(amount, out double t))
+            if (decimal.TryParse(amount, out var t))
             {
                 await Spinner.StartAsync("Processing payment ...", async spinner =>
                 {
@@ -69,7 +70,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                             }
                         });
 
-                        _walletService.CreatePayment(session.SessionId);
+                        _walletService.CreateTransaction(session.SessionId);
 
                         if (session.LastError != null)
                         {
@@ -85,13 +86,13 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                             return;
                         }
 
-                        var balance = _walletService.AvailableBalance(session.SessionId);
-                        var message = $"Available Balance: {balance.Result.DivWithNaT():F9}";
+                        var balance = _walletService.History(session.SessionId);
+                        var message = $"Available Balance: {balance.Result.Last().Balance}";
 
                         var walletTx = _walletService.LastWalletTransaction(session.SessionId, WalletType.Send);
                         if (walletTx != null)
                         {
-                            message += $"PaymentID: {walletTx.TxId.ByteToHex()}";
+                            message += $"PaymentID: {walletTx.Transaction.TxnId.ByteToHex()}";
                         }
 
                         spinner.Succeed(message);

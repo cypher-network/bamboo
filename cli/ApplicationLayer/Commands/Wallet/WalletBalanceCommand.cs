@@ -7,13 +7,14 @@
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
 
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.DependencyInjection;
 
 using McMaster.Extensions.CommandLineUtils;
 
-using BAMWallet.Extentions;
+using BAMWallet.Extensions;
 using BAMWallet.HD;
 using Kurukuru;
 
@@ -43,10 +44,20 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                 {
                     _spinner = spinner;
                     var session = _walletService.SessionAddOrUpdate(new Session(identifier, passphrase));
-                    var total = _walletService.AvailableBalance(session.SessionId);
-                    _console.ForegroundColor = ConsoleColor.Green;
-                    _console.WriteLine($"\nBalance: {total.Result.DivWithNaT():F9}\n");
-                    _console.ForegroundColor = ConsoleColor.White;
+                    var balance = _walletService.History(session.SessionId);
+                    if (balance.Success)
+                    {
+                        _console.ForegroundColor = ConsoleColor.Green;
+                        _console.WriteLine($"\n Balance: {balance.Result.Last().Balance}");
+                        _console.ForegroundColor = ConsoleColor.White;
+                    }
+                    else
+                    {
+                        _console.ForegroundColor = ConsoleColor.Red;
+                        _console.WriteLine($"\n {balance.NonSuccessMessage}");
+                        _console.ForegroundColor = ConsoleColor.White;
+                        spinner.Fail();
+                    }
                     return Task.CompletedTask;
                 });
             }
