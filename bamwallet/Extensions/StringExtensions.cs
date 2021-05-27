@@ -3,9 +3,9 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security;
 
-namespace BAMWallet.Extentions
+namespace BAMWallet.Extensions
 {
-    public static class StringExtentions
+    public static class StringExtensions
     {
         public static SecureString ToSecureString(this string value)
         {
@@ -47,6 +47,11 @@ namespace BAMWallet.Extentions
             }
 
             handle.Free();
+        }
+
+        public static decimal ToDecimal(this string value)
+        {
+            return Convert.ToDecimal(value);
         }
     }
 }
