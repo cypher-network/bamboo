@@ -11,9 +11,9 @@ using System.Text;
 
 using Newtonsoft.Json;
 
-namespace BAMWallet.Extentions
+namespace BAMWallet.Extensions
 {
-    public static class ExtentionMethods
+    public static class ExtensionMethods
     {
         public static StringContent AsJson(this object o)
           => new(JsonConvert.SerializeObject(o), Encoding.UTF8, MediaTypeNames.Application.Json);

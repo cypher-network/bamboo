@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Security;
 
-namespace BAMWallet.Extentions
+namespace BAMWallet.Extensions
 {
-    public static class SecureStringExtention
+    public static class SecureStringExtension
     {
         public static string ToUnSecureString(this SecureString secureString)
         {

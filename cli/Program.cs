@@ -9,21 +9,15 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
-
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Hosting;
-
 using Serilog;
 using Serilog.Events;
 using Serilog.Extensions.Logging;
-
 using McMaster.Extensions.CommandLineUtils;
-
 using CLi.ApplicationLayer.Commands;
-
 using BAMWallet.HD;
 using BAMWallet.Services;
 

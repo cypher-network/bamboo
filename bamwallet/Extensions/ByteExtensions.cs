@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace BAMWallet.Extentions
+namespace BAMWallet.Extensions
 {
-    public static class ByteExtentions
+    public static class ByteExtensions
     {
         public static string ToBase64(this byte[] data) => Convert.ToBase64String(Encoding.UTF8.GetBytes(Byte2Hex(data)));
 
@@ -39,6 +39,18 @@ namespace BAMWallet.Extentions
                 yield return value.Skip(i * bufferLength).Take(bufferLength).ToArray();
 
             }
+        }
+        
+        public static bool Xor(this byte[] a, byte[] b)
+        {
+            int x = a.Length ^ b.Length;
+
+            for (int i = 0; i < a.Length && i < b.Length; ++i)
+            {
+                x |= a[i] ^ b[i];
+            }
+
+            return x == 0;
         }
     }
 }

@@ -4,11 +4,8 @@
 using System;
 using System.Collections.Generic;
 using System.Security;
-
 using LiteDB;
 using Newtonsoft.Json.Linq;
-
-using BAMWallet.Extentions;
 using BAMWallet.Helper;
 using BAMWallet.Model;
 
