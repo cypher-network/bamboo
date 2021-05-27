@@ -21,7 +21,7 @@ using Kurukuru;
 
 namespace CLi.ApplicationLayer.Commands.Wallet
 {
-    [CommandDescriptor(new string[] { "history" }, "Show me my transactions")]
+    [CommandDescriptor(new string[] { "history" }, "Show my transactions")]
     public class WalletTxHistoryCommand : Command
     {
         private readonly IConsole _console;
@@ -60,8 +60,17 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                        return null;
                    }
 
-                   var table = ConsoleTable.From(request.Result).ToString();
-                   _console.WriteLine($"\n{table}");
+                   var table = new ConsoleTable("DateTime", "Memo", "MoneyOut", "Fee", "MoneyIn", "Reward", "Balance");
+                   
+                   foreach (var sheet in request.Result)
+                   {
+                       table.AddRow(sheet.Date, sheet.Memo, sheet.MoneyOut, sheet.Fee, sheet.MoneyIn, sheet.Reward,
+                           sheet.Balance);
+                   }
+
+                   table.Configure(o => o.NumberAlignment = Alignment.Right);
+                   
+                   _console.WriteLine($"\n{table.ToString()}");
 
                    return Task.CompletedTask;
                });

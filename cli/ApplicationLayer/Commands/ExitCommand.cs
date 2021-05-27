@@ -15,7 +15,7 @@ using Microsoft.Extensions.Hosting;
 
 namespace CLi.ApplicationLayer.Commands.Vault
 {
-    [CommandDescriptor(new string[] { "exit" }, "Exits the wallet")]
+    [CommandDescriptor(new string[] { "exit" }, "Exit the wallet")]
     public class ExitCommand : Command
     {
         ICommandService commandService;

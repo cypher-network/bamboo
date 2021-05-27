@@ -15,11 +15,11 @@ using McMaster.Extensions.CommandLineUtils;
 
 using BAMWallet.HD;
 using BAMWallet.Helper;
-using BAMWallet.Extentions;
+using BAMWallet.Extensions;
 
 namespace CLi.ApplicationLayer.Commands.Wallet
 {
-    [CommandDescriptor(new string[] { "create" }, "Create a new wallet")]
+    [CommandDescriptor(new string[] { "create" }, "Create new wallet")]
     class WalletCreateCommand : Command
     {
         private readonly IConsole _console;
