@@ -4,22 +4,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.IO;
-using System.Net;
 using System.Security;
-using System.Security.Cryptography;
-using System.Threading.Tasks;
-
-using Newtonsoft.Json;
-
 using LiteDB;
-
-using FlatSharp;
-
-using BAMWallet.Model;
-using BAMWallet.Extentions;
-using NBitcoin;
+using BAMWallet.Extensions;
 
 namespace BAMWallet.Helper
 {
@@ -35,16 +23,14 @@ namespace BAMWallet.Helper
             var wallets = Path.Combine(Path.GetDirectoryName(AppDomainDirectory()), "wallets");
             var wallet = Path.Combine(wallets, $"{id}.db");
 
-            if (!Directory.Exists(wallets))
+            if (Directory.Exists(wallets)) return wallet;
+            try
             {
-                try
-                {
-                    Directory.CreateDirectory(wallets);
-                }
-                catch (Exception ex)
-                {
-                    throw new Exception(ex.Message);
-                }
+                Directory.CreateDirectory(wallets);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
             }
 
             return wallet;
@@ -81,92 +67,12 @@ namespace BAMWallet.Helper
             return source.Aggregate(0UL, (current, number) => current + number);
         }
 
-        public static byte[] SerializeFlatBuffer<T>(T data) where T : class
-        {
-            try
-            {
-                int maxSize = FlatBufferSerializer.Default.GetMaxSize(data);
-                byte[] buffer = new byte[maxSize];
-                FlatBufferSerializer.Default.Serialize(data, buffer);
-                return buffer;
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-        }
-
-        public static T DeserializeFlatBuffer<T>(byte[] data) where T : class
-        {
-            try
-            {
-                return FlatBufferSerializer.Default.Parse<T>(data);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-        }
-
         public static byte[] ReadFully(Stream input)
         {
             using var ms = new MemoryStream();
 
             input.CopyTo(ms);
             return ms.ToArray();
-        }
-
-        public static WalletTransactionMessage Message(Vout vout, Key scan)
-        {
-            WalletTransactionMessage message = null;
-
-            try
-            {
-                message = DeserializeFlatBuffer<WalletTransactionMessage>(scan.Decrypt(vout.N));
-            }
-            catch (Exception)
-            {
-                // Ignore
-            }
-
-            return message;
-        }
-
-        public static ulong MessageAmount(Vout vout, Key scan)
-        {
-            ulong amount = 0;
-
-            try
-            {
-                amount = DeserializeFlatBuffer<WalletTransactionMessage>(scan.Decrypt(vout.N)).Amount;
-            }
-            catch (Exception)
-            {
-                // Ignore
-            }
-
-            return amount;
-        }
-
-        public static string MessageMemo(Vout vout, Key scan)
-        {
-            string message = string.Empty;
-
-            try
-            {
-                message = DeserializeFlatBuffer<WalletTransactionMessage>(scan.Decrypt(vout.N)).Memo;
-            }
-            catch (Exception)
-            {
-                // Ignore
-            }
-
-            return message;
-        }
-
-        public static byte[] Message(ulong amount, byte[] blind, string memo)
-        {
-            return SerializeFlatBuffer(new WalletTransactionMessage { Amount = amount, Blind = blind, Memo = memo });
         }
     }
 }
