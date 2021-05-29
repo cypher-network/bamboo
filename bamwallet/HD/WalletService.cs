@@ -264,7 +264,7 @@ namespace BAMWallet.HD
         {
             Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
 
-            var session = Session(sessionId);
+            var session = Session(sessionId).EnforceDbExists();
             var walletTransaction = session.Database.Query<WalletTransaction>().Where(x => x.Id == session.SessionId)
                 .FirstOrDefault();
 
@@ -327,12 +327,11 @@ namespace BAMWallet.HD
         public TaskResult<IEnumerable<string>> Addresses(Guid sessionId)
         {
             Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
-            DoesWalletExistGuard(sessionId);
 
             var addresses = Enumerable.Empty<string>();
             try
             {
-                var session = Session(sessionId);
+                var session = Session(sessionId).EnforceDbExists();
                 var keys = KeySets(session.SessionId);
                 if (keys != null) addresses = keys.Select(k => k.StealthAddress);
             }
@@ -485,7 +484,7 @@ namespace BAMWallet.HD
                 System.Threading.Thread.Sleep(100);
             }
             
-            var session = Session(sessionId);
+            var session = Session(sessionId).EnforceDbExists();
             session.LastError = null;
 
             var calculated = CalculateChange(session.SessionId);
@@ -910,30 +909,6 @@ namespace BAMWallet.HD
             hdRoot = new Mnemonic(concatenateMnemonic).DeriveExtKey(passphrase.ToUnSecureString());
         }
 
-        private bool DoesWalletExist(Guid sessionId)
-        {
-            var session = Session(sessionId);
-            return DoesWalletExist(session);
-        }
-
-        private bool DoesWalletExist(Session session)
-        {
-            return DoesWalletExist(session.Identifier);
-        }
-
-        private bool DoesWalletExist(SecureString identifier)
-        {
-            return File.Exists(Util.WalletPath(identifier.ToUnSecureString()));
-        }
-
-        private void DoesWalletExistGuard(Guid sessionId)
-        {
-            if (DoesWalletExist(sessionId)) return;
-
-            _logger.LogError("Unable to find wallet file with given identifier");
-            throw new FileNotFoundException("Unable to find wallet file with given identifier");
-        }
-
         /// <summary>
         /// 
         /// </summary>
@@ -942,10 +917,9 @@ namespace BAMWallet.HD
         public TaskResult<BalanceSheet[]> History(Guid sessionId)
         {
             Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
-            DoesWalletExistGuard(sessionId);
 
             var balanceSheets = new List<BalanceSheet>();
-            var session = Session(sessionId);
+            var session = Session(sessionId).EnforceDbExists();
 
             var walletTransactions = session.Database.Query<WalletTransaction>().OrderBy(x => x.DateTime).ToList();
             if (walletTransactions?.Any() != true)
@@ -1260,11 +1234,9 @@ namespace BAMWallet.HD
             Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
             Guard.Argument(paymentId, nameof(paymentId)).NotNull().NotEmpty().NotWhiteSpace();
 
-            DoesWalletExistGuard(sessionId);
-            
             try
             {
-                var session = Session(sessionId);
+                var session = Session(sessionId).EnforceDbExists();
 
                 if (AlreadyReceivedPayment(paymentId, session, out var taskResult)) return taskResult;
 
@@ -1374,7 +1346,7 @@ namespace BAMWallet.HD
         {
             Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
 
-            var session = Session(sessionId);
+            var session = Session(sessionId).EnforceDbExists();
             session.LastError = null;
 
             var transaction = GetTransaction(session.SessionId);
