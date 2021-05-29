@@ -49,15 +49,20 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                    if (!request.Success)
                    {
                        _console.ForegroundColor = ConsoleColor.Red;
-                       _console.WriteLine("Wallet history request failed.");
+                       _console.WriteLine("\nWallet history request failed.");
+
+                       if (request.NonSuccessMessage != null)
+                       {
+                           _console.WriteLine($"{request.NonSuccessMessage}");
+                       }
                        _console.ForegroundColor = ConsoleColor.White;
-                       return null;
+                       return Task.CompletedTask;
                    }
 
                    if (!request.Result.Any())
                    {
                        NoTxn();
-                       return null;
+                       return Task.CompletedTask;
                    }
 
                    var table = new ConsoleTable("DateTime", "Memo", "MoneyOut", "Fee", "MoneyIn", "Reward", "Balance");
