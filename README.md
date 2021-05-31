@@ -4,6 +4,15 @@
 [![Build wallet](https://github.com/cypher-network/bamboo/workflows/build%20wallet/badge.svg)](https://github.com/cypher-network/bamboo/commits/master/)
 [![GitHub release](https://img.shields.io/github/release/cypher-network/bamboo.svg)](https://GitHub.com/cypher-network/bamboo/releases/)
 
+## Installation
+
+### Linux
+
+For quick installation on Linux, execute the following command:
+
+`bash <(curl -sSL https://raw.githubusercontent.com/cypher-network/bamboo/master/install/linux/install.sh)`
+
+
 ## Contribution
 
 Thank you for considering to help out with the source code!
