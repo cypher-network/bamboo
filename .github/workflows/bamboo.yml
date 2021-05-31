@@ -1,32 +1,62 @@
-name: "build wallet"
+name: build cypher wallet
 
 on:
   push:
     branches:
-      - "master"
+      - '**'
     tags-ignore:
-      - "*"
+      - 'v*.*.*'
+    paths-ignore:
+      - '**/LICENSE'
+      - '**/*.md'
+      - '**/*.json'
+      - 'install/**'
+
 
 jobs:
   build:
-    runs-on: "ubuntu-latest"
+    runs-on: ubuntu-latest
+    env:
+      DOTNET_NOLOGO: true
+      DOTNET_CLI_TELEMETRY_OPTOUT: true
     steps:
-    - name: "Setup .NET Core 5.0"
-      uses: "actions/setup-dotnet@v1"
+    - name: Setup .NET Core 5.0
+      uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: "5.0.101"
-    
-    - name: "Checkout latest"
-      uses: "actions/checkout@master"
-    
-    - name: "Build"
+        dotnet-version: '5.0.x'
+
+    - name: Checkout latest
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Lint code base
+      uses: github/super-linter@v3
+      env:
+        DEFAULT_BRANCH: master
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        VALIDATE_ALL_CODEBASE: false
+        VALIDATE_BASH: true
+        VALIDATE_CSHARP: true
+        VALIDATE_DOCKERFILE: true
+        # TODO: Enable JSCPD before mainnet. Until then, duplicate code may exist.
+        # VALIDATE_JSCPD: true
+        VALIDATE_JSON: true
+        VALIDATE_MARKDOWN: true
+        VALIDATE_POWERSHELL: true
+        VALIDATE_SHELL_SHFMT: true
+
+    - name: Run unit tests
+      run: dotnet test
+      
+    - name: Build wallet
       run:  |
         dotnet restore bamboo.sln
         dotnet publish cli --output publish/cli --configuration Release
-    
-    - name: "Archive build artifacts"
-      uses: "actions/upload-artifact@v2"
+
+    - name: Archive build artifacts
+      uses: actions/upload-artifact@v2
       with:
-        name: "dist"
+        name: dist
         path: |
           ${{ github.workspace }}/publish/cli/

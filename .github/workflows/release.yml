@@ -1,57 +1,74 @@
-name: "build wallet release"
+name: build cypher wallet release
 
 on:
   push:
     tags:
-      - "v*"
+      - 'v*.*.*'
+
 
 jobs:
-  build:
-    runs-on: "ubuntu-latest"
+  build-linux:
+    runs-on: ubuntu-latest
+    env:
+      DOTNET_NOLOGO: true
+      DOTNET_CLI_TELEMETRY_OPTOUT: true
+
     steps:
-    - name: "Setup .NET Core 5.0"
-      uses: "actions/setup-dotnet@v1"
-      with:
-        dotnet-version: "5.0.101"
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
-    - name: "Checkout latest"
-      uses: "actions/checkout@master"
+      - name: Get version
+        uses: ./.github/actions/get-version
 
-    - name: "Build"
-      run:  |
-        dotnet restore bamboo.sln
-        dotnet publish cli --output publish/cli --configuration Release
+      - uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '5.0.x'
 
-    - name: "Get version"
-      id: get_version
-      run: echo "::set-output name=VERSION::${GITHUB_REF#refs/tags/}"
+      - name: Prepare Linux build environment
+        uses: ./.github/actions/build-env-prepare-linux
 
-    - name: "Generate release artifact"
-      id: gen_artifact
-      run: |
-        pushd ${{ github.workspace }}/publish/cli/
-        zip -r bamboo.${{ steps.get_version.outputs.VERSION }}.zip *
-        mv bamboo.${{ steps.get_version.outputs.VERSION }}.zip ${{ github.workspace }}
-        popd
+      - name: Create linux-x64 package
+        uses: ./.github/actions/build-linux
+        with:
+          runtime: 'linux-x64'
+          runtime_deb: 'amd64'
 
-    - name: "Create Release"
-      id: create_release
-      uses: "actions/create-release@v1"
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        draft: false
-        prerelease: false
+      - name: Create linux-arm package
+        uses: ./.github/actions/build-linux
+        with:
+          runtime: 'linux-arm'
+          runtime_deb: 'armhf'
 
-    - name: "Upload Release Asset"
-      id: upload-release-asset 
-      uses: "actions/upload-release-asset@v1"
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }} 
-        asset_path: bamboo.${{ steps.get_version.outputs.VERSION }}.zip
-        asset_name: bamboo.${{ steps.get_version.outputs.VERSION }}.zip
-        asset_content_type: "application/zip"
+      - name: Create linux-arm64 package
+        uses: ./.github/actions/build-linux
+        with:
+          runtime: 'linux-arm64'
+          runtime_deb: 'arm64'
+
+      - name: Create releases
+        id: gh-release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          files: cypher-bamboo_${{ env.VERSION }}*.*
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Get version
+        id: get_version
+        uses: ./.github/actions/get-version
+
+      - name: Create Windows release
+        id: gh-release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          files: cypher-cypnode_$VERSION*.msi
