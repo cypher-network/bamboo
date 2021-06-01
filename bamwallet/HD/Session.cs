@@ -3,7 +3,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Security;
+using BAMWallet.Extensions;
 using LiteDB;
 using Newtonsoft.Json.Linq;
 using BAMWallet.Helper;
@@ -21,12 +23,24 @@ namespace BAMWallet.HD
         public WalletTransaction WalletTransaction { get; set; }
         public LiteRepository Database { get; set; }
 
+        private bool DbExists => File.Exists(Util.WalletPath(Identifier.ToUnSecureString()));
+
         public Session(SecureString identifier, SecureString passphrase)
         {
             Identifier = identifier;
             Passphrase = passphrase;
             SessionId = Guid.NewGuid();
             Database = Util.LiteRepositoryFactory(identifier, passphrase);
+        }
+
+        public Session EnforceDbExists()
+        {
+            if (!DbExists)
+            {
+                throw new FileNotFoundException("Unable to find wallet file with given identifier");
+            }
+
+            return this;
         }
 
         /// <summary>
