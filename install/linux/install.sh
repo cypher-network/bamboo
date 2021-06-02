@@ -13,6 +13,27 @@
 # instead of continuing the installation with something broken
 set -e
 
+while test $# -gt 0
+do
+    case "$1" in
+        --help)
+          echo "  Install script arguments:"
+          echo
+          echo "    --uninstall                   : uninstall node"
+          echo
+          exit 0
+          ;;
+        --uninstall)
+            IS_UNINSTALL=true
+            ;;
+        --*) echo "bad option $1"
+            exit 1
+            ;;
+    esac
+    shift
+done
+
+
 ######## VARIABLES #########
 # For better maintainability, we store as much information that can change in variables
 # This allows us to make a change in one place that can propagate to all instances of the variable
@@ -45,15 +66,13 @@ else
 fi
 
 
-CYPHER_BAMBOO_VERSION=$(curl --silent "https://api.github.com/repos/stephankempkes/bamboo/releases/latest" | grep -Po '"tag_name": "\K.*?(?=")')
-#CYPHER_BAMBOO_VERSION=$(curl --silent "https://api.github.com/repos/cypher-network/bamboo/releases/latest" | grep -Po '"tag_name": "\K.*?(?=")')
+CYPHER_BAMBOO_VERSION=$(curl --silent "https://api.github.com/repos/cypher-network/bamboo/releases/latest" | grep -Po '"tag_name": "\K.*?(?=")')
 CYPHER_BAMBOO_VERSION_SHORT=$(echo "${CYPHER_BAMBOO_VERSION}" | cut -c 2-)
 CYPHER_BAMBOO_ARTIFACT_PREFIX="cypher-bamboo_${CYPHER_BAMBOO_VERSION_SHORT}_"
-CYPHER_BAMBOO_URL_PREFIX="https://github.com/stephankempkes/bamboo/releases/download/${CYPHER_BAMBOO_VERSION}/"
-#CYPHER_BAMBOO_URL_PREFIX="https://github.com/cypher-network/bamboo/releases/download/${CYPHER_BAMBOO_VERSION}/"
+CYPHER_BAMBOO_URL_PREFIX="https://github.com/cypher-network/bamboo/releases/download/${CYPHER_BAMBOO_VERSION}/"
 
-CYPHER_CYPNODE_OPT_PATH="/opt/cypher/bamboo/"
-CYPHER_CYPNODE_TMP_PATH="/tmp/opt/cypher/bamboo/"
+CYPHER_BAMBOO_OPT_PATH="/opt/cypher/bamboo/"
+CYPHER_BAMBOO_TMP_PATH="/tmp/opt/cypher/bamboo/"
 
 
 if [ -f /etc/debian_version ]; then
@@ -108,48 +127,9 @@ is_command() {
 }
 
 
-os_info() {
-  if ! whiptail --title "System information" --yesno "The following system was detected:\\n\\nDistribution   : ${DISTRO}\\nVersion        : ${DISTRO_VERSION}\\nDebian based   : ${IS_DEBIAN_BASED}\\n\\nArchitecture   : ${ARCHITECTURE}\\n\nIs this information correct? When unsure, select <Yes>" "${7}" "${c}"; then
-    printf "\n"
-    printf "  %b Could not detect your system information. Please report this issue on\n" "${CROSS}"
-    printf "      https://github.com/cypher-network/bamboo/issues/new and include the output\n"
-    printf "      of the following command:\n\n"
-    printf "        uname -a\n\n"
-    return 1
-  fi
-}
-
-
 install_info() {
-  if [ "${IS_DEBIAN_BASED}" = true ]; then
-    printf "\n"
-    ARCHIVE="${CYPHER_BAMBOO_ARTIFACT_PREFIX}${ARCHITECTURE_DEB}.deb"
-    
-    if whiptail --title "Installation archive - .deb" --yesno "You are running a Debian-based system. It is recommended to install cypher-bamboo using a .deb archive.\\n\\nWould you like to install the recommended archive ${ARCHIVE} ?" "${7}" "${c}"; then
-      ARCHIVE_TYPE="deb"
-      printf "  %b Using installation archive %s\n" "${TICK}" "${ARCHIVE}"
-    else
-      printf "  %b Not using Debian installation archive on Debian host %s\n" "${CROSS}" "${ARCHIVE}"
-	  printf "      Please refer to the bamboo documentation to install the package manually.\n"
-	  printf "      DO NOT INSTALL THE DEBIAN ARCHIVE PARALLEL TO A MANUAL INSTALLATION\n\n"
-	  return 1
-    fi
-  fi
-  
-  if [ -z "${ARCHIVE}" ]; then
-    printf "\n"
-    ARCHIVE="${CYPHER_BAMBOO_ARTIFACT_PREFIX}linux-${ARCHITECTURE_UNIFIED}.tar.gz"
-    if whiptail --title "Installation archive - self-contained .tar.gz" --yesno "Self-contained builds include the .NET runtime environment, which does not require a separate .NET installation at the cost of slightly more disk space.\\n\\nWould you like to install the self-contained archive ${ARCHIVE} ?" "${7}" "${c}"; then
-        ARCHIVE_TYPE="self-contained"
-        printf "  %b Using installation archive %s\n" "${TICK}" "${ARCHIVE}"
-    else
-      printf "  %b Not using installation archive %s\n" "${CROSS}" "${ARCHIVE}"
-      printf "\n"
-      printf "  %b Could not find a suitable installation archive.\n" "${CROSS}"
-      printf "      Please refer to https://github.com/cypher-network/bamboo for manual installation instructions.\n\n"
-      return 1
-    fi
-  fi
+  ARCHIVE="${CYPHER_BAMBOO_ARTIFACT_PREFIX}linux-${ARCHITECTURE_UNIFIED}.tar.gz"
+  printf "\n  %b Using installation archive %s\n" "${TICK}" "${ARCHIVE}"
 }
 
 
@@ -164,7 +144,7 @@ download_archive() {
     HAS_CURL=false
   fi
   
-  if [ "${HAS_CURL}" = false ]; then
+  if [ ! "${HAS_CURL}" = true ]; then
     if is_command wget; then
       printf "  %b wget\n" "${TICK}"
     else
@@ -176,6 +156,23 @@ download_archive() {
   fi
   
   printf "\n";
+  printf "  %b Checking archive %s" "${INFO}" "${ARCHIVE}"
+  if [ "${HAS_CURL}" = true ]; then
+    if curl --silent --fail "${DOWNLOAD_URL}"; then
+      printf " %b  %b Archive %s found\n\n" "${OVER}" "${TICK}" "${ARCHIVE}"
+    else
+      printf " %b  %b Archive %s cannot be found\n\n" "${OVER}" "${CROSS}" "${ARCHIVE}"
+      exit 1
+    fi
+  else
+    if wget -q "${DOWNLOAD_URL}"; then
+      printf " %b  %b Archive %s found\n\n" "${OVER}" "${TICK}" "${ARCHIVE}"
+    else
+      printf " %b  %b Archive %s cannot be found\n\n" "${OVER}" "${CROSS}" "${ARCHIVE}"
+      exit 1
+    fi
+  fi
+
   printf "  %b Downloading archive %s" "${INFO}" "${ARCHIVE}"
 
   DOWNLOAD_PATH="/tmp/cypher-bamboo/"
@@ -194,24 +191,17 @@ download_archive() {
 
 
 install_archive() {
-  if [ "${ARCHIVE_TYPE}" = "deb" ]; then
-    printf "  %b Installing archive\n" "${INFO}"
-
-    sudo dpkg -i "${DOWNLOAD_FILE}"   
-
-  else
-    printf "  %b Unpacking archive to %s" "${INFO}" "${CYPHER_BAMBOO_TMP_PATH}"
-    mkdir -p "${CYPHER_BAMBOO_TMP_PATH}"
-    tar --overwrite -xf "${DOWNLOAD_FILE}" -C "${CYPHER_BAMBOO_TMP_PATH}"
-    printf "%b  %b Unpacked archive to %s\n" "${OVER}" "${TICK}" "${CYPHER_BAMBOO_TMP_PATH}"
+  printf "  %b Unpacking archive to %s" "${INFO}" "${CYPHER_BAMBOO_TMP_PATH}"
+  mkdir -p "${CYPHER_BAMBOO_TMP_PATH}"
+  tar --overwrite -xf "${DOWNLOAD_FILE}" -C "${CYPHER_BAMBOO_TMP_PATH}"
+  printf "%b  %b Unpacked archive to %s\n" "${OVER}" "${TICK}" "${CYPHER_BAMBOO_TMP_PATH}"
     
-    printf "  %b Installing to %s" "${INFO}" "${CYPHER_BAMBOO_OPT_PATH}"
-    sudo mkdir -p "${CYPHER_BAMBOO_OPT_PATH}"
-    sudo cp -r "${CYPHER_BAMBOO_TMP_PATH}"* "${CYPHER_BAMBOO_OPT_PATH}"
-    sudo chmod 755 -R "${CYPHER_BAMBOO_OPT_PATH}"
-    printf "%b  %b Installed to %s\n" "${OVER}" "${TICK}" "${CYPHER_BAMBOO_OPT_PATH}"
-    
-  fi
+  printf "  %b Installing to %s" "${INFO}" "${CYPHER_BAMBOO_OPT_PATH}"
+  sudo mkdir -p "${CYPHER_BAMBOO_OPT_PATH}"
+  sudo cp -r "${CYPHER_BAMBOO_TMP_PATH}"* "${CYPHER_BAMBOO_OPT_PATH}"
+  sudo chmod 755 -R "${CYPHER_BAMBOO_OPT_PATH}"
+  sudo chown -R $USER:$USER "${CYPHER_BAMBOO_OPT_PATH}"
+  printf "%b  %b Installed to %s\n" "${OVER}" "${TICK}" "${CYPHER_BAMBOO_OPT_PATH}"   
 }
 
 
@@ -228,11 +218,19 @@ finish() {
 }
 
 
-os_info
-install_info
+if [ "${IS_UNINSTALL}" = true ]; then
+  printf "  %b Uninstalling\n\n" "${INFO}"
 
-download_archive
-install_archive
+  sudo rm -rf "${CYPHER_CYPNODE_OPT_PATH}"
+  
+  printf "\n\n  %b Uninstall succesful\n\n" "${DONE}"
 
-cleanup
-finish
+else
+  install_info
+
+  download_archive
+  install_archive
+
+  cleanup
+  finish
+fi
