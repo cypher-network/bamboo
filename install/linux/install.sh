@@ -154,7 +154,11 @@ download_archive() {
       return 1
     fi
   fi
-  
+
+  DOWNLOAD_PATH="/tmp/cypher-bamboo/"
+  DOWNLOAD_FILE="${DOWNLOAD_PATH}${ARCHIVE}"
+  DOWNLOAD_URL="${CYPHER_BAMBOO_URL_PREFIX}${ARCHIVE}"
+
   printf "\n";
   printf "  %b Checking archive %s" "${INFO}" "${ARCHIVE}"
   if [ "${HAS_CURL}" = true ]; then
@@ -174,10 +178,6 @@ download_archive() {
   fi
 
   printf "  %b Downloading archive %s" "${INFO}" "${ARCHIVE}"
-
-  DOWNLOAD_PATH="/tmp/cypher-bamboo/"
-  DOWNLOAD_FILE="${DOWNLOAD_PATH}${ARCHIVE}"
-  DOWNLOAD_URL="${CYPHER_BAMBOO_URL_PREFIX}${ARCHIVE}"
   
   if [ "${HAS_CURL}" = true ]; then
     curl -s -L --create-dirs -o "${DOWNLOAD_FILE}" "${DOWNLOAD_URL}"
