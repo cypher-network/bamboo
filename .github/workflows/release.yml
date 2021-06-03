@@ -21,8 +21,12 @@ jobs:
       - name: Get version
         uses: ./.github/actions/get-version
 
-      - name: Verify AssemblyVersion
+      - name: Verify AssemblyVersion cli
         run: ./.github/actions/get-version/validate.sh ./cli/cli.csproj ${{ env.VERSION }}
+        shell: bash
+
+      - name: Verify AssemblyVersion bamwallet
+        run: ./.github/actions/get-version/validate.sh ./bamwallet/bamwallet.csproj ${{ env.VERSION }}
         shell: bash
 
       - uses: actions/setup-dotnet@v1

@@ -47,6 +47,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
   CYPHER_BAMBOO_VERSION=$(curl --silent "https://api.github.com/repos/cypher-network/bamboo/releases/latest" | grep -w '"tag_name": "v.*"' | cut -f2 -d ":" | cut -f2 -d "\"")
 
 elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+  IS_LINUX=true
   DISTRO=$(grep '^ID=' /etc/os-release | cut -d '=' -f 2)
   DISTRO_VERSION=$(grep '^VERSION_ID=' /etc/os-release | cut -d '=' -f 2 | tr -d '"')
   ARCHITECTURE=$(uname -m)
@@ -232,7 +233,7 @@ finish() {
 if [ "${IS_UNINSTALL}" = true ]; then
   printf "  %b Uninstalling\n\n" "${INFO}"
 
-  sudo rm -rf "${CYPHER_CYPNODE_OPT_PATH}"
+  sudo rm -rf "${CYPHER_BAMBOO_OPT_PATH}"
   
   printf "\n\n  %b Uninstall succesful\n\n" "${DONE}"
 
