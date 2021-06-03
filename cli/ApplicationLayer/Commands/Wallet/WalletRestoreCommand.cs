@@ -30,7 +30,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
 
         public override Task Execute()
         {
-            Shared.CreateWalletFromMnemonic(_console, _walletService);
+            Shared.CreateWalletFromKnownMnemonic(_console, _walletService);
             return Task.CompletedTask;
         }
     }
