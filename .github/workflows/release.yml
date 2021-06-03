@@ -33,22 +33,24 @@ jobs:
         uses: ./.github/actions/build-env-prepare-linux
 
       - name: Create linux-x64 package
-        uses: ./.github/actions/build-linux
+        uses: ./.github/actions/build-tar-gz
         with:
           runtime: 'linux-x64'
-          runtime_deb: 'amd64'
 
       - name: Create linux-arm package
-        uses: ./.github/actions/build-linux
+        uses: ./.github/actions/build-tar-gz
         with:
           runtime: 'linux-arm'
-          runtime_deb: 'armhf'
 
       - name: Create linux-arm64 package
-        uses: ./.github/actions/build-linux
+        uses: ./.github/actions/build-tar-gz
         with:
           runtime: 'linux-arm64'
-          runtime_deb: 'arm64'
+
+      - name: Create osx-x64 package
+        uses: ./.github/actions/build-tar-gz
+        with:
+          runtime: 'osx-x64'
 
       - name: Create releases
         id: gh-release

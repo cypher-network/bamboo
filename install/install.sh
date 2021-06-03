@@ -40,48 +40,52 @@ done
 # These variables should all be GLOBAL variables, written in CAPS
 # Local variables will be in lowercase and will exist only within functions
 # It's still a work in progress, so you may see some variance in this guideline until it is complete
-DISTRO=$(grep '^ID=' /etc/os-release | cut -d '=' -f 2)
-DISTRO_VERSION=$(grep '^VERSION_ID=' /etc/os-release | cut -d '=' -f 2 | tr -d '"')
-ARCHITECTURE=$(uname -m)
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  IS_MACOS=true
+  ARCHITECTURE_UNIFIED="osx-x64"
 
-ARCHITECTURE_ARM=("armv7l")
-ARCHITECTURE_ARM64=("aarch64")
-ARCHITECTURE_X64=("x86_64")
+  CYPHER_BAMBOO_VERSION=$(curl --silent "https://api.github.com/repos/cypher-network/bamboo/releases/latest" | grep -w '"tag_name": "v.*"' | cut -f2 -d ":" | cut -f2 -d "\"")
 
-if [[ " ${ARCHITECTURE_ARM[@]} " =~ " ${ARCHITECTURE} " ]]; then
-  ARCHITECTURE_UNIFIED="arm"
-  ARCHITECTURE_DEB="armhf"
+elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+  DISTRO=$(grep '^ID=' /etc/os-release | cut -d '=' -f 2)
+  DISTRO_VERSION=$(grep '^VERSION_ID=' /etc/os-release | cut -d '=' -f 2 | tr -d '"')
+  ARCHITECTURE=$(uname -m)
 
-elif [[ " ${ARCHITECTURE_ARM64[@]} " =~ " ${ARCHITECTURE} " ]]; then
-  ARCHITECTURE_UNIFIED="arm64"
-  ARCHITECTURE_DEB="arm64"
+  ARCHITECTURE_ARM=("armv7l")
+  ARCHITECTURE_ARM64=("aarch64")
+  ARCHITECTURE_X64=("x86_64")
 
-elif [[ " ${ARCHITECTURE_X64[@]} " =~ " ${ARCHITECTURE} " ]]; then
-  ARCHITECTURE_UNIFIED="x64"
-  ARCHITECTURE_DEB="amd64"
+  if [[ " ${ARCHITECTURE_ARM[@]} " =~ " ${ARCHITECTURE} " ]]; then
+    ARCHITECTURE_UNIFIED="linux-arm"
+
+  elif [[ " ${ARCHITECTURE_ARM64[@]} " =~ " ${ARCHITECTURE} " ]]; then
+    ARCHITECTURE_UNIFIED="linux-arm64"
+
+  elif [[ " ${ARCHITECTURE_X64[@]} " =~ " ${ARCHITECTURE} " ]]; then
+    ARCHITECTURE_UNIFIED="linux-x64"
+  else
+    # Fall back to x64 architecture
+    ARCHITECTURE_UNIFIED="linux-x64"
+  fi
+
+  if [ -f /etc/debian_version ]; then
+    IS_DEBIAN_BASED=true
+  fi
+
+  CYPHER_BAMBOO_VERSION=$(curl --silent "https://api.github.com/repos/cypher-network/bamboo/releases/latest" | grep -Po '"tag_name": "\K.*?(?=")')
+
 else
-  # Fall back to x64 architecture
-  ARCHITECTURE_UNIFIED="x64"
-  ARCHITECTURE_DEB="amd64"
+  echo "Unsupported OS type ${OSTYPE}"
+  exit 1
 fi
 
 
-CYPHER_BAMBOO_VERSION=$(curl --silent "https://api.github.com/repos/cypher-network/bamboo/releases/latest" | grep -Po '"tag_name": "\K.*?(?=")')
 CYPHER_BAMBOO_VERSION_SHORT=$(echo "${CYPHER_BAMBOO_VERSION}" | cut -c 2-)
 CYPHER_BAMBOO_ARTIFACT_PREFIX="cypher-bamboo_${CYPHER_BAMBOO_VERSION_SHORT}_"
 CYPHER_BAMBOO_URL_PREFIX="https://github.com/cypher-network/bamboo/releases/download/${CYPHER_BAMBOO_VERSION}/"
 
 CYPHER_BAMBOO_OPT_PATH="/opt/cypher/bamboo/"
 CYPHER_BAMBOO_TMP_PATH="/tmp/opt/cypher/bamboo/"
-
-
-if [ -f /etc/debian_version ]; then
-  IS_DEBIAN_BASED=true
-else
-  IS_DEBIAN_BASED=false
-fi
-
-INIT=$(ps --no-headers -o comm 1)
 
 
 # Check if we are running on a real terminal and find the rows and columns
@@ -128,7 +132,7 @@ is_command() {
 
 
 install_info() {
-  ARCHIVE="${CYPHER_BAMBOO_ARTIFACT_PREFIX}linux-${ARCHITECTURE_UNIFIED}.tar.gz"
+  ARCHIVE="${CYPHER_BAMBOO_ARTIFACT_PREFIX}${ARCHITECTURE_UNIFIED}.tar.gz"
   printf "\n  %b Using installation archive %s\n" "${TICK}" "${ARCHIVE}"
 }
 
@@ -162,7 +166,7 @@ download_archive() {
   printf "\n";
   printf "  %b Checking archive %s" "${INFO}" "${ARCHIVE}"
   if [ "${HAS_CURL}" = true ]; then
-    if curl --silent --fail "${DOWNLOAD_URL}"; then
+    if curl --silent --fail "${DOWNLOAD_URL}" &> /dev/null; then
       printf " %b  %b Archive %s found\n\n" "${OVER}" "${TICK}" "${ARCHIVE}"
     else
       printf " %b  %b Archive %s cannot be found\n\n" "${OVER}" "${CROSS}" "${ARCHIVE}"
@@ -191,16 +195,23 @@ download_archive() {
 
 
 install_archive() {
+  printf "\n  %b Installing archive\n" "${INFO}"
+
   printf "  %b Unpacking archive to %s" "${INFO}" "${CYPHER_BAMBOO_TMP_PATH}"
   mkdir -p "${CYPHER_BAMBOO_TMP_PATH}"
-  tar --overwrite -xf "${DOWNLOAD_FILE}" -C "${CYPHER_BAMBOO_TMP_PATH}"
+  if [ "${IS_LINUX}" = true ]; then
+    tar --overwrite -xf "${DOWNLOAD_FILE}" -C "${CYPHER_BAMBOO_TMP_PATH}"
+  elif [ "${IS_MACOS}" = true ]; then
+    tar -xf "${DOWNLOAD_FILE}" -C "${CYPHER_BAMBOO_TMP_PATH}"
+  fi  
+  
   printf "%b  %b Unpacked archive to %s\n" "${OVER}" "${TICK}" "${CYPHER_BAMBOO_TMP_PATH}"
     
   printf "  %b Installing to %s" "${INFO}" "${CYPHER_BAMBOO_OPT_PATH}"
   sudo mkdir -p "${CYPHER_BAMBOO_OPT_PATH}"
   sudo cp -r "${CYPHER_BAMBOO_TMP_PATH}"* "${CYPHER_BAMBOO_OPT_PATH}"
-  sudo chmod 755 -R "${CYPHER_BAMBOO_OPT_PATH}"
-  sudo chown -R $USER:$USER "${CYPHER_BAMBOO_OPT_PATH}"
+  sudo chmod -R 755 "${CYPHER_BAMBOO_OPT_PATH}"
+  sudo chown -R $USER "${CYPHER_BAMBOO_OPT_PATH}"
   printf "%b  %b Installed to %s\n" "${OVER}" "${TICK}" "${CYPHER_BAMBOO_OPT_PATH}"   
 }
 
