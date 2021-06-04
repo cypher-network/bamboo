@@ -226,7 +226,7 @@ cleanup() {
 }
 
 finish() {
-  printf "\n\n  %b Installation succesful\n\n" "${DONE}"
+  printf "\n\n  %b Installation successful\n\n" "${DONE}"
 }
 
 
