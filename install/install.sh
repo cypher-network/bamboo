@@ -19,7 +19,7 @@ do
         --help)
           echo "  Install script arguments:"
           echo
-          echo "    --uninstall                   : uninstall node"
+          echo "    --uninstall                   : uninstall wallet"
           echo
           exit 0
           ;;

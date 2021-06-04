@@ -17,7 +17,7 @@ The following parameters can be supplied:
 Display help
   
 `--uninstall`
-Uninstall node
+Uninstall wallet
 
   
 For example:

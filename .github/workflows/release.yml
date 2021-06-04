@@ -7,7 +7,28 @@ on:
 
 
 jobs:
-  build-linux:
+  validate-version:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Get version
+        uses: ./.github/actions/get-version
+
+      - name: Verify AssemblyVersion cypcore
+        run: ./.github/actions/get-version/validate.sh ./cli/cli.csproj ${{ env.VERSION }}
+        shell: bash
+
+      - name: Verify AssemblyVersion cypnode
+        run: ./.github/actions/get-version/validate.sh ./bamwallet/bamwallet.csproj ${{ env.VERSION }}
+        shell: bash
+
+
+  build-linux-macos:
+    needs: validate-version
     runs-on: ubuntu-latest
     env:
       DOTNET_NOLOGO: true
@@ -20,14 +41,6 @@ jobs:
 
       - name: Get version
         uses: ./.github/actions/get-version
-
-      - name: Verify AssemblyVersion cli
-        run: ./.github/actions/get-version/validate.sh ./cli/cli.csproj ${{ env.VERSION }}
-        shell: bash
-
-      - name: Verify AssemblyVersion bamwallet
-        run: ./.github/actions/get-version/validate.sh ./bamwallet/bamwallet.csproj ${{ env.VERSION }}
-        shell: bash
 
       - uses: actions/setup-dotnet@v1
         with:
@@ -65,6 +78,7 @@ jobs:
           files: cypher-bamboo_${{ env.VERSION }}*.*
 
   build-windows:
+    needs: validate-version
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
