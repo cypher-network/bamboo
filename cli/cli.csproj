@@ -6,7 +6,7 @@
     <RootNamespace>CLi</RootNamespace>
     <LangVersion>8</LangVersion>
     <Platforms>AnyCPU;x64</Platforms>
-    <AssemblyVersion>0.0.12.0</AssemblyVersion>
+    <AssemblyVersion>0.0.13.0</AssemblyVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
