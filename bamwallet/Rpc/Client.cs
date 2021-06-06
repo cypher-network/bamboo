@@ -131,7 +131,7 @@ namespace BAMWallet.Rpc
                 else
                 {
                     var content = await response.Content.ReadAsStringAsync(cancellationToken);
-                    _logger.LogError($"Result: {content}\n StatusCode: {(int) response.StatusCode}");
+                    _logger.LogError($"Result: {content}\n StatusCode: {(int)response.StatusCode}");
                     throw new Exception(content);
                 }
             }
@@ -173,7 +173,7 @@ namespace BAMWallet.Rpc
             {
 
                 var buffer = MessagePackSerializer.Serialize(payload, cancellationToken: cancellationToken);
-                
+
                 using var response = await client.PostAsJsonAsync(path, buffer, cancellationToken);
 
                 var _ = response.Content.ReadAsStringAsync(cancellationToken).Result;

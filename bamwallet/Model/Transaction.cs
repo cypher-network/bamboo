@@ -64,7 +64,7 @@ namespace BAMWallet.Model
                     .Append(output.S ?? string.Empty)
                     .Append(output.T.ToString());
             }
-            
+
             foreach (var rct in Rct)
             {
                 ts
@@ -73,10 +73,10 @@ namespace BAMWallet.Model
                     .Append(rct.P)
                     .Append(rct.S);
             }
-            
+
             return ts.ToArray();
         }
-        
+
         /// <summary>
         /// 
         /// </summary>
@@ -122,7 +122,7 @@ namespace BAMWallet.Model
 
             return amount;
         }
-        
+
         /// <summary>
         /// 
         /// </summary>
@@ -156,7 +156,10 @@ namespace BAMWallet.Model
         {
             return MessagePackSerializer.Serialize(new WalletTransactionMessage
             {
-                Amount = amount, Blind = blind, Memo = memo, Date = DateTime.UtcNow
+                Amount = amount,
+                Blind = blind,
+                Memo = memo,
+                Date = DateTime.UtcNow
             });
         }
     }

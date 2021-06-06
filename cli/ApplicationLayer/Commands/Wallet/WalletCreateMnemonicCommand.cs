@@ -18,7 +18,7 @@ using NBitcoin;
 using BAMWallet.HD;
 
 namespace CLi.ApplicationLayer.Commands.Wallet
-{ 
+{
     [CommandDescriptor(new string[] { "mnemonic" }, "Creates a new mnemonic and passphrase")]
     class WalletCreateMnemonicCommand : Command
     {

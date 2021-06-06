@@ -66,7 +66,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                    }
 
                    var table = new ConsoleTable("DateTime", "Memo", "MoneyOut", "Fee", "MoneyIn", "Reward", "Balance");
-                   
+
                    foreach (var sheet in request.Result)
                    {
                        table.AddRow(sheet.Date, sheet.Memo, sheet.MoneyOut, sheet.Fee, sheet.MoneyIn, sheet.Reward,
@@ -74,7 +74,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                    }
 
                    table.Configure(o => o.NumberAlignment = Alignment.Right);
-                   
+
                    _console.WriteLine($"\n{table.ToString()}");
 
                    return Task.CompletedTask;

@@ -40,7 +40,7 @@ namespace BAMWallet.Extensions
 
             }
         }
-        
+
         public static bool Xor(this byte[] a, byte[] b)
         {
             int x = a.Length ^ b.Length;

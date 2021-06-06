@@ -84,7 +84,7 @@ namespace BAMWallet.Services
                 {
                     var fileStream = SafeguardData(GetDays());
                     var buffer = MessagePackSerializer.Serialize(blockHeaders);
-                    
+
                     await fileStream.WriteAsync(buffer, stoppingToken);
                     await fileStream.FlushAsync(stoppingToken);
                     fileStream.Close();

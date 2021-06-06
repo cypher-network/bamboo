@@ -14,15 +14,15 @@ using Microsoft.Extensions.DependencyInjection;
 namespace CLi.ApplicationLayer.Commands.Wallet
 {
     [CommandDescriptor(new string[] { "version" }, "Running version")]
-    public class WalletVersionCommand: Command
+    public class WalletVersionCommand : Command
     {
         private readonly IConsole _console;
-        
+
         public WalletVersionCommand(IServiceProvider serviceProvider)
         {
             _console = serviceProvider.GetService<IConsole>();
         }
-        
+
         public override Task Execute()
         {
             _console.WriteLine($"{BAMWallet.Helper.Util.GetAssemblyVersion()}");

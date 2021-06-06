@@ -27,7 +27,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
         private readonly IConsole _console;
 
         private Spinner _spinner;
-        
+
         public WalletBalanceCommand(IServiceProvider serviceProvider)
         {
             _walletService = serviceProvider.GetService<IWalletService>();

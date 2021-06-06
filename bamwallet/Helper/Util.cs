@@ -41,7 +41,7 @@ namespace BAMWallet.Helper
         {
             return Assembly.GetExecutingAssembly().GetName().Version.ToString();
         }
-        
+
         public static void Shuffle<T>(this IList<T> list)
         {
             var rng = new Random();

@@ -152,7 +152,7 @@ namespace BAMWallet.Controllers
 
             var transaction = _walletService.GetTransaction(session.SessionId);
             var buffer = MessagePackSerializer.Serialize(transaction);
-            
+
             return new ObjectResult(new { messagepack = buffer });
         }
 
