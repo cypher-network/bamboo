@@ -82,14 +82,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                 }
                 else
                 {
-                    using var mnemonic = Prompt.GetPasswordAsSecureString("Mnemonic:", ConsoleColor.Yellow);
-                    using var passphrase = Prompt.GetPasswordAsSecureString("Passphrase:", ConsoleColor.Yellow);
-
-                    var id = _walletService.CreateWallet(mnemonic, passphrase);
-                    var path = Util.WalletPath(id);
-
-                    _console.WriteLine($"Wallet ID: {id}");
-                    _console.WriteLine($"Wallet Path: {path}");
+                    Shared.CreateWalletFromKnownMnemonic(_console, _walletService);
                 }
             }
             catch (Exception ex)

@@ -19,7 +19,7 @@ do
         --help)
           echo "  Install script arguments:"
           echo
-          echo "    --uninstall                   : uninstall node"
+          echo "    --uninstall                   : uninstall wallet"
           echo
           exit 0
           ;;
@@ -226,7 +226,7 @@ cleanup() {
 }
 
 finish() {
-  printf "\n\n  %b Installation succesful\n\n" "${DONE}"
+  printf "\n\n  %b Installation successful\n\n" "${DONE}"
 }
 
 
