@@ -371,7 +371,7 @@ namespace BAMWallet.HD
                 
                 foreach (var balance in balances.OrderByDescending(x => x.Total))
                 {
-                    var t = balance.Total.DivWithNaT();
+                    var t = balance.Total.DivWithNaT() + Fee(FeeNByte).DivWithNaT();
                     var count = (int) (amount / t);
                     try
                     {
