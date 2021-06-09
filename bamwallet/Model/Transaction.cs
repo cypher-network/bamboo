@@ -80,6 +80,15 @@ namespace BAMWallet.Model
         /// <summary>
         /// 
         /// </summary>
+        /// <returns></returns>
+        public byte[] Serialize()
+        {
+            return MessagePackSerializer.Serialize(this);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="output"></param>
         /// <param name="scan"></param>
         /// <returns></returns>

@@ -1,6 +1,7 @@
-// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0. 
+﻿// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0. 
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
+using System;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 using System.Threading.Tasks;
@@ -11,6 +12,8 @@ using BAMWallet.Helper;
 using BAMWallet.Model;
 using Dawn;
 using MessagePack;
+using Microsoft.AspNetCore.Http;
+using Transaction = BAMWallet.Model.Transaction;
 
 namespace BAMWallet.Rpc.Controllers
 {
@@ -131,29 +134,41 @@ namespace BAMWallet.Rpc.Controllers
             return new OkObjectResult(request.Result);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
         [HttpPost("transaction", Name = "CreateTransaction")]
         public IActionResult CreateTransaction([FromBody] byte[] data)
         {
             var payment = MessagePackSerializer.Deserialize<SendPayment>(data);
-            var session = _walletService.SessionAddOrUpdate(new Session(payment.Credentials.Identifier.ToSecureString(), payment.Credentials.Passphrase.ToSecureString())
-            {
-                SessionType = payment.SessionType,
-                WalletTransaction = new WalletTransaction
+            var session = _walletService.SessionAddOrUpdate(
+                new Session(payment.Credentials.Identifier.ToSecureString(),
+                    payment.Credentials.Passphrase.ToSecureString())
                 {
-                    Fee = payment.SessionType == SessionType.Coin ? payment.Fee : 0,
-                    Payment = payment.Amount,
-                    Reward = payment.SessionType == SessionType.Coinstake ? payment.Fee : 0,
-                    Memo = payment.Memo,
-                    RecipientAddress = payment.Address
+                    SessionType = payment.SessionType,
+                    WalletTransaction = new WalletTransaction
+                    {
+                        Fee = payment.SessionType == SessionType.Coin ? payment.Fee : 0,
+                        Payment = payment.Amount,
+                        Reward = payment.SessionType == SessionType.Coinstake ? payment.Fee : 0,
+                        Memo = payment.Memo,
+                        RecipientAddress = payment.Address
+                    }
+                });
+            var walletTransaction = _walletService.CreateTransaction(session.SessionId);
+            if (walletTransaction.Success)
+            {
+                var transaction = _walletService.GetTransaction(session.SessionId);
+                if (transaction != null)
+                {
+                    return new ObjectResult(new {messagepack = transaction.Serialize()});
                 }
-            });
+            }
 
-            _walletService.CreateTransaction(session.SessionId);
-
-            var transaction = _walletService.GetTransaction(session.SessionId);
-            var buffer = MessagePackSerializer.Serialize(transaction);
-
-            return new ObjectResult(new { messagepack = buffer });
+            _walletService.RollBackTransaction(session.SessionId);
+            return new StatusCodeResult(StatusCodes.Status404NotFound);
         }
 
         [HttpPost("receive", Name = "Receive")]

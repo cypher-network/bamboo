@@ -267,7 +267,7 @@ namespace BAMWallet.HD
             var walletTransaction = session.Database.Query<WalletTransaction>().Where(x => x.Id == session.SessionId)
                 .FirstOrDefault();
 
-            return walletTransaction.Transaction;
+            return walletTransaction?.Transaction;
         }
 
         /// <summary>
@@ -1362,7 +1362,7 @@ namespace BAMWallet.HD
             var fail = TaskResult<bool>.CreateFailure(
                 new Exception($"Unable to send transaction with paymentId: {transaction.TxnId.ByteToHex()}"));
             SetLastError(session, fail);
-            RollBackOne(session.SessionId);
+            RollBackTransaction(session.SessionId);
 
             return fail;
         }
@@ -1455,7 +1455,7 @@ namespace BAMWallet.HD
         /// </summary>
         /// <param name="sessionId"></param>
         /// <returns></returns>
-        private TaskResult<bool> RollBackOne(Guid sessionId)
+        public TaskResult<bool> RollBackTransaction(Guid sessionId)
         {
             Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
 

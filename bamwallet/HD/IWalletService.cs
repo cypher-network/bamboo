@@ -43,6 +43,7 @@ namespace BAMWallet.HD
         ulong Fee(int nByte);
         PubKey ScanPublicKey(string address);
         Transaction GetTransaction(Guid sessionId);
-        public byte[] GetKeyImage(Guid sessionId, Vout output);
+        byte[] GetKeyImage(Guid sessionId, Vout output);
+        TaskResult<bool> RollBackTransaction(Guid sessionId);
     }
 }
