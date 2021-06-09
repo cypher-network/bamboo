@@ -1,0 +1,1 @@
+@powershell "Start-Process -FilePath 'clibamwallet.exe' -WorkingDirectory '%~dp0' -Verb RunAs"

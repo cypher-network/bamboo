@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <?if $(var.Platform) = x64 ?>
+  <?define ProductName = "Bamboo Wallet" ?>
+  <?define Win64 = "yes" ?>
+  <?endif ?>
+  <!-- Full version number to display -->
+  <?define VersionNumber="!(bind.FileVersion.filEAED9D20F2CFC15D7672EE6A5EB4C687)" ?>
+  <!--
+   Upgrade code HAS to be the same for all updates.
+   Once you've chosen it don't change it.
+   -->
+  <?define UpgradeCode="BC2E46D2-2304-415B-A341-754D9D263EAB"?>
+
+  <!-- The URL for add/remove programs -->
+  <?define InfoURL="https://tangrams.io/about-tangram/" ?>
+  <Product Id="*" Name="$(var.ProductName)" Language="1033" Version="$(var.VersionNumber)" Manufacturer="Cypher" UpgradeCode="$(var.UpgradeCode)">
+    <Package InstallerVersion="400" Compressed="yes" InstallScope="perMachine" Description="Bamboo Wallet installer" Comments="Bamboo wallet version: $(var.VersionNumber)"/>
+    <WixVariable Id="WixUILicenseRtf" Value="Eula-en.rtf"/>
+    <!--Images-->
+    <WixVariable Id="WixUIBannerBmp" Value="Tangram_Logo_Banner-493x58.bmp" />
+    <UI>
+      <UIRef Id="WixUI_Minimal"/>
+      <Publish Dialog="ExitDialog"
+               Control="Finish"
+               Event="DoAction"
+               Value="AddBambooWalletToPath">WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 and NOT Installed</Publish>
+    </UI>
+
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Add Bamboo CLI Wallet to the path." />
+    <Icon Id="icon.ico" SourceFile="tgm.ico"/>
+    <!--Override standard dialog properties-->
+    <Property Id="ARPPRODUCTICON" Value="icon.ico" />
+    <Property Id="ARPHELPLINK" Value="$(var.InfoURL)" />
+    <Property Id="ARPNOREPAIR" Value="yes" Secure="yes" />
+    <!-- Remove repair -->
+    <MediaTemplate EmbedCab="yes"/>
+    <MajorUpgrade AllowDowngrades="no"
+                  DowngradeErrorMessage="A newer version of [ProductName] is already installed."
+                  AllowSameVersionUpgrades="no"/>
+    <!--Windows 10 only allowed!-->
+    <Condition Message="This product requires at least Windows 10.">
+      <![CDATA[Installed OR (VersionNT >= 603)]]>
+    </Condition>
+
+    <CustomAction Id="AddBambooWalletToPath" Directory="Bamboo" Impersonate="no" ExeCommand="cmd.exe /k %SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe&quot;Start-Process -FilePath 'C:\Program Files\Cypher\Wallet\Bamboo\path.ps1' -Verb RunAs&quot;" Return="check" />
+
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id='ProgramFiles64Folder' Name='PFiles'>
+        <Directory Id="Cypher" Name="Cypher">
+          <Directory Id="Wallet" Name="Wallet">
+            <Directory Id="Bamboo" Name="Bamboo"/>
+          </Directory>
+        </Directory>
+      </Directory>
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="MyShortcutsDir"
+                   Name="Bamboo Wallet"/>
+      </Directory>
+    </Directory>
+
+    <DirectoryRef Id="MyShortcutsDir">
+      <Component Id="CMP_Shortcuts"
+                 Guid="44B82209-CE25-4714-BD1A-F717D654263A">
+        <Shortcut Id="LicenceAgreementShortcut"
+                  Name="Bamboo Wallet licence"
+                  Description="Read the Bamboo Wallet licence agreement"
+                  Target="[Bamboo]Eula-en.rtf"/>
+        <Shortcut Id="StartNodeShortcut"
+                  Name="Start Bamboo Wallet cli"
+                  Description="Launches a cmd line window where you can access your bamboo wallet!"
+                  WorkingDirectory="Bamboo"
+                  Target="[Bamboo]wallet.bat"
+                  Icon="icon.ico"/>
+        <RemoveFolder Id="RemoveMyShortcutsDir" On="uninstall"/>
+        <RegistryValue Root="HKCU"
+                       Key="Software\Microsoft\TangramBambooWallet"
+                       Name="installed"
+                       Type="integer"
+                       Value="1"
+                       KeyPath="yes"/>
+      </Component>
+    </DirectoryRef>
+
+    <Property Id="WIXUI_EXITDIALOGOPTIONALTEXT" Value="Thank you for installing Bamboo Wallet." />
+    <ComponentGroup Id="CMP_ShortcutFiles" Directory="Bamboo">
+      <Component Id="CMP_FILE_A1" Guid="5F7BCFA8-48FF-442D-80B7-7E070DA14558">
+        <File Id="FILE_5F7BCFA848FF442D80B77E070DA14558" KeyPath="yes" Source="Eula-en.rtf" />
+      </Component>
+      <Component Id="CMP_FILE_A2" Guid="FC92B091-02E9-4556-ABD1-2474D3B63086">
+        <File Id="FILE_5F7BCFA848FF442D80B77E070DA14559" KeyPath="yes" Source="wallet.bat" />
+      </Component>
+    </ComponentGroup>
+
+    <Component Id="wallet_exe" Directory="Bamboo" Guid="C6FE69A2-F268-4899-A8ED-FA146399FC21">
+      <File Id="filEAED9D20F2CFC15D7672EE6A5EB4C687" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\clibamwallet.exe" />
+    </Component>
+    <Component Id="path_exe" Directory="Bamboo" Guid="A83B4C70-7D8C-4525-A8E8-566EAF73970A">
+      <File Id="filEAED9D20F2CFC15D7672EE6A5EBCGDGF" KeyPath="yes" Source="path.ps1" />
+    </Component>
+
+    <Feature Id="BambooWallet"
+             Title="Bamboo Wallet cli"
+             Absent="disallow"
+             Level="1">
+      <ComponentGroupRef Id="BambooWalletInstallationFilesGroup"/>
+      <ComponentRef Id="CMP_Shortcuts"/>
+      <ComponentGroupRef Id="CMP_ShortcutFiles"/>
+      <ComponentRef Id="wallet_exe"/>
+      <ComponentRef Id="path_exe"/>
+    </Feature>
+  </Product>
+</Wix>
