@@ -3,7 +3,7 @@
 
 using Microsoft.AspNetCore.Mvc;
 
-namespace BAMWallet.Controllers
+namespace BAMWallet.Rpc.Controllers
 {
     public class HomeController : Controller
     {
