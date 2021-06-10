@@ -21,7 +21,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Eula-en.rtf" />
-    <Content Include="path.ps1" />
     <Content Include="ReadMe.txt" />
     <Content Include="remove_exe.xslt" />
     <Content Include="wallet.bat" />

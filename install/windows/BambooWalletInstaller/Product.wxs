@@ -21,13 +21,8 @@
     <WixVariable Id="WixUIBannerBmp" Value="Tangram_Logo_Banner-493x58.bmp" />
     <UI>
       <UIRef Id="WixUI_Minimal"/>
-      <Publish Dialog="ExitDialog"
-               Control="Finish"
-               Event="DoAction"
-               Value="AddBambooWalletToPath">WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 and NOT Installed</Publish>
     </UI>
 
-    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Add Bamboo CLI Wallet to the path." />
     <Icon Id="icon.ico" SourceFile="tgm.ico"/>
     <!--Override standard dialog properties-->
     <Property Id="ARPPRODUCTICON" Value="icon.ico" />
@@ -43,13 +38,16 @@
       <![CDATA[Installed OR (VersionNT >= 603)]]>
     </Condition>
 
-    <CustomAction Id="AddBambooWalletToPath" Directory="Bamboo" Impersonate="no" ExeCommand="cmd.exe /k %SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe&quot;Start-Process -FilePath 'C:\Program Files\Cypher\Wallet\Bamboo\path.ps1' -Verb RunAs&quot;" Return="check" />
-
     <Directory Id="TARGETDIR" Name="SourceDir">
       <Directory Id='ProgramFiles64Folder' Name='PFiles'>
         <Directory Id="Cypher" Name="Cypher">
           <Directory Id="Wallet" Name="Wallet">
-            <Directory Id="Bamboo" Name="Bamboo"/>
+            <Directory Id="Bamboo" Name="Bamboo">
+              <Component Id='EnvVars' Guid="173E3599-D5EF-41FB-8548-749E7D7915B3">
+                <CreateFolder/>
+                <Environment Id='PATH' Action='set' System='no' Name='PATH' Part='first' Value='[Bamboo]'/>
+              </Component>
+            </Directory>
           </Directory>
         </Directory>
       </Directory>
@@ -95,10 +93,6 @@
     <Component Id="wallet_exe" Directory="Bamboo" Guid="C6FE69A2-F268-4899-A8ED-FA146399FC21">
       <File Id="filEAED9D20F2CFC15D7672EE6A5EB4C687" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\clibamwallet.exe" />
     </Component>
-    <Component Id="path_exe" Directory="Bamboo" Guid="A83B4C70-7D8C-4525-A8E8-566EAF73970A">
-      <File Id="filEAED9D20F2CFC15D7672EE6A5EBCGDGF" KeyPath="yes" Source="path.ps1" />
-    </Component>
-
     <Feature Id="BambooWallet"
              Title="Bamboo Wallet cli"
              Absent="disallow"
@@ -107,7 +101,7 @@
       <ComponentRef Id="CMP_Shortcuts"/>
       <ComponentGroupRef Id="CMP_ShortcutFiles"/>
       <ComponentRef Id="wallet_exe"/>
-      <ComponentRef Id="path_exe"/>
+      <ComponentRef Id="EnvVars"/>
     </Feature>
   </Product>
 </Wix>
