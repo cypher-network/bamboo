@@ -5,6 +5,14 @@ on:
     tags:
       - 'v*.*.*'
 
+  workflow_dispatch:
+      inputs:
+        logLevel:
+          description: 'Log level'
+          required: true
+          default: 'warning'
+        tags:
+          description: 'Test scenario tags'
 
 jobs:
   validate-version:
@@ -89,10 +97,13 @@ jobs:
         id: get_version
         uses: ./.github/actions/get-version
 
+      - name: Create windows installer
+        uses: ./.github/actions/build-windows
+
       - name: Create Windows release
         id: gh-release
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          files: cypher-cypnode_$VERSION*.msi
+          files: cypher-bamboo_{{ env.$VERSION }}*.*
