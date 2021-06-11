@@ -5,14 +5,14 @@ on:
     tags:
       - 'v*.*.*'
 
-  workflow_dispatch:
-      inputs:
-        logLevel:
-          description: 'Log level'
-          required: true
-          default: 'warning'
-        tags:
-          description: 'Test scenario tags'
+  # workflow_dispatch:
+  #     inputs:
+  #       logLevel:
+  #         description: 'Log level'
+  #         required: true
+  #         default: 'warning'
+  #       tags:
+  #         description: 'Test scenario tags'
 
 jobs:
   validate-version:
@@ -88,6 +88,10 @@ jobs:
   build-windows:
     needs: validate-version
     runs-on: windows-latest
+    env:
+      DOTNET_NOLOGO: true
+      DOTNET_CLI_TELEMETRY_OPTOUT: true
+
     steps:
       - uses: actions/checkout@v2
         with:
@@ -106,4 +110,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          files: cypher-bamboo_{{ env.$VERSION }}*.*
+          files: cypher-bamboo_${{ env.VERSION }}*.*

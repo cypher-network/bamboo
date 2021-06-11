@@ -43,7 +43,7 @@
         <Directory Id="Cypher" Name="Cypher">
           <Directory Id="Wallet" Name="Wallet">
             <Directory Id="Bamboo" Name="Bamboo">
-              <Component Id='EnvVars' Guid="173E3599-D5EF-41FB-8548-749E7D7915B3">
+              <Component Id='EnvVars' Guid="173E3599-D5EF-41FB-8548-749E7D7915B3" KeyPath="yes">
                 <CreateFolder/>
                 <Environment Id='PATH' Action='set' System='no' Name='PATH' Part='first' Value='[Bamboo]'/>
               </Component>
