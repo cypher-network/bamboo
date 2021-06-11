@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" InitialTargets="EnsureWixToolsetInstalled" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProductVersion>3.10</ProductVersion>
+    <ProjectGuid>661070c1-3b7c-43ec-84c6-6c6951c95aa7</ProjectGuid>
+    <SchemaVersion>2.0</SchemaVersion>
+    <OutputName>bamboo_wallet_cli</OutputName>
+    <OutputType>Package</OutputType>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
+    <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
+    <DefineConstants>BambooWalletInstallationDirectory=$(ProjectDir)bin\BambooWalletCliFiles</DefineConstants>
+    <SuppressSpecificWarnings>20</SuppressSpecificWarnings>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Product.wxs" />
+    <Compile Include="wallet_files.wxs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Eula-en.rtf" />
+    <Content Include="ReadMe.txt" />
+    <Content Include="remove_exe.xslt" />
+    <Content Include="wallet.bat" />
+    <Content Include="Tangram_Logo-32x32.ico" />
+    <Content Include="Tangram_Logo_Banner-493x58.bmp" />
+    <Content Include="tgm.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <WixExtension Include="WixUtilExtension">
+      <HintPath>$(WixExtDir)\WixUtilExtension.dll</HintPath>
+      <Name>WixUtilExtension</Name>
+    </WixExtension>
+    <WixExtension Include="WixUIExtension">
+      <HintPath>$(WixExtDir)\WixUIExtension.dll</HintPath>
+      <Name>WixUIExtension</Name>
+    </WixExtension>
+  </ItemGroup>
+  <Import Project="$(WixTargetsPath)" Condition=" '$(WixTargetsPath)' != '' " />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets" Condition=" '$(WixTargetsPath)' == '' AND Exists('$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets') " />
+  <Target Name="EnsureWixToolsetInstalled" Condition=" '$(WixTargetsImported)' != 'true' ">
+    <Error Text="The WiX Toolset v3.11 (or newer) build tools must be installed to build this project. To download the WiX Toolset, see http://wixtoolset.org/releases/" />
+  </Target>
+  <PropertyGroup>
+    <PreBuildEvent>mkdir $(ProjectDir)bin\BambooWalletCliFiles
+cd $(ProjectDir)bin\BambooWalletCliFiles
+del /f /q /s %2a.%2a &gt; NUL
+dotnet publish $(SolutionDir)..\..\..\cli -c Release -r win-x64 -p:PublishReadyToRun=true -o $(ProjectDir)bin\BambooWalletCliFiles
+heat.exe dir $(ProjectDir)bin\BambooWalletCliFiles -sreg -dr Bamboo -cg BambooWalletInstallationFilesGroup -gg -g1 -sf -srd -var "var.BambooWalletInstallationDirectory" -t $(ProjectDir)remove_exe.xslt  -out $(ProjectDir)wallet_files.wxs</PreBuildEvent>
+  </PropertyGroup>
+  <!--
+	To modify your build process, add your task inside one of the targets below and uncomment it.
+	Other similar extension points exist, see Wix.targets.
+	<Target Name="BeforeBuild">
+	</Target>
+	<Target Name="AfterBuild">
+	</Target>
+	-->
+</Project>

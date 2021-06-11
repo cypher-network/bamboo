@@ -1,0 +1,1188 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+    <Fragment>
+        <DirectoryRef Id="Bamboo">
+            <Directory Id="dir82F777F7B19DE4EA724E28734AF5B7B4" Name="Runners" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <ComponentGroup Id="BambooWalletInstallationFilesGroup">
+            <Component Id="cmpAE857C19E03BACAB450365B2062CDD6C" Directory="Bamboo" Guid="0E83C91B-9B5D-4A9C-A5D1-323B1BBC0F86">
+                <File Id="filA915D3AFB65280029199300CE5840365" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\api-ms-win-core-console-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmpCE56518F1DABB6A977FA9C1E27E2219A" Directory="Bamboo" Guid="B210A8F2-5F39-4435-9185-35E49066DA5A">
+                <File Id="fil3AB26EBEA8861B380A6424518E18F0C2" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\api-ms-win-core-console-l1-2-0.dll" />
+            </Component>
+            <Component Id="cmpA0331FF4547F8CB3BB86B416E926D40A" Directory="Bamboo" Guid="AABF8EA1-352E-4A24-8BB1-5EE88454DF20">
+                <File Id="fil068150459B8AF397014AC5B073A3FE13" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\api-ms-win-core-datetime-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmp5CB6F12E827D09CFBE24AB8833C43C1C" Directory="Bamboo" Guid="7B0D7BD8-BE27-496D-8358-9EAE1D65471D">
+                <File Id="fil9E2FFD5ED9D91985BD5CA887BF7B20D5" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\api-ms-win-core-debug-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmp69DD2F437FA91373222A142101CDB220" Directory="Bamboo" Guid="4A6B51CB-EF4A-4E34-B34B-F67A0FA4DE73">
+                <File Id="fil51919C851E8A06C694EF43B6C0BFD810" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\api-ms-win-core-errorhandling-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmp8FD444B85121D5F36CFB752D4F266954" Directory="Bamboo" Guid="0810242B-4394-4BA1-BAFB-8F5CBFA765A5">
+                <File Id="filD9142B27AD2E08D884ACF78AF61B59B3" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\api-ms-win-core-file-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmpA918F7972EA1DDEF39CEF79AF27A56DA" Directory="Bamboo" Guid="E7CAA128-6821-408B-95EF-78597C4262C0">
+                <File Id="filCEC1A284544EB19F26F38D96087EC275" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\api-ms-win-core-file-l1-2-0.dll" />
+            </Component>
+            <Component Id="cmp3C6886C6307CA5A9C1693AACCA2A6E30" Directory="Bamboo" Guid="4C8192CA-B6FF-4A20-89FA-E1CE03D2D888">
+                <File Id="fil984A80547AD086FFBE758C12AFA46EEA" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\api-ms-win-core-file-l2-1-0.dll" />
+            </Component>
+            <Component Id="cmp3C7ED962A6F3EEE1BF2BF9011AA7AEA8" Directory="Bamboo" Guid="9E5914A2-4D75-487A-A981-B239829A7D8A">
+                <File Id="filB211A3C2B86A8DFCD61467F62436E7D1" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\api-ms-win-core-handle-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmp6A64FFC96B216643B4C7268C8886CCFA" Directory="Bamboo" Guid="67B35D2C-AA59-49F0-9736-DA819B0E3A69">
+                <File Id="fil9CEA7B2A3684A8B3EF85F50121561436" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\api-ms-win-core-heap-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmp956189B29B51D5E32FFF026F259B8FE0" Directory="Bamboo" Guid="722420FC-5CE5-43C8-8630-423395D333E0">
+                <File Id="filB4E338F5FB0D0364401952459EF6E002" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\api-ms-win-core-interlocked-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmpC236894B90DBB2391BDB45E69F16548A" Directory="Bamboo" Guid="8A028E4C-1914-490F-9705-2264137B011D">
+                <File Id="fil8CDD22A2C8867CD602D3C2C4A87D979E" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\api-ms-win-core-libraryloader-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmp41A8E760E38FE1D3B1F9435437A761E6" Directory="Bamboo" Guid="622D4AFF-70B8-4F9A-9550-DF614AAF2B50">
+                <File Id="filD6617C66AB6698060C2870B035ACE5DA" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\api-ms-win-core-localization-l1-2-0.dll" />
+            </Component>
+            <Component Id="cmp6EB9738B31098AADADAF42AB00CAB1F0" Directory="Bamboo" Guid="2EA95542-0D41-4305-9E34-EB46AA77C5F1">
+                <File Id="fil14B04104CC1DA1B9DB56AEA4C4BA95EF" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\api-ms-win-core-memory-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmpE503912C5301FBE18173112147B9541C" Directory="Bamboo" Guid="D9A12822-175B-4A4F-A9AD-87703791ABBC">
+                <File Id="filCC54FA7462201DB8E2C91EF4669CF67B" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\api-ms-win-core-namedpipe-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmp77DA80E36A8A5E599FD7B1E304C9061E" Directory="Bamboo" Guid="BAF4C30A-80AC-4B04-B2A6-106F21F436A7">
+                <File Id="fil1A72B50CC6E35FEB6386485B1543B461" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\api-ms-win-core-processenvironment-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmp3B52800B858EDB4C2FB22595B694E866" Directory="Bamboo" Guid="46B8B015-B067-4DD0-B9B1-503D96D0CC28">
+                <File Id="fil09BEAA60062554BCC9A4F3F7B5D8C1A4" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\api-ms-win-core-processthreads-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmp78CFAD3E41191A4520A6DB107F0B5EF3" Directory="Bamboo" Guid="851596B3-2BD1-4F71-8214-0052E45D2FCC">
+                <File Id="fil0C9D652B8E9ED6EA1270287249E3A3B0" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\api-ms-win-core-processthreads-l1-1-1.dll" />
+            </Component>
+            <Component Id="cmpC59959833D1EA7AF5A0E22824FDF4558" Directory="Bamboo" Guid="0F780E37-EBA8-4B05-B22B-0778D04ABCB7">
+                <File Id="filBA7861F81446C507EEFD5B7104A15769" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\api-ms-win-core-profile-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmp4400EA1FC466E6B90E7F7546EA35DB83" Directory="Bamboo" Guid="DE31504A-8D6B-44BF-A103-49EE970E33FB">
+                <File Id="fil4E09A34B31F7E46F4530047809278C09" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\api-ms-win-core-rtlsupport-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmpE9D06DBC9AF1482A8E2A301D42E5C346" Directory="Bamboo" Guid="EBC5873B-3A35-4912-9C66-7F1287857DF2">
+                <File Id="fil7A8D35966A7DF2184BB5C818FCFD072C" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\api-ms-win-core-string-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmp380FBB46767CC8F029E6F4057F8846C2" Directory="Bamboo" Guid="2D408AC9-498E-45F0-83A4-21BA9F21D343">
+                <File Id="fil44CE2455967D45111CF85604F3004182" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\api-ms-win-core-synch-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmpF7A6CAC24AC75F5A5D44E184D30BF915" Directory="Bamboo" Guid="B5A30F33-A76A-4FA0-9FB7-6FBF476CDE05">
+                <File Id="fil5EB531CC2C9144BFFEB5592A5D54A5E0" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\api-ms-win-core-synch-l1-2-0.dll" />
+            </Component>
+            <Component Id="cmpF381E04973669276B2791BDC1C22A300" Directory="Bamboo" Guid="E1AF6D22-4933-4DB8-8854-F1A081BF24CC">
+                <File Id="fil929B5C855BDB6E2145FA4B3D23D4AD3D" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\api-ms-win-core-sysinfo-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmpCE26AFCC5E677FE8C2B91CC92F7A2B69" Directory="Bamboo" Guid="1A8FB712-A1CB-466D-9660-D1BD9BD9C6AE">
+                <File Id="fil828E3FDBFD526BA2BC6B4E21304D5AF1" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\api-ms-win-core-timezone-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmpC097EEAC9EEBB9C56B8CBFB4DC417469" Directory="Bamboo" Guid="48173E4D-7747-49CA-AEEC-864D2769F4D5">
+                <File Id="fil8A005C5A1EEC62B5CCD3D3B6209E42C9" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\api-ms-win-core-util-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmp454D131AE22C7D7EE9812E7BBC7196D6" Directory="Bamboo" Guid="40F1DE70-B329-4D6D-B65F-CA254035269F">
+                <File Id="filBFD70B4D4C0839BB00C44BF6B2BF01BE" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\api-ms-win-crt-conio-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmp3997A9D04E941383159971DBB1742779" Directory="Bamboo" Guid="267F2A74-4E8A-49CB-BF70-6C2DC507E5D9">
+                <File Id="fil064ABFB10BA6E54D52CE95287933046B" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\api-ms-win-crt-convert-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmpE54BC0CBE32C79A26670B02379BD8B27" Directory="Bamboo" Guid="B0ABBB81-0D07-4C5F-894E-E83E452118B6">
+                <File Id="fil6A7BF8DBEE97D7604E176D84939066A8" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\api-ms-win-crt-environment-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmp4AB1C50E0EE6821BF749896806911E84" Directory="Bamboo" Guid="82C1A5AF-5348-41F7-8158-223310C5EF95">
+                <File Id="filA3263CBC2700BA723182C67E358B05B5" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\api-ms-win-crt-filesystem-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmp6C26DA48266BAA13CE4A9DD2605A4D2D" Directory="Bamboo" Guid="EE49B678-5090-4228-BA99-0C5953890584">
+                <File Id="fil3D7B2A9B1F3511B95ABEE8144F684F06" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\api-ms-win-crt-heap-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmp23B3B6766B56EF3DB4AD23651E5FCB81" Directory="Bamboo" Guid="96F73B4F-1D09-4FEB-8830-207B6992BDBD">
+                <File Id="fil9314119ACF7C4FDB909A7B35D62063E9" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\api-ms-win-crt-locale-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmp54D0089D358D180D5024FD286207D6B0" Directory="Bamboo" Guid="F2EE78C7-7545-41FF-B012-738F56E078EC">
+                <File Id="filDE5CA15B696C20689BE7875870358AE3" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\api-ms-win-crt-math-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmp1A97FCB5AE1A8E8BF523CD268169FA71" Directory="Bamboo" Guid="789CA9C2-C04A-4E61-91D6-5DEE29C2B60D">
+                <File Id="fil9514F1FDA7F32FC4472DBB12B666E81F" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\api-ms-win-crt-multibyte-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmpE4822802722A3A3830987655555D1D93" Directory="Bamboo" Guid="6349311A-AA83-4BBA-B80D-F7FC03C1FA96">
+                <File Id="filFF95137C61DF56A857F26921D225ECB7" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\api-ms-win-crt-private-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmp3AAB3B141AC3D7E795987E1F17922023" Directory="Bamboo" Guid="5FB74F04-433A-4199-B82E-BE43DBED3AF5">
+                <File Id="filE91B7BA983CD83E4C4AD4DC03EEF6FD5" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\api-ms-win-crt-process-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmpFCF38C2475C6B4A133D38BE65DE0651B" Directory="Bamboo" Guid="E29C90DD-274F-47D1-8F3D-7CE2A2597C5A">
+                <File Id="filBEE7D5E942A43C914E9AD4A2B6D89BD9" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\api-ms-win-crt-runtime-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmp795E2C35B449D711F91D72DE4CB78170" Directory="Bamboo" Guid="A87678B2-6725-43A7-BAAF-DCFCE57949B2">
+                <File Id="filCD03D6042E011E95C71CE98AFEFCF300" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\api-ms-win-crt-stdio-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmpA4BE6052461F21128DF06209166D4972" Directory="Bamboo" Guid="F383C2A3-0E5D-478C-99CF-E8E5C5944B05">
+                <File Id="fil7A382135DD2688EAB2D9FCBA41C079FA" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\api-ms-win-crt-string-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmp2650D9CE467EB3581EFCB51758B0C909" Directory="Bamboo" Guid="8B29E1B5-E717-4801-ACFA-13F5A8A940C7">
+                <File Id="filDF1D922B66B9749B070DAC9633D43685" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\api-ms-win-crt-time-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmp2C9016D35D0B58A01E39C40AF193597F" Directory="Bamboo" Guid="968B5FD9-C894-42AD-85E3-A467F9FC4E18">
+                <File Id="fil0F36D8CC84864D58A1A7507F9608607E" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\api-ms-win-crt-utility-l1-1-0.dll" />
+            </Component>
+            <Component Id="cmpAA2E98D23ECDA730CE64E828D1F0A731" Directory="Bamboo" Guid="394D19F1-8E18-49E8-9680-3C8F2662D70A">
+                <File Id="filA0E45015B94D08BD54FAEC14F817C944" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\appsettings.json" />
+            </Component>
+            <Component Id="cmp28D0CDA740272092BD24175FB52AE123" Directory="Bamboo" Guid="74256DD0-123A-46AE-AB28-9F115843649F">
+                <File Id="fil352FB003685979873C2996297C5C3873" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\aspnetcorev2_inprocess.dll" />
+            </Component>
+            <Component Id="cmp813B008ECDDCC7DF7BEDB259C90D1776" Directory="Bamboo" Guid="D0068B6E-B771-4A83-9331-C748C30D0829">
+                <File Id="fil38CBAFE363E18317A1C3D474A5222443" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\bamwallet.dll" />
+            </Component>
+            <Component Id="cmp121DEC5E8B744987F713B306AF1815DD" Directory="Bamboo" Guid="9E1A6935-4A64-4E41-870C-8836E6A7CADC">
+                <File Id="fil83FE3505A2D06DEC0662CDCCC463570C" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\bamwallet.pdb" />
+            </Component>
+            <Component Id="cmp5B9409BDC751B92DACAF5F9B9C35178D" Directory="Bamboo" Guid="CF2FAA6F-7EA6-47A6-BA95-14F82A955785">
+                <File Id="fil55BEDF8B98397268489CE62BFFB04AB0" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\clibamwallet.deps.json" />
+            </Component>
+            <Component Id="cmpB3821D0CF9CAD78B6AF11CC59F4B125D" Directory="Bamboo" Guid="333E45F8-60AB-405C-9D1C-8EEC2AC4742E">
+                <File Id="fil8BAF32F355D2F3C99325E91E710FF5D7" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\clibamwallet.dll" />
+            </Component>
+            <Component Id="cmp7002D8371C9837B54BFD5B254776F663" Directory="Bamboo" Guid="49C6C46E-6436-4A7E-BD23-09FA23C0E72E">
+                <File Id="filA35E254E1229D0D78E751B0D282035F7" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\clibamwallet.pdb" />
+            </Component>
+            <Component Id="cmpB00ED7F5149349C1C9F02DD4C6D24FA7" Directory="Bamboo" Guid="09F819AF-93DA-441C-B631-AEFFF6F32583">
+                <File Id="filE2CA719EEA8C50723377745E5CE9D2F6" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\clibamwallet.runtimeconfig.json" />
+            </Component>
+            <Component Id="cmp7141956EF60D230E5ECBD80E2CE7D33C" Directory="Bamboo" Guid="5239F254-A179-4B62-99D0-3E280BC6AAAB">
+                <File Id="fil6AF4AE2C2F27079DF88947E8419C8AF4" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\clrcompression.dll" />
+            </Component>
+            <Component Id="cmpB56A9AFAB3E1CBFBB74568C5BD4C43A0" Directory="Bamboo" Guid="C5B304CD-D268-456F-AAF9-4109EFD9A9E3">
+                <File Id="filDF0183EFAB6107FDA2675672625D4966" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\clretwrc.dll" />
+            </Component>
+            <Component Id="cmp3DE061FED059973DCC51F59626350B91" Directory="Bamboo" Guid="1A8D3DE8-7037-44C6-A5FD-978252A65B87">
+                <File Id="fil457D79D4055B21C3A7DAE629EA926BD9" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\clrjit.dll" />
+            </Component>
+            <Component Id="cmp429DF6A7B01B774BF0B32E1C019080E6" Directory="Bamboo" Guid="47553345-0E6F-4B73-A334-89E0643BC361">
+                <File Id="fil78BD3FB1FACC75AD2B0BC4FF33A1ABE3" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\ConsoleTables.dll" />
+            </Component>
+            <Component Id="cmpCAFA535D63D2B5FA50EE2EA017ABEE2A" Directory="Bamboo" Guid="BB99E11A-0A5F-4654-898F-19F936AF16DE">
+                <File Id="fil9F469A03F7B7244175EDF671443B96CB" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\coreclr.dll" />
+            </Component>
+            <Component Id="cmp1D50B4BD1C05C3B640E4A4723CC106E0" Directory="Bamboo" Guid="FCAE9A2F-64C8-4C2C-B7D7-A4CD8D8F5E39">
+                <File Id="fil1BC4C02F665C5261DE7D9CA6B262C790" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\createdump.exe" />
+            </Component>
+            <Component Id="cmp926325027D6A08B9AE1FD5B8AFCEE377" Directory="Bamboo" Guid="0AB3D382-C22A-4645-B756-EA0532E42419">
+                <File Id="fil4E1E6EE09B7DBBD553B053F40CEAF252" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Dawn.Guard.dll" />
+            </Component>
+            <Component Id="cmp52C42DE010EB15CDA00B1E52BF41D74A" Directory="Bamboo" Guid="C34D447D-0381-4B6A-9EA8-B8D654EEBAE3">
+                <File Id="fil94A3CF9231B6D036FCCCA671E9E5C580" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\dbgshim.dll" />
+            </Component>
+            <Component Id="cmp3ADDA5D9C738D1B2F43111CB9086FA5F" Directory="Bamboo" Guid="C8C77CA3-43F1-4610-B657-1660908C8F9C">
+                <File Id="fil20E5445C2F21B2D79338D2CB27FB99F5" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\hostfxr.dll" />
+            </Component>
+            <Component Id="cmp55BA2B6865587E509D14293228D085DB" Directory="Bamboo" Guid="5C042923-6131-4DDE-8406-450830806C32">
+                <File Id="fil976346ADEAE16566622E30ADBF119EDA" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\hostpolicy.dll" />
+            </Component>
+            <Component Id="cmp315E12ED90763476EB1E3921505F58A2" Directory="Bamboo" Guid="97E6B68E-B020-45A5-90F9-551DC5AB382A">
+                <File Id="fil67DD664A81E1FF0B9EEFA27E2FFB2FB5" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Kurukuru.dll" />
+            </Component>
+            <Component Id="cmp7CBABD73945E48110F6FEC77E38D89A4" Directory="Bamboo" Guid="68D96867-7EFA-4269-9565-E5FBA7706969">
+                <File Id="filDB8F22FF8D6E6C1FC421A4A52DAF3CFE" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\libsecp256k1.dll" />
+            </Component>
+            <Component Id="cmpD30FC550D3D1A6E6CBD16F1B26ADC1CA" Directory="Bamboo" Guid="DD8BFDBD-69DF-49E0-8B27-FFC88D6B1FEB">
+                <File Id="fil3543A301A78F8BF32857D47C57FBC590" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\libsecp256k1Zkp.Net.dll" />
+            </Component>
+            <Component Id="cmpD3B42B17E3C51C1AA62A0C8AF0FC4F26" Directory="Bamboo" Guid="D6FFC19F-98BF-42ED-ACA5-74238D1DFEE6">
+                <File Id="filCFAA670EBB0A2E1159FD4D9DAEF4240D" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\LiteDB.dll" />
+            </Component>
+            <Component Id="cmp612070E315C6A335C50A371C22A93B58" Directory="Bamboo" Guid="5AC6E51C-5B2A-4224-9395-E6C883FE4E67">
+                <File Id="fil41C910B3355A8272BE7D606C4958708D" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\McMaster.Extensions.CommandLineUtils.dll" />
+            </Component>
+            <Component Id="cmp2A0A8110311A92E73EE230B3C0039B2A" Directory="Bamboo" Guid="AD8FF18C-0DA9-4204-8ED1-14DF29372225">
+                <File Id="filC9F0279CF22DC89A241950777E719A4B" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\MessagePack.Annotations.dll" />
+            </Component>
+            <Component Id="cmp059853B147D70248747B5222109F3B69" Directory="Bamboo" Guid="8D97566A-3B65-4A5F-93DC-ED825BE525B7">
+                <File Id="fil284D3828543FEB25C3F93F043EEEEFD1" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\MessagePack.dll" />
+            </Component>
+            <Component Id="cmp0F193D41F747E6D565C8C1C1C3E12161" Directory="Bamboo" Guid="87E3F2E6-DD98-428E-9219-1678205FF0AC">
+                <File Id="fil4335DC69078FC0EEC56994477F3C9C7C" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Antiforgery.dll" />
+            </Component>
+            <Component Id="cmpAF1DA90749B680C75A0030723DF0621B" Directory="Bamboo" Guid="52BFF671-9E73-493F-9BCD-2043B31797E0">
+                <File Id="fil2ABE2E55EBC0634F80C1DE79A42E52D5" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Authentication.Abstractions.dll" />
+            </Component>
+            <Component Id="cmp3F74C89491499A66105F8DDA68187539" Directory="Bamboo" Guid="AC85656B-74E8-4362-B484-7972A40D1324">
+                <File Id="fil31D5A9260EAD68681B1B9979CF4C73F2" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Authentication.Cookies.dll" />
+            </Component>
+            <Component Id="cmp70B4BD64F400CAA423E50D66517CC914" Directory="Bamboo" Guid="8B177012-65F8-45AB-9C2F-E59ED3629391">
+                <File Id="fil55425930D45A3426193BBCA9A29A65C6" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Authentication.Core.dll" />
+            </Component>
+            <Component Id="cmpBBFF65E5C62FAAD20411BAE9DE843770" Directory="Bamboo" Guid="4EC8EE94-07DA-43C0-A4C8-A0EE112B3B92">
+                <File Id="fil08C725DC7FFB7CAB30E455E07C3A39AB" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Authentication.dll" />
+            </Component>
+            <Component Id="cmp5B14F6778B0837136B1C4A15721E8CA7" Directory="Bamboo" Guid="CAEFA7A0-1CF0-4151-965A-D8A0E55C3566">
+                <File Id="fil7426A4372A935B49CB9968356B37E254" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Authentication.OAuth.dll" />
+            </Component>
+            <Component Id="cmpCB3F8504994406E8F1513CE5DC744BE0" Directory="Bamboo" Guid="8FE5FF6C-7BA9-4015-AD74-DF95579FCE9C">
+                <File Id="fil7E86CD52AA76A63FEEACCB8338703ADD" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Authorization.dll" />
+            </Component>
+            <Component Id="cmpE1028448ADEDB7346DDCA8F3B80C12C4" Directory="Bamboo" Guid="C0E30585-73D1-4B5F-A514-F1E9EE3F3739">
+                <File Id="fil7F70BB68D82CE71F9B616EC5AB4065F4" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Authorization.Policy.dll" />
+            </Component>
+            <Component Id="cmpA4B7E0D9D83C25B4295CC5B89CD45089" Directory="Bamboo" Guid="E430D402-C2B7-424D-A9B3-C84C769FB698">
+                <File Id="fil33A863ADD823DE20071F31BA64DD1DDC" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Components.Authorization.dll" />
+            </Component>
+            <Component Id="cmp1F21DA6EF899C7C0F3430C1999FE5754" Directory="Bamboo" Guid="A40B0417-13A5-4DEC-ADB3-930D1ACE5D85">
+                <File Id="fil5A74EF98633F1588F78836C62D4622AC" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Components.dll" />
+            </Component>
+            <Component Id="cmp38F86E93822006279B70B48416B416B2" Directory="Bamboo" Guid="AB9BD550-F238-4DD4-8947-ADB2027030DF">
+                <File Id="fil44D9ACF85F284EC174A5EB0BAC4C4258" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Components.Forms.dll" />
+            </Component>
+            <Component Id="cmpC49B935D8B968D62FEEA47D98AE972D1" Directory="Bamboo" Guid="F09A8E4B-9B48-4F13-8F8F-FB094E22E333">
+                <File Id="filC00EB73919F22D1535F064316626C6BA" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Components.Server.dll" />
+            </Component>
+            <Component Id="cmpDE1926F9C9157EEBE40C7A456B86555D" Directory="Bamboo" Guid="D813086B-A5B8-48AD-962B-B818CA9FBEB8">
+                <File Id="fil578167A7506743FD7B1898E3D58F7852" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Components.Web.dll" />
+            </Component>
+            <Component Id="cmp2E717277BE88534182A4B2A6D13EECF8" Directory="Bamboo" Guid="57088A93-17F1-4F7C-A8CB-94759C84DE43">
+                <File Id="fil2B1B9F4EFB07390CDCD5F737B42590B3" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Connections.Abstractions.dll" />
+            </Component>
+            <Component Id="cmp353A74F613FE4433511DF5D8544296FB" Directory="Bamboo" Guid="3814016A-BF9C-429F-B2CD-67298B83C3DE">
+                <File Id="filE318DE7F56DC6749D08A3B452D870C63" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.CookiePolicy.dll" />
+            </Component>
+            <Component Id="cmp86EE95B37FEE7FF497958AFA4DA3F3E1" Directory="Bamboo" Guid="93B8A188-CDC1-48E2-9C62-F41D490B8B8E">
+                <File Id="fil35E3923C8808421EFA61B870C3442933" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Cors.dll" />
+            </Component>
+            <Component Id="cmp4B518145789005B1A9F1F8458E0F9AB9" Directory="Bamboo" Guid="0E52E9F6-9323-4B3C-BCCF-739F8889FB7B">
+                <File Id="fil02A337607E6339768B024FA737FEE36F" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Cryptography.Internal.dll" />
+            </Component>
+            <Component Id="cmpCFE561EE538DBFD6BDD3560EC0048A75" Directory="Bamboo" Guid="381162E5-A6CB-46AA-B52D-65D5F7674831">
+                <File Id="fil7A00909799006906C4AEFE8E6957071D" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Cryptography.KeyDerivation.dll" />
+            </Component>
+            <Component Id="cmp476C05B31BECB958186686D0639947FF" Directory="Bamboo" Guid="C8756DA6-BC0A-469F-B418-732751B29F6B">
+                <File Id="fil53F5869849C56692B2158D42DAA4018F" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.DataProtection.Abstractions.dll" />
+            </Component>
+            <Component Id="cmpCAA698A9EBBC8C7EF934A7F5B49321CF" Directory="Bamboo" Guid="F14E8371-CACC-4E22-9D2E-1D634AB6F7F2">
+                <File Id="filEB8E9CE94E66AD9F7C67B2197654CBBC" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.DataProtection.dll" />
+            </Component>
+            <Component Id="cmp3E46196E1C5735F56FF11262CDB83684" Directory="Bamboo" Guid="8669671D-0855-4CF7-B390-232C18973968">
+                <File Id="filDA07DC8044F8D79C8E05650C89227EA6" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.DataProtection.Extensions.dll" />
+            </Component>
+            <Component Id="cmpB6AD5F61733D3798E503C4C907871FE7" Directory="Bamboo" Guid="0BAE734F-229A-4182-9BAD-74F339A20B36">
+                <File Id="fil1BE235D6227EE299AA35451036132DF1" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Diagnostics.Abstractions.dll" />
+            </Component>
+            <Component Id="cmpBA34FD92768FAB0828E4A29BF5084554" Directory="Bamboo" Guid="E15A2CEF-E779-49C5-AB3D-D14128675244">
+                <File Id="fil7E5BB3D354F4F5F89A62DC304AEF69E3" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Diagnostics.dll" />
+            </Component>
+            <Component Id="cmpCBA20385F291CA9C47C85A22D0413363" Directory="Bamboo" Guid="32992D60-B12C-4819-9559-EAF7C63D0151">
+                <File Id="fil7CBB59AA9BF61E8FB9CFEA22F3300E3D" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Diagnostics.HealthChecks.dll" />
+            </Component>
+            <Component Id="cmp0ACDB157AC164B2C6194349BD5F75278" Directory="Bamboo" Guid="B205D93F-4598-4B65-97E8-539B727551DC">
+                <File Id="fil59A1D6BC35E24DF16A113EB4990C11D9" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.dll" />
+            </Component>
+            <Component Id="cmpDF24A8512B1CD4F8B2CDB148B830AC39" Directory="Bamboo" Guid="00E15CB8-6345-4ECF-BFD8-6FEEDC023FA6">
+                <File Id="fil5A0A3696B14637BB4555C0559D8CB1E8" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.HostFiltering.dll" />
+            </Component>
+            <Component Id="cmp14108AE69A54260BE6F08CC0FC7F8900" Directory="Bamboo" Guid="9497D78B-B7B9-45A5-A06F-9921559F6122">
+                <File Id="filAD753612E83BE5C8ED960972F3E16A68" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Hosting.Abstractions.dll" />
+            </Component>
+            <Component Id="cmpC1ABF26F2CC109A43DF4198C2C7E65FA" Directory="Bamboo" Guid="9AA53812-366E-4B39-AD1B-AC7738102B67">
+                <File Id="filB25674C2266DFCBFF888A134AB55F3E5" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Hosting.dll" />
+            </Component>
+            <Component Id="cmp7E2ADDD6E7919158AD7BA05E69C8B8C5" Directory="Bamboo" Guid="2217339C-FB82-4F73-8DB1-F14CE33D026E">
+                <File Id="fil32A9856ADAAE61E024E61F0731B3D585" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Hosting.Server.Abstractions.dll" />
+            </Component>
+            <Component Id="cmp26F28872B76AB36BB30B8A63D4AF9A42" Directory="Bamboo" Guid="6DF2E6A4-B484-4A1E-8C2E-AF45090CE5B1">
+                <File Id="fil7E6E9E89E70711D1D5748A516B60E84D" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Html.Abstractions.dll" />
+            </Component>
+            <Component Id="cmp86E62DAF058E68C0A02A3664F0AE13BD" Directory="Bamboo" Guid="D1DC16D2-61A6-4EE0-943E-0BF335E8342B">
+                <File Id="filE1D258B8180610B7DAD220646D7E6F81" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Http.Abstractions.dll" />
+            </Component>
+            <Component Id="cmp789CE1E6361558B24974AD7F062EB590" Directory="Bamboo" Guid="259A00F8-017B-4A3A-AABD-401319669A4C">
+                <File Id="fil1FE7ED663E35941BD5C5C8D3A2FF085C" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Http.Connections.Common.dll" />
+            </Component>
+            <Component Id="cmpB1AFC8400F5E703C4B90ECDF4985F8E2" Directory="Bamboo" Guid="7C9F8A63-1F1C-4964-B496-5B6928FB1D41">
+                <File Id="fil4596D22E99D9298029EB5287E2E7E997" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Http.Connections.dll" />
+            </Component>
+            <Component Id="cmp9E635555B212A16254E77428214FF083" Directory="Bamboo" Guid="6E63D142-6E32-493C-87B9-03B3D50512CB">
+                <File Id="filF5E5622B59B80207F0C253B4209CD673" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Http.dll" />
+            </Component>
+            <Component Id="cmpD4A52D5B898FD7C7B441DCA067B29B2A" Directory="Bamboo" Guid="F99846E5-64DA-472E-8268-97BBD50BDC0C">
+                <File Id="fil1CFFD53FA345400FB6A2B1E7A0AB5370" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Http.Extensions.dll" />
+            </Component>
+            <Component Id="cmp43C0DB659B86A4EC8716226F32E24448" Directory="Bamboo" Guid="AD6B0EC4-3700-4D41-B7B9-42A926FDDEAE">
+                <File Id="filEA0A520A110390FB7133CBB5A98BAD3A" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Http.Features.dll" />
+            </Component>
+            <Component Id="cmp9BBE98D566ED1AE7EABAC241723CB977" Directory="Bamboo" Guid="4D2AE999-6D6E-43D3-ADB2-EF9BCF650021">
+                <File Id="filE6C301794D739F5913C6C2C0F23FFE2B" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.HttpOverrides.dll" />
+            </Component>
+            <Component Id="cmpA4AAD764BB6BAE3E44896DF72E6858EC" Directory="Bamboo" Guid="2F39223E-D8E1-47D4-9B12-759FC3475099">
+                <File Id="filA6F7A8B5341B559B1C3E6EDC48563C46" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.HttpsPolicy.dll" />
+            </Component>
+            <Component Id="cmp01F5113DCDAA781B4C1702564F0CBAB8" Directory="Bamboo" Guid="C493144A-23C3-4CA1-AFB7-13BEAC5F3BC5">
+                <File Id="fil3ECA04E0A08FDA0F844F37B45A9E8377" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Identity.dll" />
+            </Component>
+            <Component Id="cmp39CC726A237E4AA6D366E9ADCAA78769" Directory="Bamboo" Guid="98C23DC2-EA01-428F-970E-5D75871681DE">
+                <File Id="fil279F5C2193B1B8050EB975D5E242C829" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Localization.dll" />
+            </Component>
+            <Component Id="cmpAD19D7C6CFC4408BB770666A925C2178" Directory="Bamboo" Guid="E3C9CBE2-0BE4-4027-A3ED-891BA9397EA4">
+                <File Id="fil205F40F858409EA5F7138B06E11378D2" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Localization.Routing.dll" />
+            </Component>
+            <Component Id="cmp2AC005CB93FAF470909B0EBB5171BAC2" Directory="Bamboo" Guid="AFF491C7-81C8-49AC-8DEB-244FD8514DD4">
+                <File Id="fil01EC5225200951D1CCD3DCF4995D8E1B" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Metadata.dll" />
+            </Component>
+            <Component Id="cmp40A26E8E6B0EBDD782C9CB60D781D8D3" Directory="Bamboo" Guid="9E248554-B828-4190-9919-CE9940CA28E4">
+                <File Id="fil02EE8702006E25B2C2909CCD01E43A38" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Mvc.Abstractions.dll" />
+            </Component>
+            <Component Id="cmp965BFB0FA2B2DA7CCE5F6DEA19E3679C" Directory="Bamboo" Guid="360E7CDE-1BAE-4391-9978-D7ED5E3FBBF8">
+                <File Id="filB46C9577BCDC8B2B8C6C9B87940D56FA" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Mvc.ApiExplorer.dll" />
+            </Component>
+            <Component Id="cmp5ED110E4B5FF3AFDCAA16DFAFE745DC1" Directory="Bamboo" Guid="5EEE3BE7-6DF3-4368-8C34-115563EBC1E2">
+                <File Id="fil54F502492B03365D87C7148EF9C7E6EE" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Mvc.Core.dll" />
+            </Component>
+            <Component Id="cmpAD15F7E803BF7256568299C744CCBE98" Directory="Bamboo" Guid="37EBC3CB-072C-4D36-B4E3-67E6F2C6A36E">
+                <File Id="fil56E7611683FEF94AE0B236C3996F5FE3" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Mvc.Cors.dll" />
+            </Component>
+            <Component Id="cmp6C053F98533B60B88620402A45F33CDD" Directory="Bamboo" Guid="B80A71DC-8BAF-442C-B851-D507A136298C">
+                <File Id="fil3535FDF3D581709646BC402C59B0FC87" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Mvc.DataAnnotations.dll" />
+            </Component>
+            <Component Id="cmp659BA00D3B95A98B7B0C3941FC59ED64" Directory="Bamboo" Guid="2827465E-0223-452C-BD4F-4C322F9E98BF">
+                <File Id="fil0FF36C242C5C2BC5A818AAE0B295461D" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Mvc.dll" />
+            </Component>
+            <Component Id="cmp6237BB72A3C3CA016AE9934CEA582ECB" Directory="Bamboo" Guid="70E385CB-EDF3-4735-8F1F-F900EF77E076">
+                <File Id="fil41F47BF56ADA3A1C0277A8A31022A6EE" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Mvc.Formatters.Json.dll" />
+            </Component>
+            <Component Id="cmp49FFF635F00C320E6A5330DBF2DBC7DF" Directory="Bamboo" Guid="F553F964-0C6D-4BEF-A63F-6436C17B2503">
+                <File Id="filF24FC9B125AB052B268F89DD4663F0A6" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Mvc.Formatters.Xml.dll" />
+            </Component>
+            <Component Id="cmp9567956B733DE07B57333778457D4EA0" Directory="Bamboo" Guid="F4EC7AC0-43F7-4E0D-8532-5C0552045CD5">
+                <File Id="fil4B6DB408CC79BCE0129BEC8ADF8ADD6D" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Mvc.Localization.dll" />
+            </Component>
+            <Component Id="cmpA23AAEF4FD08AF1C816C9B68058DA9D0" Directory="Bamboo" Guid="1ACC8983-039F-4BEC-BDBE-DFEC724232E8">
+                <File Id="filAFD65B6075999791414781DD5580A6C6" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Mvc.Razor.dll" />
+            </Component>
+            <Component Id="cmp4D2C21A21A12E93D0F010E8C9223C33B" Directory="Bamboo" Guid="1E7555B8-0314-43C9-9744-1139D2D5F805">
+                <File Id="filC3B062E1D8ED1935C614689B852F9825" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Mvc.RazorPages.dll" />
+            </Component>
+            <Component Id="cmpD7DC7AC589D47F706BB688241412C00E" Directory="Bamboo" Guid="B5CDD252-59D8-4F3E-ADDB-08EFA05D6638">
+                <File Id="fil7AA9FC4CBA4B9D062A0625901F3502EB" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Mvc.TagHelpers.dll" />
+            </Component>
+            <Component Id="cmp5586F1C0EA3764A8A9B3D457F838D6F9" Directory="Bamboo" Guid="120FC5C9-30C5-4B6E-AC8D-A481B39D8B52">
+                <File Id="fil1021AD95BA7E0FE8F20D4A7B4C71D0CF" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Mvc.ViewFeatures.dll" />
+            </Component>
+            <Component Id="cmp772A20AB2E13ED4AE39ABBA41534FD2E" Directory="Bamboo" Guid="E45BFB3E-D28D-4797-B2F0-F28CDFE8757F">
+                <File Id="fil3AD7FB7A0FC6B8B316768519928D22AD" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Razor.dll" />
+            </Component>
+            <Component Id="cmp5988A40C6DA73F293AC93FCB3F794743" Directory="Bamboo" Guid="A6301BEB-9BF9-4B0D-8989-8B04F4C51D15">
+                <File Id="fil9EF91AD883F613633A0D50019F3841C4" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Razor.Runtime.dll" />
+            </Component>
+            <Component Id="cmpCBB3C29D8AA275C8566050941D72F215" Directory="Bamboo" Guid="15EDE383-3183-44F5-98E0-C0D2E282CE2B">
+                <File Id="fil707074BBA3D101DC497792CA998B932B" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.ResponseCaching.Abstractions.dll" />
+            </Component>
+            <Component Id="cmpC0E45BA8F141CA19087D50C719C6523B" Directory="Bamboo" Guid="8196BF2A-D912-4D37-9E17-0434B38C9F25">
+                <File Id="fil52523E4893021FAA965ED95B7DCF0F73" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.ResponseCaching.dll" />
+            </Component>
+            <Component Id="cmp407009F05D86610E874D1E8B55EF50D6" Directory="Bamboo" Guid="1DCFE3AF-4CCB-4F1F-9095-FF03C68F6FB3">
+                <File Id="fil9ACC44B7F800827274E645C2B8FDFD1D" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.ResponseCompression.dll" />
+            </Component>
+            <Component Id="cmp3C4E87B7F8C00FFA12CCA92BAB8A5574" Directory="Bamboo" Guid="706F641B-EBEF-4E66-AC14-668F2622332E">
+                <File Id="filABE340C833EC0DDDA54B221CA62E8B4F" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Rewrite.dll" />
+            </Component>
+            <Component Id="cmp63DE5F7C9492A6FE2BFCDA1B693774FE" Directory="Bamboo" Guid="8F66CEE2-B343-4270-9E20-543F2F37C324">
+                <File Id="filA0AB3C4FB3BB931B4C65DB10C14DEE15" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Routing.Abstractions.dll" />
+            </Component>
+            <Component Id="cmpD2A780BA0A474D1159BFD2A5246F673A" Directory="Bamboo" Guid="E41EA9E4-24D7-46FD-BE30-404C150C6E09">
+                <File Id="filB0E16EC37664929CB661170CCD8F4811" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Routing.dll" />
+            </Component>
+            <Component Id="cmpB653CB7628D61FBAB806261A8139AEEE" Directory="Bamboo" Guid="17B713C8-071D-4D6E-A79F-FE63EF1E9693">
+                <File Id="fil8E3FDCC16B4400915153A9244C34B6E6" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Server.HttpSys.dll" />
+            </Component>
+            <Component Id="cmpB4037814A08D628921BE1D23F666DE89" Directory="Bamboo" Guid="E0432838-16F3-4325-97F6-B6789E146A80">
+                <File Id="fil62D9E07D7A36801D1D04DDE11709CABC" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Server.IIS.dll" />
+            </Component>
+            <Component Id="cmpDBB41EBA744F69BB23A9EDDB5C61199D" Directory="Bamboo" Guid="0FCAC5C0-E852-43D5-B46B-6D3FAA4B93FB">
+                <File Id="filB4D3ACE4AB30E861D108F99BBEC10DD2" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Server.IISIntegration.dll" />
+            </Component>
+            <Component Id="cmp0B8D106CFE58BCE6A51DACB5C40C19ED" Directory="Bamboo" Guid="EE760BF5-EDF9-44BB-9C48-FE45F93BB7A6">
+                <File Id="filA23EA682C3DC6A484A02798B59874F8E" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Server.Kestrel.Core.dll" />
+            </Component>
+            <Component Id="cmp160955C144C82E0E197218B85100B92B" Directory="Bamboo" Guid="E73E7E66-E7AA-491F-B9B4-480FBBB78BAA">
+                <File Id="fil28D82BBB6C25CCAAB010E5F329FDD465" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Server.Kestrel.dll" />
+            </Component>
+            <Component Id="cmp01A7AC9003AD2A08DA0BE11B28C1FCDA" Directory="Bamboo" Guid="A941F6E7-8092-4CB3-AB61-97111C72AD6E">
+                <File Id="fil23CDA586831B8214514A0D430767385B" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Server.Kestrel.Https.dll" />
+            </Component>
+            <Component Id="cmpAA3D313DC2A10D1762B4FD9D6956A3B1" Directory="Bamboo" Guid="13C53CE7-E492-4EB2-A38E-804F80074A6F">
+                <File Id="fil6DA0B5636AF018B4A6AA9E9C3E6FCDBA" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Server.Kestrel.Transport.Abstractions.dll" />
+            </Component>
+            <Component Id="cmpD8ABC15C86F75B3F23A2BFD59ACD973E" Directory="Bamboo" Guid="4ED43DFA-A39B-44D8-BB0D-006EC9EACF32">
+                <File Id="fil6BAE1BC43775B7D3FB9A04ADB11442AB" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.dll" />
+            </Component>
+            <Component Id="cmpA361AC441028786C8EA03F714A1AF4FB" Directory="Bamboo" Guid="77C3A7EB-3652-4456-96C6-88CBAB9E8C39">
+                <File Id="fil0BDDF968668436A417A450628458C255" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.Session.dll" />
+            </Component>
+            <Component Id="cmp538AF68BE62F50F31A6708BD7D47F390" Directory="Bamboo" Guid="FC0331E1-A8C6-40F8-B2B2-506457B3F373">
+                <File Id="fil5AAC54D4EB79325C27630550F1E2B055" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.SignalR.Common.dll" />
+            </Component>
+            <Component Id="cmpA41FB11FE1AF1AE08E37CF4A04E998E8" Directory="Bamboo" Guid="D2FAAA29-9A5E-455D-B039-6A2C789DB7BE">
+                <File Id="filF1E092B20DF6E031F69DC5E7639BCF1B" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.SignalR.Core.dll" />
+            </Component>
+            <Component Id="cmpD36EA076FFD3A22D75D6708604F4B3A9" Directory="Bamboo" Guid="2987D83F-E053-4545-A936-4A6536068F00">
+                <File Id="filE7FAC81D54384CCE69F05AED54E9CE29" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.SignalR.dll" />
+            </Component>
+            <Component Id="cmp0C3C555CD269D3760BFE2F4610DEBAAB" Directory="Bamboo" Guid="686560D6-73D8-45E6-8141-8B9746E5DDE3">
+                <File Id="fil30DACC52768A034B9CB4A29D92BE9731" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.SignalR.Protocols.Json.dll" />
+            </Component>
+            <Component Id="cmp27980DAD94ED168654418D14F612569B" Directory="Bamboo" Guid="14481830-60DC-480F-A378-85AC569E4C1A">
+                <File Id="filC33597F9BF0CF284B4F63E083D51EC7A" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.StaticFiles.dll" />
+            </Component>
+            <Component Id="cmpF49D48CD285661A03230284162027D38" Directory="Bamboo" Guid="101556D9-2AE0-494A-94AC-974A4E05F7F5">
+                <File Id="fil1E1D85C4FCBCCC665F1F20A852948104" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.WebSockets.dll" />
+            </Component>
+            <Component Id="cmpB4681BFA0162C3E8DB0F3221307CB237" Directory="Bamboo" Guid="E83B9CB5-17E1-4B20-A221-7FE1DEB08327">
+                <File Id="filBC2A4458BBDF425FE9F09C2170022B46" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.AspNetCore.WebUtilities.dll" />
+            </Component>
+            <Component Id="cmp257BFC0F13683EE02F94992C34C0DE9A" Directory="Bamboo" Guid="1884346B-90E4-4140-BB4B-914E352AA31D">
+                <File Id="filCCBD33F7BBAC292C38893F38026E7BD2" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Bcl.AsyncInterfaces.dll" />
+            </Component>
+            <Component Id="cmp98D4288B17A86A5FB65B27644CFBC1ED" Directory="Bamboo" Guid="E89A6140-51FB-4F1E-B071-4A900EAD6B63">
+                <File Id="filE923EE71DF76A7457672AA08DA59D5DD" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.CSharp.dll" />
+            </Component>
+            <Component Id="cmpBF5A1E9DFB4B530911F927E0D41DEC1B" Directory="Bamboo" Guid="959FFC60-C95B-4E8C-BA43-2BA769F2581C">
+                <File Id="filABD56B92F0BD7600F79553EDC2617A44" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.DiaSymReader.Native.amd64.dll" />
+            </Component>
+            <Component Id="cmp697F6C0D82CB8697B99404C009915BE1" Directory="Bamboo" Guid="F5930CA9-91BD-4A14-B974-BF2E682AF6F2">
+                <File Id="fil3F9FE8C66C8D4152F7D67466187B1196" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.DotNet.PlatformAbstractions.dll" />
+            </Component>
+            <Component Id="cmpF59DAA399D84997C850591790CC830FA" Directory="Bamboo" Guid="B952F4C3-E664-48B6-A4BF-4FD3170E3197">
+                <File Id="filB14EFADD5B0A14AA1FA63BC4C21572BB" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Extensions.Caching.Abstractions.dll" />
+            </Component>
+            <Component Id="cmp62096C0DE7053649949270A0D1126B96" Directory="Bamboo" Guid="380349BF-8698-4AE3-8629-B7B41223DFFD">
+                <File Id="fil505DD1A0BB147A1997B22914E8E5260E" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Extensions.Caching.Memory.dll" />
+            </Component>
+            <Component Id="cmp731F20A0A7AA9AD70CC0A1F268AF6C8C" Directory="Bamboo" Guid="6D614243-47DB-4C27-A380-B996D378DFF2">
+                <File Id="filD172B0775CBD3C4A00851A2054015237" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Extensions.Configuration.Abstractions.dll" />
+            </Component>
+            <Component Id="cmp09F4B4AC2F7A00309CF23ADC8ED4B886" Directory="Bamboo" Guid="539B0F29-02DA-427A-A3F1-237606AF5621">
+                <File Id="filAB986990F4EDD29A75512BA40F782CC3" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Extensions.Configuration.Binder.dll" />
+            </Component>
+            <Component Id="cmp03D181DACA77F6F9487989EB41FC4FD8" Directory="Bamboo" Guid="A86A6396-A594-4261-8BF8-95039CBBCF10">
+                <File Id="filCBFBA858484FAAFE3BC68D1749CCF8D7" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Extensions.Configuration.CommandLine.dll" />
+            </Component>
+            <Component Id="cmp633D01F2ED92B2BF8142D11AF0025593" Directory="Bamboo" Guid="A6DF0BAC-F24E-414B-BC2D-379EFDF4B709">
+                <File Id="filC65FDAE20DD590B8E9CE69D8080BE323" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Extensions.Configuration.dll" />
+            </Component>
+            <Component Id="cmp84C195AA0A281CAF0D57AA8CECD392F5" Directory="Bamboo" Guid="F7486C9E-C94F-4DED-BCE5-66D9385A9FC2">
+                <File Id="filE0D1D13609D74E5B9F72A662CC82ABB4" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Extensions.Configuration.EnvironmentVariables.dll" />
+            </Component>
+            <Component Id="cmp99F6F609590162C81DC277BE5F93D476" Directory="Bamboo" Guid="F9732B62-720F-4F94-A93C-1C521BA333F3">
+                <File Id="filE3984110FA08159BAB758DB801832A9F" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Extensions.Configuration.FileExtensions.dll" />
+            </Component>
+            <Component Id="cmp468405FE09C319CAA27839A18E2411C6" Directory="Bamboo" Guid="FA19FEDA-AE17-44C1-961A-F1ABF86787BF">
+                <File Id="fil5BD03E5FCB0879BB37F95169A808E1DC" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Extensions.Configuration.Ini.dll" />
+            </Component>
+            <Component Id="cmp367DACB4D2785EA3C04B3D686243E47D" Directory="Bamboo" Guid="679A9D52-FE39-4417-8A9A-BC124BD38AB2">
+                <File Id="filEC3C5B5E76CD76B01A6CCB8C6E2E3615" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Extensions.Configuration.Json.dll" />
+            </Component>
+            <Component Id="cmp73E4B8D13D60265C67D297AD6302F9CC" Directory="Bamboo" Guid="AFA3B543-4222-4A31-921C-8E89D9B6A859">
+                <File Id="fil907CBD6B46F7EBED376F5B94CE11D102" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Extensions.Configuration.KeyPerFile.dll" />
+            </Component>
+            <Component Id="cmp9FA1F240DC2CAC9E4D2CB52F4DC94F2A" Directory="Bamboo" Guid="4D0CE340-1788-4CF6-89A0-ECEA019AC895">
+                <File Id="fil5420A4A0BC47298A7CEDFB15582C2410" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Extensions.Configuration.UserSecrets.dll" />
+            </Component>
+            <Component Id="cmpE9CC491ED4E75597D654FA8BC13A4BAE" Directory="Bamboo" Guid="DAE5B5E1-1B6F-4AAA-A489-448598D79853">
+                <File Id="fil9A4BE8CBB0270ECC3FDC635B3B8D7488" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Extensions.Configuration.Xml.dll" />
+            </Component>
+            <Component Id="cmpFF99971740A73282F069E1AD5AC7B87E" Directory="Bamboo" Guid="8CD81853-D128-40C6-95D1-DEF570B074D9">
+                <File Id="filF8F7FFC3ED50AE18CC9D3872D12997D7" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Extensions.DependencyInjection.Abstractions.dll" />
+            </Component>
+            <Component Id="cmp3642B8C7F084AB05760FE1858D108C48" Directory="Bamboo" Guid="6E5A6A4F-4471-4E02-B967-E141F271073E">
+                <File Id="fil37BEC3E4D02F555601BE8C50CEA987A3" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Extensions.DependencyInjection.dll" />
+            </Component>
+            <Component Id="cmp28A94CDBA68266A83162DD8CE6A49CA4" Directory="Bamboo" Guid="216B3F70-86C4-45AA-99B9-149BA90CB618">
+                <File Id="fil7BE9B336B3F696657F585783F3DCF2F3" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Extensions.DependencyModel.dll" />
+            </Component>
+            <Component Id="cmp3B8DFBAADC2FFACE403AF20BC57BCE60" Directory="Bamboo" Guid="64629B0C-5DB8-427D-9B9E-F8BFAAF2D39C">
+                <File Id="fil3AA7D0B5B55A7F163A0CEE21556BF5E4" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions.dll" />
+            </Component>
+            <Component Id="cmp3ADF7EA5888F5C2BA6FE8558A40F8EA1" Directory="Bamboo" Guid="B0CE99AC-47A4-4082-A4A3-9B2C207F8492">
+                <File Id="fil1261582319EEDD2590B64D366CF9B64F" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Extensions.Diagnostics.HealthChecks.dll" />
+            </Component>
+            <Component Id="cmpD09B79009AD9DE0542F9704A2F272936" Directory="Bamboo" Guid="8A912D75-C042-4731-9DC8-F7996966E03D">
+                <File Id="fil5FC9D92B9ED03DAADD872FEAB30D67F6" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Extensions.FileProviders.Abstractions.dll" />
+            </Component>
+            <Component Id="cmpFE2276E3D2619255B193BB35BCB28F51" Directory="Bamboo" Guid="74942CFC-C05E-4946-9849-82B576B0E9A6">
+                <File Id="filBD35EC580E0AA80CFD92161B05369A44" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Extensions.FileProviders.Composite.dll" />
+            </Component>
+            <Component Id="cmpBB100E5F83B1CB5671EAA52BD4DF8137" Directory="Bamboo" Guid="8F0A7791-0F34-4A2A-8B9D-023A9CD9E989">
+                <File Id="fil894B1AEF3D9EB23B87B4F022A77965E4" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Extensions.FileProviders.Embedded.dll" />
+            </Component>
+            <Component Id="cmpCBF58B10B22B44974DADE4F0EC933D44" Directory="Bamboo" Guid="247D08AE-7E04-40E5-AA48-CEAA63BDF1BE">
+                <File Id="fil2E086832ADBFF5BDCB32064FA8E3A8A4" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Extensions.FileProviders.Physical.dll" />
+            </Component>
+            <Component Id="cmp3F594C8747DD4E47FE65DDDA24AAF3B1" Directory="Bamboo" Guid="2AE1E6C9-A248-4D02-8998-E45868997A59">
+                <File Id="fil837430067E3075A7FE1EE489A3266185" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Extensions.FileSystemGlobbing.dll" />
+            </Component>
+            <Component Id="cmp4A213079C379B8EA4040ABF44C553B18" Directory="Bamboo" Guid="94C96128-7C95-4285-9274-EC98FC56A1B3">
+                <File Id="fil85B93167FE260F96E4481E275129B3D5" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Extensions.Hosting.Abstractions.dll" />
+            </Component>
+            <Component Id="cmp34BD15877A91596128FD6A06FF7FDD64" Directory="Bamboo" Guid="2C5263CD-0C27-4E29-ADB8-399B82535F72">
+                <File Id="fil14638684B1B213E8B800864E6038CCB9" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Extensions.Hosting.dll" />
+            </Component>
+            <Component Id="cmp9208E616B75CA0F6633A359F916CF516" Directory="Bamboo" Guid="2C6099DC-B5B5-4F5F-8B2E-FDEBFECB798B">
+                <File Id="filF565FE8F519D6ECED04B0FBF8E4224B5" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Extensions.Http.dll" />
+            </Component>
+            <Component Id="cmpD3A91AF48517F3BADE8E444DEBC848AA" Directory="Bamboo" Guid="72653C7A-EF9F-4D93-8198-291BF8E46461">
+                <File Id="fil1DD30C18B5DF255ADB7D806F599E8118" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Extensions.Identity.Core.dll" />
+            </Component>
+            <Component Id="cmpF85679D042BE33996A55FF4E391F3F17" Directory="Bamboo" Guid="3CE868A2-3284-475C-962A-F90E26E824CA">
+                <File Id="filA7DF917FBD3DFA75C26E1BB0AFB10A3E" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Extensions.Identity.Stores.dll" />
+            </Component>
+            <Component Id="cmpB393387180F2EBEBD1A8371AAFEE1FEC" Directory="Bamboo" Guid="68F6CE48-C8D4-438D-8AFF-E6ED489D96FE">
+                <File Id="fil321E9515851B41F5AEBB8DB2D226A3AE" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Extensions.Localization.Abstractions.dll" />
+            </Component>
+            <Component Id="cmp08DD3CD052EB9CF5594C8475EED2257D" Directory="Bamboo" Guid="3E3B9623-FC01-4B88-A1BA-1FB0141DE7B0">
+                <File Id="filC1D2787CC199A802F083C05DF449DF5F" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Extensions.Localization.dll" />
+            </Component>
+            <Component Id="cmpC7A863C3BF62589DB8DA8C724E1303D4" Directory="Bamboo" Guid="31AD53A6-B1C9-44DA-BE3F-0AF95E923EB6">
+                <File Id="filD014CE907B306E0276BBCC36EF514D90" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Extensions.Logging.Abstractions.dll" />
+            </Component>
+            <Component Id="cmp4F5910569B13D5A891566FF94A9FA451" Directory="Bamboo" Guid="5FC8BE4D-6A62-4A2F-9030-C513C35B674E">
+                <File Id="filC62A2B2E9BC05F73300AFF16AA73A964" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Extensions.Logging.Configuration.dll" />
+            </Component>
+            <Component Id="cmp681271D3DBDB7B4D3915E433C25360B3" Directory="Bamboo" Guid="ED3E217C-40DB-4903-82D7-15D0570C89BA">
+                <File Id="fil0B39603ADA5A78303E5107201D616381" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Extensions.Logging.Console.dll" />
+            </Component>
+            <Component Id="cmp0B232A2ABD524B5CC520CEA03539E142" Directory="Bamboo" Guid="F8FE12DC-332F-47F2-97B8-146B5CD4059D">
+                <File Id="filCCFB0AE68991101D0D41ED73FA74958C" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Extensions.Logging.Debug.dll" />
+            </Component>
+            <Component Id="cmp2326720BC984DA7360A6EC95B70A78A4" Directory="Bamboo" Guid="42D2D4A6-73D9-4B94-8E54-450B45DC8377">
+                <File Id="fil1612E44B163B5B2B28EC8569D6A81D45" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Extensions.Logging.dll" />
+            </Component>
+            <Component Id="cmpB90AA15C3DF991A299970CDDD3DD14D1" Directory="Bamboo" Guid="D484225A-8B13-4A7D-B42C-E14A096695BA">
+                <File Id="filBFFB9CA677DD87AD96BACEA65A90CD18" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Extensions.Logging.EventLog.dll" />
+            </Component>
+            <Component Id="cmp04B165F221B97B19C25AE116780E4EFC" Directory="Bamboo" Guid="DF98697C-D660-4639-B9D0-F4DE875E6625">
+                <File Id="filCC989C82BFF5F4465FB0B7B0AE9044DB" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Extensions.Logging.EventSource.dll" />
+            </Component>
+            <Component Id="cmpEBEFC4BAFC3CE58359B7B73FBD0F5CD1" Directory="Bamboo" Guid="199C6F24-00BE-46C0-A9D0-41E6296A5317">
+                <File Id="fil739388357FF1DB4C227866F7F10593C0" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Extensions.Logging.TraceSource.dll" />
+            </Component>
+            <Component Id="cmp481D51597385A534CBBC14AA780A3BFB" Directory="Bamboo" Guid="BA6000C3-24CC-4077-A87E-947DD5A4F82E">
+                <File Id="fil3EE0B4FB27B27F470C87C46B39D689E0" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Extensions.ObjectPool.dll" />
+            </Component>
+            <Component Id="cmp68AB6860E3E5B610C55E0D2DB2125FCB" Directory="Bamboo" Guid="15001A50-5798-49C5-867F-B2C09D6647DB">
+                <File Id="filE1F5359268C9DB62D1AFEFBF354DDAD0" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Extensions.Options.ConfigurationExtensions.dll" />
+            </Component>
+            <Component Id="cmp9B36DB7F58F2FEDC4AA0F19B22AA8AF7" Directory="Bamboo" Guid="6F83ADE4-ED4D-450C-AE60-1F4586012C02">
+                <File Id="filA2C63AD1DC0FD4F9699537A1E0967313" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Extensions.Options.DataAnnotations.dll" />
+            </Component>
+            <Component Id="cmp7B7BCA013B63335B377C1C40B6DD8A1C" Directory="Bamboo" Guid="27857D65-7D78-43AC-82AF-AC64CDE207D9">
+                <File Id="filAD3252A29D3D631A5757823C92089D23" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Extensions.Options.dll" />
+            </Component>
+            <Component Id="cmp51B3685CBA73D51C01E12CE246BCE3C9" Directory="Bamboo" Guid="A2FF5D97-48BF-4938-A3CC-0F4051ADAD2B">
+                <File Id="filD58354E2B7AE2A6C349D1E5BB2C53E63" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Extensions.Primitives.dll" />
+            </Component>
+            <Component Id="cmpEE2DDC8A4706B7E7BC62D943A67BCCAE" Directory="Bamboo" Guid="D77A6604-4E1F-47A1-845F-5452850E9BFE">
+                <File Id="filD7A851279C1ED0FE8AC0CF369B3F983F" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Extensions.WebEncoders.dll" />
+            </Component>
+            <Component Id="cmp83C524DF5CED69A773C58E5B7F494022" Directory="Bamboo" Guid="E8CA4544-C2DE-46F5-9A1F-B61FCA02E54C">
+                <File Id="fil6D72C1ADA59E05CF3808ECB1AFD9C861" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.JSInterop.dll" />
+            </Component>
+            <Component Id="cmp230135DE99ADBB912C512CCA31FA107B" Directory="Bamboo" Guid="BA861BF2-C308-4EC0-8905-84655C186C65">
+                <File Id="fil41EABC0510B44252E81F3227AE475806" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Net.Http.Headers.dll" />
+            </Component>
+            <Component Id="cmpBBCEEE241846CCBB030302E38009D5A7" Directory="Bamboo" Guid="36884D05-E61A-434C-9B9E-FEF62D99E946">
+                <File Id="fil7A8EEC323F5BE1920288D623C467D491" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.OpenApi.dll" />
+            </Component>
+            <Component Id="cmpE5E5D8B46FFCE9F138657518662060BD" Directory="Bamboo" Guid="EDE25C34-BB3F-4062-B9B5-1C3621AE2FD3">
+                <File Id="fil8D0D891FC32180AFCB7F0F6AAC9904DE" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.VisualBasic.Core.dll" />
+            </Component>
+            <Component Id="cmp206888E773E83B3526E6D3CEDE976E82" Directory="Bamboo" Guid="C2A56533-B76B-47C4-9ED7-A4BE58B23722">
+                <File Id="fil0B8D71FC98A190E6AFD7B4ADFEF1A093" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.VisualBasic.dll" />
+            </Component>
+            <Component Id="cmp8DA2DE1E88B9CD481978233C1AFB257A" Directory="Bamboo" Guid="E8771795-03FF-43CE-A69D-B7835C73AFB6">
+                <File Id="fil0F8C84495C2F922913FAD49113694771" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Win32.Primitives.dll" />
+            </Component>
+            <Component Id="cmpACA04641914F4B32756A4F9E40F88115" Directory="Bamboo" Guid="BCD5D966-FDC4-42C6-9D61-44647A806EB5">
+                <File Id="fil891858F809DC8BB2D3EC5588178D17CB" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Win32.Registry.dll" />
+            </Component>
+            <Component Id="cmpA519DCE6B98F3E2DC223D74FEC0EEBA9" Directory="Bamboo" Guid="21E528F4-52E7-4A63-97BC-05935DC0E597">
+                <File Id="filB0BD54FBC33D8CFE6D669F357224E8F7" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Microsoft.Win32.SystemEvents.dll" />
+            </Component>
+            <Component Id="cmp83D649F851DA99EB7BA88387F013CE59" Directory="Bamboo" Guid="5AFA5016-DA85-43F0-8896-3F850B76A73B">
+                <File Id="filC8142B6F93966F5197B22CFD958B5B28" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\mscordaccore.dll" />
+            </Component>
+            <Component Id="cmp679C1F094458ECB67ADD2B716EEA8D43" Directory="Bamboo" Guid="C08EBAFC-3867-4E02-A296-3FA91DC82AAD">
+                <File Id="fil4112E29F7CB72BDA3D153021FB32963E" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\mscordaccore_amd64_amd64_5.0.621.22011.dll" />
+            </Component>
+            <Component Id="cmp9899B382D96FAA2F0471699508A60602" Directory="Bamboo" Guid="610BCFC9-F8BA-437A-9FDB-099EB95D32DB">
+                <File Id="fil71A448B5DF729E21F8E9E3F6E94A8285" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\mscordbi.dll" />
+            </Component>
+            <Component Id="cmp98BBE3C31B91AF972E41EDBA70999C73" Directory="Bamboo" Guid="8B630E89-2AFF-44DA-846E-73F2932118B8">
+                <File Id="filA15AC30D2CAA747CE4D4CBD4FABF716D" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\mscorlib.dll" />
+            </Component>
+            <Component Id="cmpCEA3F4200D397214CE36DDB5E9D0B439" Directory="Bamboo" Guid="62B87DB2-D98F-4857-919C-08B4938AECCC">
+                <File Id="fil602EA2029B8F01432880CBCEC6D2B5BD" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\mscorrc.dll" />
+            </Component>
+            <Component Id="cmp6665D802654353095BFB0BB565665E5D" Directory="Bamboo" Guid="E1F579BB-5982-4422-9121-9DD0BCC769E2">
+                <File Id="filD44805515456FD885E752747EA178243" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\NBitcoin.dll" />
+            </Component>
+            <Component Id="cmp424D956E01785971BFC7F6A4B94F0E43" Directory="Bamboo" Guid="90100456-EF22-47E1-8316-8C74F56FE4FA">
+                <File Id="fil8C508879005457CD627BFB537E8AA1F6" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\netstandard.dll" />
+            </Component>
+            <Component Id="cmp443000E2AD0727251B163F9A5D119C92" Directory="Bamboo" Guid="AC6726C5-FD21-4160-B931-0989BD453CCC">
+                <File Id="fil2181CFC24E17AEA4782BF3A15D2A178A" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Newtonsoft.Json.Bson.dll" />
+            </Component>
+            <Component Id="cmp144B389226F4FD63E193B29573F0D8BA" Directory="Bamboo" Guid="AF024324-D369-432B-ACF2-6DE0CE343C36">
+                <File Id="fil221BC96699B77CEA4D41DA74E566D95E" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Newtonsoft.Json.dll" />
+            </Component>
+            <Component Id="cmp3D4C6A70F46733FAD9B597750746B560" Directory="Bamboo" Guid="E263ADC1-2BDA-4DD6-8CCD-1E2F9E0B3B3B">
+                <File Id="filEE15AEC10E9111EBE99D89D5D1822426" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Serilog.AspNetCore.dll" />
+            </Component>
+            <Component Id="cmpB1149828CEC748B29B3407877C59D232" Directory="Bamboo" Guid="C540F326-C526-435E-A2A9-5C6179680863">
+                <File Id="filAA756B5BEB33D85C6171AD6FC4516C7D" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Serilog.dll" />
+            </Component>
+            <Component Id="cmp74A8C6E9304178AD6CAD8D6538463773" Directory="Bamboo" Guid="E80F36AB-4292-45F9-8944-84545BB0B0EF">
+                <File Id="fil3AE5F129A5AF5423796EE92D50BE005D" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Serilog.Extensions.Hosting.dll" />
+            </Component>
+            <Component Id="cmp7BB1B19DF9F72127F6CF2517B6870E18" Directory="Bamboo" Guid="F1D64257-CC07-4365-8F5D-5561180B6B9A">
+                <File Id="fil8E81711EF92E80DAD376B3936677BB19" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Serilog.Extensions.Logging.dll" />
+            </Component>
+            <Component Id="cmp4A3C2C845DD0D383A925E7789F6B1D32" Directory="Bamboo" Guid="DA8FE0CB-A2C2-403E-BA2B-06B71A75D2F0">
+                <File Id="fil5D4C338A8EC112DBA593BBAFC8C9FFD7" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Serilog.Formatting.Compact.dll" />
+            </Component>
+            <Component Id="cmpC6F0621270089D35833AF0C4DB0602FE" Directory="Bamboo" Guid="3C4720EC-F3F7-4CB3-8195-6E769086CA49">
+                <File Id="fil493D7ACA73E2F92E4F920A3EDD263835" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Serilog.Settings.Configuration.dll" />
+            </Component>
+            <Component Id="cmpFFB17B750EC7DD6DD53393B4B4964954" Directory="Bamboo" Guid="3717E814-D4B0-4458-AE00-6979D0463B96">
+                <File Id="fil79272D61887033615F16EA739C87460B" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Serilog.Sinks.Console.dll" />
+            </Component>
+            <Component Id="cmp8B6AF0841AF5D3908F0C335EDAB6A51F" Directory="Bamboo" Guid="98E32498-4A19-4B45-85B2-5B4614059C1A">
+                <File Id="fil58F5B2BF8477F444E1FBDE91569CC7FC" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Serilog.Sinks.Debug.dll" />
+            </Component>
+            <Component Id="cmpCB667F1006F3505D910CD4B60DC4CBB7" Directory="Bamboo" Guid="08B54B38-71A7-4B25-A6BF-52C97AFB0BDA">
+                <File Id="fil0F8F3A04FC07270475CE93D3980EE931" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Serilog.Sinks.File.dll" />
+            </Component>
+            <Component Id="cmpE37E306C8B42D6782C8DF0F0794959B1" Directory="Bamboo" Guid="E11E49DD-BFDA-485B-BDEE-86D14103FFFA">
+                <File Id="fil2F5783D9EB733568AE250BF92DA6F514" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Swashbuckle.AspNetCore.Swagger.dll" />
+            </Component>
+            <Component Id="cmp326447085B5564700B012BBB788B92EC" Directory="Bamboo" Guid="ED499FCE-963F-4C63-9781-AF64DAE49747">
+                <File Id="fil199C98A021EF99ACBC76890E69A7A3B6" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Swashbuckle.AspNetCore.SwaggerGen.dll" />
+            </Component>
+            <Component Id="cmp50FF1990361D3FA1BD32099258805BE2" Directory="Bamboo" Guid="0980BA56-17C1-4335-89A2-9F7A96D45EEE">
+                <File Id="filDB184BEE8AC25B3F497DDF0DE1F8440D" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Swashbuckle.AspNetCore.SwaggerUI.dll" />
+            </Component>
+            <Component Id="cmp71A7D82B91CD5EF4E83B2124CCEFEC7C" Directory="Bamboo" Guid="022DF280-986E-4E67-A293-5290DD4BC3A3">
+                <File Id="fil320D591630606A94F2F62C43A6DB4B59" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.AppContext.dll" />
+            </Component>
+            <Component Id="cmp046ABECF5650379516EEA0ABCEA92E18" Directory="Bamboo" Guid="B4BB165F-90D1-42D8-AC92-79668E76ECBA">
+                <File Id="fil17BBEFCE5A4C8B4DA15BCD6C08BFF56F" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Buffers.dll" />
+            </Component>
+            <Component Id="cmp362CB89C67570822B1BA0FB87503DC42" Directory="Bamboo" Guid="E6DA30E7-BB94-40A7-BB58-5CE6BC8D0C04">
+                <File Id="filB689A6AFCDCD61580BECCA6B14472359" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Collections.Concurrent.dll" />
+            </Component>
+            <Component Id="cmp80EBFA03B4D71B5589E2274BE0DD9D67" Directory="Bamboo" Guid="675510FB-5D38-4F21-99AD-D87578B39588">
+                <File Id="fil913B30310BCF4C7EFC7920C0327DE55B" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Collections.dll" />
+            </Component>
+            <Component Id="cmp18A297C771F4553E2B0C3D04E787312B" Directory="Bamboo" Guid="30648823-DE07-4F2F-9213-487B9BED5CC1">
+                <File Id="fil6491AE8991DD4D6B1BDDA9B888063B36" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Collections.Immutable.dll" />
+            </Component>
+            <Component Id="cmp8D198A3764E546D57F61139BFD9A5170" Directory="Bamboo" Guid="803F2743-7AD3-4F76-AD16-21F1BDB461E6">
+                <File Id="fil63EC906E9DABB2BACB323ABF72818DD5" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Collections.NonGeneric.dll" />
+            </Component>
+            <Component Id="cmp652327D0DB0DE2C7CD26BDC3CC8C5BAF" Directory="Bamboo" Guid="A9E18D59-94A2-4BCD-9BEA-8CB5B980B0C5">
+                <File Id="fil6AFCD5DC8885BB03634206A0A53D3355" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Collections.Specialized.dll" />
+            </Component>
+            <Component Id="cmpB7ED9B74B9F69E092B1DC920D7BCD249" Directory="Bamboo" Guid="A7FB7BF0-4CA0-4421-B741-E7F8AE0EBAA9">
+                <File Id="fil18608007AACA81BB04B99A8CE7D96EA4" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.ComponentModel.Annotations.dll" />
+            </Component>
+            <Component Id="cmp6A2F6AF82C494C2BD756FC65049A429E" Directory="Bamboo" Guid="7D506112-6752-4010-956B-4B89EAB43720">
+                <File Id="fil3D6A0149BE3CCBB924228641D7A9FD52" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.ComponentModel.DataAnnotations.dll" />
+            </Component>
+            <Component Id="cmp17A18908D283CCBA8454805A6200B45F" Directory="Bamboo" Guid="0F5901F0-2487-4683-9B27-8C058272B7B7">
+                <File Id="filCA9397657609829B062BEFC4DCDD460F" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.ComponentModel.dll" />
+            </Component>
+            <Component Id="cmp7AF12E7BD9BE362BFEDC4154F45240BA" Directory="Bamboo" Guid="F4E0887C-C0F3-4E3D-9F1A-C8611D31DDC5">
+                <File Id="fil788400CCC6287B5CA2C0356E626825C9" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.ComponentModel.EventBasedAsync.dll" />
+            </Component>
+            <Component Id="cmp3279813864C9AA3CF45816A9FDE78B15" Directory="Bamboo" Guid="B838FAFC-DBD6-42D3-8F96-E9AEA026E01A">
+                <File Id="filEB02832F8567C7C8673C3D66D97E0F7E" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.ComponentModel.Primitives.dll" />
+            </Component>
+            <Component Id="cmp9B90A2E0271738D3597943D237BA1A68" Directory="Bamboo" Guid="72FAD8F0-ADCD-4A34-8859-D33480A5FBA3">
+                <File Id="filB908C9C9C2D9417129C396332C88F9A0" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.ComponentModel.TypeConverter.dll" />
+            </Component>
+            <Component Id="cmpC798EDE20BD42ABA4D6DD2659E70F74C" Directory="Bamboo" Guid="D1A4DE41-19E0-44DE-9384-5A6408B9501A">
+                <File Id="filF3F34B8A3D6AD7D7E6FBD4D2939FDD9D" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Configuration.dll" />
+            </Component>
+            <Component Id="cmp918C82DBCB0BFE43BB44EAA1A351BDC6" Directory="Bamboo" Guid="DFCB67DA-13F1-4FE6-B0B0-AA6470C731E4">
+                <File Id="filBC01694F12CF5D7D01DCC9A2591B0E40" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Console.dll" />
+            </Component>
+            <Component Id="cmpFCD0FE27D57ECF677BE7CCEC200F364A" Directory="Bamboo" Guid="C99F2FF6-E915-407F-9E74-804C1C7CC638">
+                <File Id="filA19FE7A9E8EAD7D94C922191CACD5443" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Core.dll" />
+            </Component>
+            <Component Id="cmp9C3364D98282C883E4F645BF77B89FB6" Directory="Bamboo" Guid="3FB3ECF6-9B15-4875-9859-98D47BB6DAE0">
+                <File Id="fil6C1A46DD243EEDAA0F40A16E6D12E6BF" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Data.Common.dll" />
+            </Component>
+            <Component Id="cmpA39F782BA7F2566D672B0AA49FBDE4C0" Directory="Bamboo" Guid="FEB258F9-9FCE-47EA-AA0F-B0160E251877">
+                <File Id="fil5B69BF85F3CF0B89EFF9026FF92B56A9" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Data.DataSetExtensions.dll" />
+            </Component>
+            <Component Id="cmpD2C1F2A7293103F119D7F1D91B8F57DE" Directory="Bamboo" Guid="A4B00B85-1693-438C-A073-118E119FB764">
+                <File Id="fil8700B5B94B192304B63B17C8C54F70E1" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Data.dll" />
+            </Component>
+            <Component Id="cmpE4FC53B246C743B0BEBFFF3A3F108C52" Directory="Bamboo" Guid="583AB4F3-457A-4D81-9212-F06A28EE062F">
+                <File Id="fil0D92D5FEA1F286ED59FB4AB194D1B5D0" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Diagnostics.Contracts.dll" />
+            </Component>
+            <Component Id="cmpEBBC58C1737F76C2CDDDA6C64FBCAC93" Directory="Bamboo" Guid="0BE7C896-0B54-4ED6-A0C7-CCAE81442D8F">
+                <File Id="filF4DB428E1E1190A461172C0F1D4FF924" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Diagnostics.Debug.dll" />
+            </Component>
+            <Component Id="cmpFDD191A256A70FFA07043A80B36B375B" Directory="Bamboo" Guid="46C20742-CC6E-45C4-8AAB-F377B8F45272">
+                <File Id="filD37995F57BFF1669FF43F575445B4E9E" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Diagnostics.DiagnosticSource.dll" />
+            </Component>
+            <Component Id="cmp4CE046AC72CFA02A0107F1F54ED4B385" Directory="Bamboo" Guid="8248BE36-DC3D-4C9E-A042-9A9D99AE5955">
+                <File Id="filB21FEC734B376973593C14F06BEAAF82" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Diagnostics.EventLog.dll" />
+            </Component>
+            <Component Id="cmpB73D9B706A9A3AB688F020B16D9E09ED" Directory="Bamboo" Guid="807762A5-533D-478E-859B-67B8E980AF6D">
+                <File Id="fil0D108766C17317A4CF9341750E31DA65" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Diagnostics.EventLog.Messages.dll" />
+            </Component>
+            <Component Id="cmp5C69373DE28538E2E1DD625A8A23E8CB" Directory="Bamboo" Guid="3F7E6924-475B-4E2A-AF7C-8984529E49A9">
+                <File Id="fil3FB33692159A2520450F0B25FD78D6D8" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Diagnostics.FileVersionInfo.dll" />
+            </Component>
+            <Component Id="cmp77E7B9B8C2DB62BF66CC62EF74F68DCD" Directory="Bamboo" Guid="69146B6C-9FF6-431E-B183-1CB260A7BFFB">
+                <File Id="filB30313D3B4055D50288DA403EC727590" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Diagnostics.Process.dll" />
+            </Component>
+            <Component Id="cmp2E02A71598B3BBE9D85C2F7A7D3FCA6B" Directory="Bamboo" Guid="46726382-9EED-4D6B-8124-51117AEA56F1">
+                <File Id="filEAA04DE263EC372714FB8EED631C4195" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Diagnostics.StackTrace.dll" />
+            </Component>
+            <Component Id="cmp9A65BCE6E84ECCC56C681A14B159317A" Directory="Bamboo" Guid="BFA82E5F-B14C-44BD-BDB5-0637150756EC">
+                <File Id="fil5C84DAEC7EFEBEBB90B1C222949CC495" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Diagnostics.TextWriterTraceListener.dll" />
+            </Component>
+            <Component Id="cmp2E623161888BFAF31740A13C3B40D70C" Directory="Bamboo" Guid="FE82623A-5AB9-425B-BFC6-75B004CB8B36">
+                <File Id="filDDD5AF26F5CF4D26BBAFD3A18B2127B8" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Diagnostics.Tools.dll" />
+            </Component>
+            <Component Id="cmp7832CDA858FF0D7AD47F24D29D2A90E2" Directory="Bamboo" Guid="0C58AF18-3054-468C-B0ED-3623A80278D3">
+                <File Id="filF95089EC24BD54F4548D5C02FE496FB0" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Diagnostics.TraceSource.dll" />
+            </Component>
+            <Component Id="cmp45DD861654A5C5F47F63166BA4C5431A" Directory="Bamboo" Guid="FDB64533-B8E8-4166-A42E-A55DF37772B9">
+                <File Id="fil5E83E0163495E2B5CB8ACC4C754D5352" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Diagnostics.Tracing.dll" />
+            </Component>
+            <Component Id="cmp8585AFC57221D6903F76AFCBEC5FE069" Directory="Bamboo" Guid="69239CC1-8051-4136-AF17-46860D87B3BB">
+                <File Id="filD085A4A922412208221D1E7B700564C7" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.dll" />
+            </Component>
+            <Component Id="cmpA4639EDD6993F1D17E44AD9C3D3F8276" Directory="Bamboo" Guid="6CA41FB5-3496-4402-A182-3BB191317E3C">
+                <File Id="fil4B01DC26D39C665827B7A5170B030895" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Drawing.Common.dll" />
+            </Component>
+            <Component Id="cmp6A575630832A03F868DE886175F3435A" Directory="Bamboo" Guid="CEAE7B10-7A7E-4DC5-AD1B-841F4340AEFF">
+                <File Id="fil15A049476BD0318911C59FB79397DB70" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Drawing.dll" />
+            </Component>
+            <Component Id="cmp4A4AD3C9FD07C9AB9CC525579C397EAC" Directory="Bamboo" Guid="18581680-6B8E-442F-9C75-758A64722098">
+                <File Id="fil46FAFFB2D919C34DE9F95BD73EBE1D2F" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Drawing.Primitives.dll" />
+            </Component>
+            <Component Id="cmpCE5092147818AE79283B236BD0FD0762" Directory="Bamboo" Guid="9782417F-8465-4170-BEC1-0FFFEECD5284">
+                <File Id="filA499A1C3D0C57C0EC6483790F797060C" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Dynamic.Runtime.dll" />
+            </Component>
+            <Component Id="cmpC4D24B32685DC2CA7EDE81E12E0FF8A4" Directory="Bamboo" Guid="38CE0073-CB42-4A63-BFF2-24F251B24753">
+                <File Id="fil24DD62371CA9891F56DA68F9573C0884" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Formats.Asn1.dll" />
+            </Component>
+            <Component Id="cmp043BF3BD1D70ED3D0A2A5E34580A6C27" Directory="Bamboo" Guid="50C45111-0050-4EDF-98A3-8886D2B38044">
+                <File Id="filCDBEBB1357EF6D4D09EFBA1A9019CB36" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Globalization.Calendars.dll" />
+            </Component>
+            <Component Id="cmp6943A2B49C6F98DDCCBFB04C95D81D82" Directory="Bamboo" Guid="55721835-3970-45DE-BD39-13C12E2D2FC6">
+                <File Id="fil1BFB94C0A8112F59FEF6CE9769BA8988" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Globalization.dll" />
+            </Component>
+            <Component Id="cmp1CCA4D81DAB1F2EBDDC10194CA6B7DE2" Directory="Bamboo" Guid="D1F736D4-438A-4292-83F0-B3E0364C7304">
+                <File Id="filA7D9056EAE4FCC19E7909A27E5A48B11" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Globalization.Extensions.dll" />
+            </Component>
+            <Component Id="cmp683CBBF20179C10C82CB6A7FB7715A94" Directory="Bamboo" Guid="D7E0A8B9-E7A5-4CE5-AB0C-7CD2BC102100">
+                <File Id="filFFCF72A1E9D3CCEDBD2C6C0CB57891D7" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.IO.Compression.Brotli.dll" />
+            </Component>
+            <Component Id="cmp272560152FBC9274F8315B0BF59B06D8" Directory="Bamboo" Guid="9D93071F-0F06-4E98-8C9B-B400AB782BFC">
+                <File Id="fil1E7E20D45F788E44B25EFDAA2B22EF35" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.IO.Compression.dll" />
+            </Component>
+            <Component Id="cmp185E86757CF8B32475A6E341625BA784" Directory="Bamboo" Guid="17CCC05A-FBD2-46DC-97D8-F4483FAF0160">
+                <File Id="fil04B2D864D70432A5612BBE9436A222B8" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.IO.Compression.FileSystem.dll" />
+            </Component>
+            <Component Id="cmp950E74D4B3AE848283C6E31380C23702" Directory="Bamboo" Guid="0F37D1EF-AEE2-4449-9902-D2A9009A6A68">
+                <File Id="fil75FF60EEEAA8D4AA6FA21DCF29BE6AA2" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.IO.Compression.ZipFile.dll" />
+            </Component>
+            <Component Id="cmp93638699E5721E8A0EF906F99C09C25E" Directory="Bamboo" Guid="24AB2098-A7E7-4E03-BB7B-32E268A2E3C1">
+                <File Id="filCF57DED8E22EB05B284B040320A994E6" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.IO.dll" />
+            </Component>
+            <Component Id="cmpCC6DEB61D15348095F937996CCA1DC1B" Directory="Bamboo" Guid="B6EDE9CE-6D01-4D76-9AD0-3E2B5BEFCF75">
+                <File Id="filAA7BBC66C794901BC08FC2B73A0EC283" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.IO.FileSystem.AccessControl.dll" />
+            </Component>
+            <Component Id="cmpDE2283EF3CFE9AB5655BE6BB242AD600" Directory="Bamboo" Guid="35AA5B33-1A46-4B7F-A316-77BC70671338">
+                <File Id="fil500E7C8205C4DA42C2F3A7EB40E39EBD" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.IO.FileSystem.dll" />
+            </Component>
+            <Component Id="cmpF3EA65CC67313C734546CFEFFC65D9F6" Directory="Bamboo" Guid="AD84D4D8-2A7D-4B89-BC2E-6CBE3A0305DE">
+                <File Id="fil295417217545E6CD3A452BAE5B7C00C5" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.IO.FileSystem.DriveInfo.dll" />
+            </Component>
+            <Component Id="cmp6052D4CB70CB680778C7EB1428F6F16C" Directory="Bamboo" Guid="747D12C2-9896-40C9-A502-61FC4E323183">
+                <File Id="fil75CF5E1AA39821CABAABE5A3EA78C451" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.IO.FileSystem.Primitives.dll" />
+            </Component>
+            <Component Id="cmpF25927B0E433BAD19905FEC8FDA3A948" Directory="Bamboo" Guid="47C08A86-1C5D-4031-BB5C-309366BA08B1">
+                <File Id="fil40B891E81BF543C1F68FB7C1713FF00B" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.IO.FileSystem.Watcher.dll" />
+            </Component>
+            <Component Id="cmp83A74AB111B0060D286B0C0747AF8794" Directory="Bamboo" Guid="C29F141B-640C-4B4E-96C8-E485178A1C75">
+                <File Id="filC4FACD27896DA4C84AA5707C6E3D78DC" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.IO.IsolatedStorage.dll" />
+            </Component>
+            <Component Id="cmp1081C6F062D767973CA9F05434D64ED2" Directory="Bamboo" Guid="4C51B7EB-2F02-455B-91C2-C1E09C577239">
+                <File Id="filF06A32E2C8FA0062B7E7495ED0D41182" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.IO.MemoryMappedFiles.dll" />
+            </Component>
+            <Component Id="cmp85A31F6C777BABEA1101DCA66EAC04C6" Directory="Bamboo" Guid="CC2615AA-F23F-482E-91AF-92615D386E44">
+                <File Id="filBEA7C5AF056773A5ED8B85691BF48119" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.IO.Pipelines.dll" />
+            </Component>
+            <Component Id="cmp8E9893C9012389D48D73A1DD46EAED87" Directory="Bamboo" Guid="AA92A1C2-B79F-4A22-B6B0-F6D3E382D39A">
+                <File Id="fil5BD437679093320B4729E83003A923F5" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.IO.Pipes.AccessControl.dll" />
+            </Component>
+            <Component Id="cmp47B4311527D7977FE72F33BF9E19F3B7" Directory="Bamboo" Guid="9F4B19EA-17BE-48E2-B935-E9F1221A8E0F">
+                <File Id="fil1FBA2438A77449C35A0F157067FC3C66" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.IO.Pipes.dll" />
+            </Component>
+            <Component Id="cmp9941FE599E09576A8B07B8A312B10990" Directory="Bamboo" Guid="60419960-277D-4555-96B8-74FB1E01414B">
+                <File Id="fil8DC310FEA0090918F9BA9A2D2ADC0322" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.IO.UnmanagedMemoryStream.dll" />
+            </Component>
+            <Component Id="cmp4DFB2D1D3C5BA05174581B2A2D6C4832" Directory="Bamboo" Guid="2E9793E5-57E0-43EC-A955-B6D1A9ECE6A7">
+                <File Id="filC14B2C2673CBD4E9BD0FE8F50E51B0F3" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Linq.dll" />
+            </Component>
+            <Component Id="cmp35450A03BC505E6831BE9A1A7C34A3E9" Directory="Bamboo" Guid="FC767162-D512-4FF2-85FF-6FEBC0C9151B">
+                <File Id="fil43E5FB56525FFAF4CE7AF280ED55C1D7" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Linq.Expressions.dll" />
+            </Component>
+            <Component Id="cmp6A0C4C0F6BA1172B8BE8E247D05F8AD0" Directory="Bamboo" Guid="0D376D6C-6F46-491B-BD8B-3296EBD8D740">
+                <File Id="fil87B772262B34358019027CF7CADB250F" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Linq.Parallel.dll" />
+            </Component>
+            <Component Id="cmp0BD334CF6413F46BA877AE6924B21484" Directory="Bamboo" Guid="7853E766-9F76-4DE5-AE13-20EEBF88C573">
+                <File Id="fil371DF56E81A6AA3741C68D3EF852C7B9" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Linq.Queryable.dll" />
+            </Component>
+            <Component Id="cmp3909E97871CE9A5AD85DC3028BC83878" Directory="Bamboo" Guid="F424CE16-659A-4194-A842-329897525340">
+                <File Id="filE96D42794D3AB942C8EA8ECF09C5D7D7" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Memory.dll" />
+            </Component>
+            <Component Id="cmpB37EF4260FEFC825279E97B6F4E0D75D" Directory="Bamboo" Guid="B74CC135-0BEF-4668-A78D-C20E3A6879DF">
+                <File Id="fil0ED365C13753E231D93948664506B95F" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Net.dll" />
+            </Component>
+            <Component Id="cmpA0288F015403968DCA29C5A078165DA2" Directory="Bamboo" Guid="C48ACF88-112A-4A5C-BCF2-FC8BF1858B88">
+                <File Id="filC27DD7748FE8B1CA76BA95FD42263479" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Net.Http.dll" />
+            </Component>
+            <Component Id="cmp3BCFD887F7E8E65A67EBEE760650B138" Directory="Bamboo" Guid="B5F6D7E9-A983-4D13-9EBC-1B67091DEBB4">
+                <File Id="fil2414C06F49CE54027F77A5CD8CE6CA0F" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Net.Http.Formatting.dll" />
+            </Component>
+            <Component Id="cmp6BBD1A8DEDE071B89FBA72D317EA2ABF" Directory="Bamboo" Guid="7C4DD21E-7252-4855-B26B-C7F226E108D0">
+                <File Id="filBD9150D9AFF22DFDB703A69853F48CAF" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Net.Http.Json.dll" />
+            </Component>
+            <Component Id="cmp0CE78D39664D7DACFB65953C84404F86" Directory="Bamboo" Guid="B8E3930B-524F-4B2D-A534-AF6FD91FF2CF">
+                <File Id="fil2E9E45C1AE05246064203BE437CBAB13" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Net.HttpListener.dll" />
+            </Component>
+            <Component Id="cmpA864765B0D7013CB633300C992D1C8B3" Directory="Bamboo" Guid="1B47FB17-F325-4165-862F-350A43FC72E9">
+                <File Id="filA5ECDA035E32BC54B36DACAB4D492444" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Net.Mail.dll" />
+            </Component>
+            <Component Id="cmp7E25AEC8530F642C9B846A713146B792" Directory="Bamboo" Guid="38B998D5-81BC-4F20-BFA0-994925EACD2E">
+                <File Id="filF6AE3E3D6CF3294664E9CE2E2F2AF391" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Net.NameResolution.dll" />
+            </Component>
+            <Component Id="cmpC5A3AE6DA8A6AE19AD777205883BFC14" Directory="Bamboo" Guid="27B19B71-952A-47BC-BAF7-DA3B88183B11">
+                <File Id="filA0EB7E523B005C4AFCF239BD0BB43FD4" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Net.NetworkInformation.dll" />
+            </Component>
+            <Component Id="cmp9AB345140DFA2A7B309FAE386692D994" Directory="Bamboo" Guid="BD200F0E-D2CC-4CEA-BED2-89C49E7569A5">
+                <File Id="fil4A1656CE1CCF92592032E22E40E04290" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Net.Ping.dll" />
+            </Component>
+            <Component Id="cmp75983360915CB83475B8020D3DC7781A" Directory="Bamboo" Guid="56655879-DEF0-4E63-95A9-498F2C996E40">
+                <File Id="filC2F6BA16926F14D1B1C3F5254558FEB5" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Net.Primitives.dll" />
+            </Component>
+            <Component Id="cmp6690932F97942F075114AAB8F1FC765C" Directory="Bamboo" Guid="78C764C6-07F1-4BB2-89C1-A56059514FA6">
+                <File Id="filA8E0EF3085A26ECE239660F1D3A47757" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Net.Requests.dll" />
+            </Component>
+            <Component Id="cmp64378BD4E686F1756BE107B5AC9AD2F5" Directory="Bamboo" Guid="EE18E0F5-5A98-44AA-9757-D0B06F4231A6">
+                <File Id="fil25469F2014E03463F5779505C63C6908" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Net.Security.dll" />
+            </Component>
+            <Component Id="cmpF81928B1DB888FB70D1B58E3B5A21CF9" Directory="Bamboo" Guid="71434316-4B9F-46B2-AE16-D9A03F1BA77A">
+                <File Id="fil19E22FACAE8A00E319A0FCE809C04E59" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Net.ServicePoint.dll" />
+            </Component>
+            <Component Id="cmp8FBBD30FD0B9E934E9896FD9BEE777BA" Directory="Bamboo" Guid="30B4C940-CE62-47F0-A6D8-AE6EF46030A0">
+                <File Id="filBD3A53D3AE20BC7FB39B965940776F52" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Net.Sockets.dll" />
+            </Component>
+            <Component Id="cmp9FE202D23D58679ECE3C4157F92638A6" Directory="Bamboo" Guid="7131DC65-0A1D-467B-B5D5-863F58268348">
+                <File Id="fil0DA9ADC09FA0939A7E5590C5106111A7" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Net.WebClient.dll" />
+            </Component>
+            <Component Id="cmpBB88C91DD4BFFE26CFD090879EFF12F7" Directory="Bamboo" Guid="5C368289-605F-460E-8BE7-A21DFF02FB71">
+                <File Id="fil3C97F54F92B5F1A1F3DC861A02CB3878" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Net.WebHeaderCollection.dll" />
+            </Component>
+            <Component Id="cmpA055DE0C8C35BE1C3F612CCD455CF5F1" Directory="Bamboo" Guid="67A670B1-878E-4DA9-B184-CFBE58716873">
+                <File Id="filEB7143994EEAD97CF4369AFC6DB9D8D8" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Net.WebProxy.dll" />
+            </Component>
+            <Component Id="cmpD3379F4FBD01968B7F937B146C1D25AD" Directory="Bamboo" Guid="2CE39382-D600-4876-B6D6-BC8442AB57A4">
+                <File Id="fil4283349F84445D744321975B20B619DC" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Net.WebSockets.Client.dll" />
+            </Component>
+            <Component Id="cmpECD09A3394792E8D4B4FF1F9ECCC6A04" Directory="Bamboo" Guid="75765EAB-2E00-4DE4-9860-890EBC6EA1A2">
+                <File Id="fil24B3A458834CF15018AC5AE3EF5E0736" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Net.WebSockets.dll" />
+            </Component>
+            <Component Id="cmp19C8094722E2F29CCD132AD650E3AFD8" Directory="Bamboo" Guid="C2759E23-A205-4A71-A27F-B358252E8EC6">
+                <File Id="fil8C2256405C28F3176B9EBF4E35DB4796" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Numerics.dll" />
+            </Component>
+            <Component Id="cmpF437A7CAE8190043B0A0FA3776C86FA0" Directory="Bamboo" Guid="D8573582-3EB6-4907-8997-23C66684AB61">
+                <File Id="fil106AB3B6E916082B35A9B6C165E4E3A4" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Numerics.Vectors.dll" />
+            </Component>
+            <Component Id="cmp0E1B70499DE2F370F19432D2CE3E5828" Directory="Bamboo" Guid="77ACCAE8-B541-4043-B00D-63E8836943A6">
+                <File Id="filFBFFD975F233D27635DBC0729B4EEC24" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.ObjectModel.dll" />
+            </Component>
+            <Component Id="cmpAE704DFFBEB2270E8CAF67C0927E9834" Directory="Bamboo" Guid="A1932BF1-9398-43EA-978A-D5E9E874A542">
+                <File Id="filB2A7106C990C313E269C4BBEF0B18BAB" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Private.CoreLib.dll" />
+            </Component>
+            <Component Id="cmp6D3890190D25E06299287CD708DB601D" Directory="Bamboo" Guid="2CC0A29E-3550-45AB-90FD-BA0D0CB270DC">
+                <File Id="fil19DEC72EA75DE99892810A3B529262BC" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Private.DataContractSerialization.dll" />
+            </Component>
+            <Component Id="cmp94AE9BC92A912B41A36FC6612734441F" Directory="Bamboo" Guid="C5E804EE-8504-4E3B-A2DE-1B6D8E15C041">
+                <File Id="fil7A88F2209155C94018F4562369A2C1FD" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Private.Uri.dll" />
+            </Component>
+            <Component Id="cmp698CF936655B405EBE52007E05F618DF" Directory="Bamboo" Guid="5B8D90D7-4411-4681-812F-A1BDE104D657">
+                <File Id="fil76EAE385D2563B1E65834FE7A874D959" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Private.Xml.dll" />
+            </Component>
+            <Component Id="cmp9499D420C8F3C87E611CE020AEEE6353" Directory="Bamboo" Guid="0F8F0F83-9976-4A6B-A3F6-76BDDC920376">
+                <File Id="fil3C415E83EB69D06099612BF3AA61B37E" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Private.Xml.Linq.dll" />
+            </Component>
+            <Component Id="cmpE015AA2B1E4C9448A306007BCC5C8E3B" Directory="Bamboo" Guid="5FB23F86-4ABC-441F-9C6F-09E0BCCF8478">
+                <File Id="filFC3E57F8F229AB772B1DE0B0555227D6" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Reflection.DispatchProxy.dll" />
+            </Component>
+            <Component Id="cmpC424816DB173465BFA06787BADD9545B" Directory="Bamboo" Guid="C5A1F305-26F8-46F3-862C-612424618E95">
+                <File Id="filE28F53BA33D06129AFB4D9508859FB5D" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Reflection.dll" />
+            </Component>
+            <Component Id="cmp3334A53618D6244B0D1D11A12843810C" Directory="Bamboo" Guid="A9A01A97-501F-4E56-AA57-034A60492C27">
+                <File Id="filE834EBB1202ED8BC10D1EAA8B2F944C1" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Reflection.Emit.dll" />
+            </Component>
+            <Component Id="cmp54C21BBD5D5C1CF4AE2DAF895F7FE20B" Directory="Bamboo" Guid="6CCA5013-3BD2-4B3A-8E86-3011102E834F">
+                <File Id="fil2CA37AAFB6F3C7E14525EAED397D7E08" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Reflection.Emit.ILGeneration.dll" />
+            </Component>
+            <Component Id="cmp875EAD56B7CBEBF305778E8B56D6A2E0" Directory="Bamboo" Guid="506F192F-9D4F-4F71-BEA7-9BD45003D2A5">
+                <File Id="filEBD1FDE9347AA63690A46FE7575CDB44" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Reflection.Emit.Lightweight.dll" />
+            </Component>
+            <Component Id="cmp713C35D4A04A7A210D08538D46D840EE" Directory="Bamboo" Guid="117AC7BD-96E7-44E4-827F-7F833B498B11">
+                <File Id="filCF1B36F1DA82948D320DA0A8BA76DB4A" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Reflection.Extensions.dll" />
+            </Component>
+            <Component Id="cmp6C84E7BEBD71AA6CDC44D5B944E209BF" Directory="Bamboo" Guid="7EF551E7-46D9-4A0C-947E-BDFE44BADF07">
+                <File Id="fil11B1ABE5B086715C216946BEFBEB5979" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Reflection.Metadata.dll" />
+            </Component>
+            <Component Id="cmpC44E10EE2496B4DB2719C665A489B96D" Directory="Bamboo" Guid="FB9DBC19-6BE5-440C-8FA9-07A293A42E41">
+                <File Id="fil5FE6BBE1BD9FDE6AEAC453189F0441B9" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Reflection.Primitives.dll" />
+            </Component>
+            <Component Id="cmpE32E7FBCDC2B18C097FDA33B2F9AFDA5" Directory="Bamboo" Guid="0EACEA7A-50C4-4195-AF82-A08CCC99EA48">
+                <File Id="fil8B3965BD5B8D8F982DDBB571A8C99E5B" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Reflection.TypeExtensions.dll" />
+            </Component>
+            <Component Id="cmp62E59574C08688138408F709B1B97E6B" Directory="Bamboo" Guid="F553CC7B-E525-4D89-BB16-EFF61874AE7F">
+                <File Id="fil72502498702A57350777C0CDD5D4E7A0" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Resources.Reader.dll" />
+            </Component>
+            <Component Id="cmp66A098860CF4B74B65D02BB8EE95490F" Directory="Bamboo" Guid="AAE8628F-DBD7-4B9A-9855-7BB0C4621F27">
+                <File Id="filBF26F2A2E667D12EA9C7E2E3E7363C70" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Resources.ResourceManager.dll" />
+            </Component>
+            <Component Id="cmp8D52A6CD5E7934904F079BE964EEE30C" Directory="Bamboo" Guid="DE1BF65A-29A7-463F-AB83-E89C0C029264">
+                <File Id="fil027E93C15AF5BC8BEA3B3AD3153EB9E4" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Resources.Writer.dll" />
+            </Component>
+            <Component Id="cmp38C7AEC455B5FAB603C9C8EEDB0346E1" Directory="Bamboo" Guid="18FE9C08-9856-42B2-931B-489034E575FD">
+                <File Id="filAB86CEDFFE5BFFB4EB296A842279D96B" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Runtime.CompilerServices.Unsafe.dll" />
+            </Component>
+            <Component Id="cmpFF739AD9FBF8D7F3EF54D9E306AC3A6E" Directory="Bamboo" Guid="061F11C0-6169-4453-A9F5-501BFBF4C987">
+                <File Id="fil1B0186FE030216E1AC2452CD2251CE9F" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Runtime.CompilerServices.VisualC.dll" />
+            </Component>
+            <Component Id="cmp602BC51A6E43234EF1B9D53A7C2CFB3A" Directory="Bamboo" Guid="20B4F0E0-AE5D-4135-AC6A-0F1C305C2B0E">
+                <File Id="fil3E02C9966F2BF5F8BD38996D95794EDF" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Runtime.dll" />
+            </Component>
+            <Component Id="cmpD9D3D423546A49302411D2CCDB8A75E3" Directory="Bamboo" Guid="78D204BA-646D-4AD9-A58C-8D8FEAC44815">
+                <File Id="filFEDF78A65A8B65D7B86D2A5FCC0465ED" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Runtime.Extensions.dll" />
+            </Component>
+            <Component Id="cmp2F95005C053F6FC1D985C1711D24BB40" Directory="Bamboo" Guid="CB3131B6-E00B-4983-BF2A-D91AD8444DB4">
+                <File Id="fil9D5062D4CD5D9B2B9094B81285E0024C" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Runtime.Handles.dll" />
+            </Component>
+            <Component Id="cmpA3E97E4BEA42121AF5C18A505E7AF63B" Directory="Bamboo" Guid="6A9ACB97-7F55-4CB6-A3C2-BDA0C2449D9C">
+                <File Id="filC7BD24876C13ECD3A5A9159C919111A8" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Runtime.InteropServices.dll" />
+            </Component>
+            <Component Id="cmp7BAC2B87BC92C687528F69CA0565280F" Directory="Bamboo" Guid="4C3D29DE-C29F-4433-B3C5-ACE40A1D84E0">
+                <File Id="filB6D11B735D0AB4D3EA014839AA113838" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Runtime.InteropServices.RuntimeInformation.dll" />
+            </Component>
+            <Component Id="cmp1481A2F0CAE67698BA494DAE6A63D2A7" Directory="Bamboo" Guid="F7058F04-105C-409A-963A-6A1FE5ECB559">
+                <File Id="fil163E036188D79F6EE41160B560F65A7D" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Runtime.Intrinsics.dll" />
+            </Component>
+            <Component Id="cmp6954C7B591294F226BFC21CEEE560280" Directory="Bamboo" Guid="3B39994B-08D4-4906-B311-256F7394BF56">
+                <File Id="fil0727129AA0ED64A2530747EE64B82F74" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Runtime.Loader.dll" />
+            </Component>
+            <Component Id="cmp583FBD026EC6E2B5FFEBFB14768DB947" Directory="Bamboo" Guid="3BA5907D-658F-4A85-B760-578E7AC6C861">
+                <File Id="fil34C78E48DA933842DC0F52EB2ED7D1F6" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Runtime.Numerics.dll" />
+            </Component>
+            <Component Id="cmp84B3117D5A5EE42395440D7030CA0C26" Directory="Bamboo" Guid="72E10D06-251E-42B4-AB97-BDBFA99B1421">
+                <File Id="filFD64ECE23438D18C35630BB9F972CC7E" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Runtime.Serialization.dll" />
+            </Component>
+            <Component Id="cmpB46035E20DE4F53760EC747528520C0C" Directory="Bamboo" Guid="286D9F96-8F80-4C7C-8C80-466012209206">
+                <File Id="filDE4D55FA7785F692375C106897824385" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Runtime.Serialization.Formatters.dll" />
+            </Component>
+            <Component Id="cmp4314534C87D0C018218C7D304EB85398" Directory="Bamboo" Guid="5DC15AF0-540E-48C5-9D72-53BADCE9C1F6">
+                <File Id="fil287E80F4D1D184CCB4D568CCF83E8299" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Runtime.Serialization.Json.dll" />
+            </Component>
+            <Component Id="cmp92EB346536A549052BBEBC515256E0C4" Directory="Bamboo" Guid="14DB90CC-C0FA-4869-8777-8EE9C82435C8">
+                <File Id="fil07B10C0E699BEDF414DCBFD50DFF4405" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Runtime.Serialization.Primitives.dll" />
+            </Component>
+            <Component Id="cmp253216AE9A9029A4B7928A9B92AA4216" Directory="Bamboo" Guid="D605B060-66E7-4ED3-922D-09DF1DA5357C">
+                <File Id="filD29B1267C39416F0452CB58B6D70E9ED" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Runtime.Serialization.Xml.dll" />
+            </Component>
+            <Component Id="cmp8C34E69A76A754F4E5D4953B15926890" Directory="Bamboo" Guid="FE31FD3F-2783-4B63-87D7-70B3CF4A9525">
+                <File Id="filEAC8EAB8AA93336A7F22A73CE862D147" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Security.AccessControl.dll" />
+            </Component>
+            <Component Id="cmpB1D122B7BEA853D27C1B458E793FED58" Directory="Bamboo" Guid="4BE9A930-5AE7-4023-8963-40A45333983E">
+                <File Id="fil9CF71DC272E8DDC20C51448427515421" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Security.Claims.dll" />
+            </Component>
+            <Component Id="cmpA3BCCEEC0F017B40C236049690E48A27" Directory="Bamboo" Guid="A7C9CDBF-E8D9-46D7-B4BE-0605BACCF59A">
+                <File Id="fil2F701AB7AAB21336EB6D159031370916" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Security.Cryptography.Algorithms.dll" />
+            </Component>
+            <Component Id="cmp4AA4B1F4026E6E5066F560EDF0F772B3" Directory="Bamboo" Guid="F7D4DE64-F550-4AB0-A682-8714D804CF48">
+                <File Id="filE0C8D707184C9449A190F0E86B5DE472" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Security.Cryptography.Cng.dll" />
+            </Component>
+            <Component Id="cmpA6218C5B0F54C16DB67C5E7DE1ABD74B" Directory="Bamboo" Guid="735A6968-05EB-4C7F-B4E1-0020A0140625">
+                <File Id="fil1F7646D87CD5E809D1C0421C1491CA2E" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Security.Cryptography.Csp.dll" />
+            </Component>
+            <Component Id="cmp508A93C92B03D18760D658237E1020B3" Directory="Bamboo" Guid="D6DFB7A8-F8ED-4C87-9DE8-41097089C883">
+                <File Id="fil49AA2A7C046758EE5F328F7D8F5A9C0A" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Security.Cryptography.Encoding.dll" />
+            </Component>
+            <Component Id="cmp439695497EA5B9A0FB623FE297789456" Directory="Bamboo" Guid="7EE2DED0-79F1-433E-99EA-C55AF9ED0173">
+                <File Id="fil7F48A8C4971C7DEA9274D60375074B23" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Security.Cryptography.OpenSsl.dll" />
+            </Component>
+            <Component Id="cmp94EE1CB49CD03EA9DB6B8DEFFF9CB4D5" Directory="Bamboo" Guid="BDA7C68E-DEED-4650-8792-0257DB423116">
+                <File Id="fil9635ABF4D6723C8A431C9D3DD6FC761B" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Security.Cryptography.Pkcs.dll" />
+            </Component>
+            <Component Id="cmp0A3C6C59837ADFC4DABBD24DB10307A0" Directory="Bamboo" Guid="F179088C-32BC-4E61-8906-803923B3C338">
+                <File Id="filDA338503616D1097369AF47C875399AC" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Security.Cryptography.Primitives.dll" />
+            </Component>
+            <Component Id="cmpC28D0AB77C51A5B2C487A7CA47F58191" Directory="Bamboo" Guid="7B4B059B-C031-4549-9083-6EED69AED25D">
+                <File Id="fil4C38F69C594602AB67AFD90901A755BB" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Security.Cryptography.X509Certificates.dll" />
+            </Component>
+            <Component Id="cmp656AEA8FED1BD8063ECFBCF2ECE26D77" Directory="Bamboo" Guid="699324D8-1E2F-4719-9615-B8531F22FA9A">
+                <File Id="fil3EB0655D66F143E91F3D69AB28AEB060" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Security.Cryptography.Xml.dll" />
+            </Component>
+            <Component Id="cmp3CB0AEFDB3FD9D93BA2D047C21EEB923" Directory="Bamboo" Guid="3D1D2FC2-636A-41D3-8560-D30DE201E13D">
+                <File Id="fil1682F536711C4C8742B10F68007A8456" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Security.dll" />
+            </Component>
+            <Component Id="cmp3A3A872C67E3442FBCABC7DD95D61F25" Directory="Bamboo" Guid="FB78DF50-F710-4FAD-97AB-B55F330EC908">
+                <File Id="fil90FDB00B59376DD93AE73D6DC0DCDD86" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Security.Permissions.dll" />
+            </Component>
+            <Component Id="cmp6D191E69E7E63DD41D508090B01E99EC" Directory="Bamboo" Guid="4CD5C77E-BFDB-4CE1-8ED0-1F0E3B38974D">
+                <File Id="filB9750DC9A463A9C4FC2315ECC7CC5B63" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Security.Principal.dll" />
+            </Component>
+            <Component Id="cmp1FC0F51D75165905EA3BBB6789976CD3" Directory="Bamboo" Guid="371B5541-E586-4D3C-BAB1-68E8CCC21973">
+                <File Id="filD9CBEAC8B37EC8C8CB733A73C9F7C241" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Security.Principal.Windows.dll" />
+            </Component>
+            <Component Id="cmp043FD0BD829254B0C9B9D8A57174BF47" Directory="Bamboo" Guid="BF4A05F0-AD52-4292-818D-E6BAEE5312D9">
+                <File Id="fil4A4E9F7267CEBCE9B36913375DDF150C" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Security.SecureString.dll" />
+            </Component>
+            <Component Id="cmpC7FFC4102DEA322F2FE04BE7B63C1290" Directory="Bamboo" Guid="FA1C8854-2861-490A-9F4D-67EBF87FC96A">
+                <File Id="filA68434411581740B9EB96224C6B80927" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.ServiceModel.Web.dll" />
+            </Component>
+            <Component Id="cmp81FAC624A8A3E9B7714F98BB033D5DFF" Directory="Bamboo" Guid="7D16E72D-B831-4723-BC8F-4B32AC520D8A">
+                <File Id="fil2B3508545931927C582EEFCEBF38B88C" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.ServiceProcess.dll" />
+            </Component>
+            <Component Id="cmp0BA5FB6A3A7E9F0F0F07B77081E8FCF3" Directory="Bamboo" Guid="BCAF63BA-587D-45F8-A022-F19E091F5624">
+                <File Id="filCDD2A19E24733982EEB7903651D7AD50" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Text.Encoding.CodePages.dll" />
+            </Component>
+            <Component Id="cmp8F6189A23D6C3E5A6513CB64542434EF" Directory="Bamboo" Guid="EFC10EF9-21EE-4603-902B-BBE29A4C6EDC">
+                <File Id="filA14FE86461ED48303EE866A22DA8A5AE" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Text.Encoding.dll" />
+            </Component>
+            <Component Id="cmp852B97706F865DFCA214635EB9DC306B" Directory="Bamboo" Guid="6DE18BB3-73E9-4C3B-A8D6-7891466C987B">
+                <File Id="fil8DFC4C48F70F5730879C1A618729AB09" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Text.Encoding.Extensions.dll" />
+            </Component>
+            <Component Id="cmp5A834ACDF2CDD2FC6286BFD23E74DC49" Directory="Bamboo" Guid="59CE23A2-6978-4AA3-9AC8-F37D39CDBD11">
+                <File Id="fil3B7AFC8627E9443F987B920D844BCC14" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Text.Encodings.Web.dll" />
+            </Component>
+            <Component Id="cmp926AD7A6D19647F869C51FF282E5DAF6" Directory="Bamboo" Guid="2B297E73-41F3-4D61-A161-78B0B1A3E8C1">
+                <File Id="fil2680FC5E58B5CFD10C44432A98CDD1A7" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Text.Json.dll" />
+            </Component>
+            <Component Id="cmp2FCC5F798520E997B5519AAF7D5F166A" Directory="Bamboo" Guid="024B90D5-4BAE-467F-B4A7-03C715155A5C">
+                <File Id="fil446712DE296E8B8E4B80AA92D8D3ED0E" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Text.RegularExpressions.dll" />
+            </Component>
+            <Component Id="cmp670185A8E5C744E59A8F66008F56545E" Directory="Bamboo" Guid="69D6F072-F6A9-4F71-A0D6-D723957F347B">
+                <File Id="fil976F3334FBDAD26E529D2985977144D6" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Threading.Channels.dll" />
+            </Component>
+            <Component Id="cmp4793D2B643A12BB5F6FBA8701766F92D" Directory="Bamboo" Guid="FAFCDB66-53D4-4428-8EB1-7B53122D4A5B">
+                <File Id="filEB248DEA964B28D512CB8500D356C0F5" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Threading.dll" />
+            </Component>
+            <Component Id="cmp93E5E968EB5E398505D0C40CE7A89E18" Directory="Bamboo" Guid="6D36EC2D-BD5D-4209-8811-A4ED296ABD6F">
+                <File Id="fil324C4DE3B2469280AA2EF62F77FD8391" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Threading.Overlapped.dll" />
+            </Component>
+            <Component Id="cmp55EBE6876CEF856E23E547FCD4891FF8" Directory="Bamboo" Guid="79847AF9-E073-4012-B8B3-D039FB78BD79">
+                <File Id="filD4E4B88C08084463FD2D1B86962F2585" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Threading.Tasks.Dataflow.dll" />
+            </Component>
+            <Component Id="cmp5F08736722075F4665E4EE7429C47C25" Directory="Bamboo" Guid="B8A46671-2E51-4655-B91E-7F6E37C7DB8F">
+                <File Id="filC83F827339B2A1A5A2E36317EB42B5D8" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Threading.Tasks.dll" />
+            </Component>
+            <Component Id="cmp1B6B4E0A070A284F546A195A199CA7B7" Directory="Bamboo" Guid="017E2574-55D1-4BFB-AC86-744A60054F0D">
+                <File Id="fil9DE336CC356D56F2687B0852788E11C8" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Threading.Tasks.Extensions.dll" />
+            </Component>
+            <Component Id="cmpA55653CD40543F3FD4CF268DDD899D61" Directory="Bamboo" Guid="4EA44D58-BBF1-48CD-8389-A20023EC2D86">
+                <File Id="fil8BB2513ABC4DEF63663435680531D58A" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Threading.Tasks.Parallel.dll" />
+            </Component>
+            <Component Id="cmp11EDBDC220CABDD743113CFB5D4F153A" Directory="Bamboo" Guid="05C67ED3-EAE1-49C7-B2DF-0081283D5F3F">
+                <File Id="filC1D84CB888D5AC1F46EFA1C643B17317" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Threading.Thread.dll" />
+            </Component>
+            <Component Id="cmp66DB747E9D63755FC5DD09F6A738387A" Directory="Bamboo" Guid="B875757D-5472-41C9-BC6E-FD52454C4D9E">
+                <File Id="fil07F1ABDE58252BBCC048C12EFF70EF3C" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Threading.ThreadPool.dll" />
+            </Component>
+            <Component Id="cmp139406CB3BFE7002BE3278A507069025" Directory="Bamboo" Guid="7B19FD5D-28C3-42CB-B9F5-6F807CDA2A82">
+                <File Id="fil3283C1169570C92080728E237EC196A1" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Threading.Timer.dll" />
+            </Component>
+            <Component Id="cmp70EBFD0B0B22430D4253CCE0F345B4BE" Directory="Bamboo" Guid="039FCCAC-9CCD-4E94-BE9B-66E33C842B9D">
+                <File Id="fil054A1E62C636E718B48D1ED90F372881" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Transactions.dll" />
+            </Component>
+            <Component Id="cmpFDD8783201C234DE967DC56421CCAA67" Directory="Bamboo" Guid="C900E7B3-1CB2-47C7-A69E-F0D900456922">
+                <File Id="fil989EA357E1C9747D3DC3C1AA04C6910F" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Transactions.Local.dll" />
+            </Component>
+            <Component Id="cmpFE328475C8CC3AA6EAEAF862573264BB" Directory="Bamboo" Guid="AF97A834-F20E-4473-882A-87582F946575">
+                <File Id="fil7564DED18857659DA531E75177D89929" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.ValueTuple.dll" />
+            </Component>
+            <Component Id="cmp8BEB444862F23685A7964D88829E6D43" Directory="Bamboo" Guid="AE938A70-8D61-4D3F-A473-641E4C078301">
+                <File Id="fil7FBB2E1593AE6B94D89A56DA2145D036" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Web.dll" />
+            </Component>
+            <Component Id="cmp531AB72C7E88CDD41260D7B6C8EBFFAA" Directory="Bamboo" Guid="5BE7A844-5D7D-4725-9127-3B159DAE12ED">
+                <File Id="fil49AD17F682F8DE1E3DEBCDBE170D9CAD" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Web.HttpUtility.dll" />
+            </Component>
+            <Component Id="cmp5F40E4F9802AEB982072E3CC0421F8CA" Directory="Bamboo" Guid="9CA7B0E5-C5DC-47CB-A62A-982F4F63BF1D">
+                <File Id="fil4590D6121263CCD9D4E98AD2C7AD4A29" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Windows.dll" />
+            </Component>
+            <Component Id="cmpC268853652AB88AAD7011949AE1BD465" Directory="Bamboo" Guid="024FEC37-80E6-4694-849C-BBC4A21123F5">
+                <File Id="fil980E18C77BE28C1FEB3CC57A150749DF" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Windows.Extensions.dll" />
+            </Component>
+            <Component Id="cmpA5CA6EB8DD585A1F16406FAEA4FA3411" Directory="Bamboo" Guid="FFAD6E70-8C81-46CE-8B20-34258FB51401">
+                <File Id="filF217BB55CF3B84949937235038779B94" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Xml.dll" />
+            </Component>
+            <Component Id="cmpEF9F4969269AA728AC4B5A0B5F682EB1" Directory="Bamboo" Guid="9058358E-C7EA-445B-B921-EFC63BD57D07">
+                <File Id="filCB2942B7FF9D4CF4C9EBF3EA82AF552A" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Xml.Linq.dll" />
+            </Component>
+            <Component Id="cmpC849DF644A7A84B9FBBC7F54D8E9CD2F" Directory="Bamboo" Guid="173E8B99-2954-4114-B292-00AF87807F97">
+                <File Id="filF342308859C40BBB5D111186B72E0990" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Xml.ReaderWriter.dll" />
+            </Component>
+            <Component Id="cmpD40EA0C1AD9F850860DBFB859B6DEEF5" Directory="Bamboo" Guid="45A050B7-E1E1-4740-8CFB-2ACCFD31613F">
+                <File Id="fil3E46A1A91929500EA3F9147941AA9CF2" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Xml.Serialization.dll" />
+            </Component>
+            <Component Id="cmpD71E13F3C22E951516821FB2028826EA" Directory="Bamboo" Guid="90310E3D-8BA1-4866-B9F5-E8BA89ABAE7C">
+                <File Id="fil170064E1FBE8AA85E3F59466BAD76B7A" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Xml.XDocument.dll" />
+            </Component>
+            <Component Id="cmpDE7B330A44315C7A1853A69C6436C0C4" Directory="Bamboo" Guid="E6E19428-DA9E-4853-99CA-BBE7228B08DF">
+                <File Id="filE4F43860C636E2F7CEA496600086F396" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Xml.XmlDocument.dll" />
+            </Component>
+            <Component Id="cmp6D3805892659C47A5E25A0447B674040" Directory="Bamboo" Guid="3FE68642-2C8A-473A-9570-B32F409BAB8B">
+                <File Id="fil5CB1FA37545964DCB7CD0E1A6D3CE4AF" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Xml.XmlSerializer.dll" />
+            </Component>
+            <Component Id="cmp510ED4673200FC08A8A38359C29C4093" Directory="Bamboo" Guid="0E7FF2E2-6D28-4339-B051-020170A446C1">
+                <File Id="filC2ED0DA42B643269933F94D8CD3143B8" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Xml.XPath.dll" />
+            </Component>
+            <Component Id="cmp50B35A67F447F3460DB16A9BD4E92523" Directory="Bamboo" Guid="604D98DD-EE06-4912-80D3-A27F4DFDAA53">
+                <File Id="fil465793960CF4F396CD4434212FA9A2FF" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\System.Xml.XPath.XDocument.dll" />
+            </Component>
+            <Component Id="cmpEBB0FD2B843238EE0B5C1DC565FDA0ED" Directory="Bamboo" Guid="9CA63784-C32A-4CAD-87FC-3BC630FCC80D">
+                <File Id="fil87E244F027B5C68588E36F0813C30975" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\ucrtbase.dll" />
+            </Component>
+            <Component Id="cmpB03B822A58C8BDE3774A79A1A6608E34" Directory="Bamboo" Guid="03D94358-081D-417F-8632-FE9DF798CB94">
+                <File Id="fil6381FC61F553049E09EC74B568399DBE" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\WebApiContrib.Core.Formatter.Bson.dll" />
+            </Component>
+            <Component Id="cmp55CF196D03C101EA10E5C7B04601C0E2" Directory="Bamboo" Guid="BC53F3EF-E788-4DE8-A8F7-EFCFE4428C81">
+                <File Id="fil93E614DE0FE17E56207A7F147D74554B" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\WindowsBase.dll" />
+            </Component>
+            <Component Id="cmpD017309B4A0FE8226C43C8F5A61F787D" Directory="dir82F777F7B19DE4EA724E28734AF5B7B4" Guid="DC425A0F-D267-4D7B-AA93-60C34F7BA6B3">
+                <File Id="filF4ED0DFDED1E068761CBD2443FBC9DB7" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Runners\bamboo.cmd" />
+            </Component>
+            <Component Id="cmp69F766EFAE68ADC0F3971B60EAE4669B" Directory="dir82F777F7B19DE4EA724E28734AF5B7B4" Guid="D62857D3-6C79-44DA-902B-F634EA42D5ED">
+                <File Id="fil7D1FB3FA920A1040781914526EC9680C" KeyPath="yes" Source="$(var.BambooWalletInstallationDirectory)\Runners\bamboo.sh" />
+            </Component>
+        </ComponentGroup>
+    </Fragment>
+</Wix>
