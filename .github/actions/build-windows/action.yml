@@ -25,7 +25,7 @@ runs:
       Light.exe -b install\windows\BambooWalletInstaller -out install\windows\BambooWalletInstaller\bin\x64\Release\cypher-bamboo_${{ env.VERSION }}.msi -pdbout install\windows\BambooWalletInstaller\bin\x64\Release\cypher-bamboo_${{ env.VERSION }}.wixpdb -wx -cultures:null -ext "C:\Program Files (x86)\WiX Toolset v3.11\bin\\WixUtilExtension.dll" -ext "C:\Program Files (x86)\WiX Toolset v3.11\bin\\WixUIExtension.dll" -pedantic -contentsfile install\windows\BambooWalletInstaller\obj\x64\Release\BambooWalletInstaller.wixproj.BindContentsFileListnull.txt -outputsfile install\windows\BambooWalletInstaller\obj\x64\Release\BambooWalletInstaller.wixproj.BindOutputsFileListnull.txt -builtoutputsfile install\windows\BambooWalletInstaller\obj\x64\Release\BambooWalletInstaller.wixproj.BindBuiltOutputsFileListnull.txt -wixprojectfile install\windows\BambooWalletInstaller\BambooWalletInstaller.wixproj install\windows\BambooWalletInstaller\obj\x64\Release\Product.wixobj install\windows\BambooWalletInstaller\obj\x64\Release\wallet_files.wixobj
     shell: cmd
 
-  - name: Calculate SHA1
+  - name: Calculate SHA256
     run: sha256sum install/windows/BambooWalletInstaller/bin/x64/Release/cypher-bamboo_${{ env.VERSION }}.msi > install/windows/BambooWalletInstaller/bin/x64/Release/cypher-bamboo_${{ env.VERSION }}.msi.sha256
     shell: bash
 
