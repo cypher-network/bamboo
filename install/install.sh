@@ -87,6 +87,8 @@ CYPHER_BAMBOO_URL_PREFIX="https://github.com/cypher-network/bamboo/releases/down
 
 CYPHER_BAMBOO_OPT_PATH="/opt/cypher/bamboo/"
 CYPHER_BAMBOO_TMP_PATH="/tmp/opt/cypher/bamboo/"
+CYPHER_BAMBOO_SYMLINK_PATH="/usr/local/bin/"
+CYPHER_BAMBOO_EXECUTABLE="clibamwallet"
 
 
 # Check if we are running on a real terminal and find the rows and columns
@@ -205,14 +207,18 @@ install_archive() {
   elif [ "${IS_MACOS}" = true ]; then
     tar -xf "${DOWNLOAD_FILE}" -C "${CYPHER_BAMBOO_TMP_PATH}"
   fi  
-  
+
   printf "%b  %b Unpacked archive to %s\n" "${OVER}" "${TICK}" "${CYPHER_BAMBOO_TMP_PATH}"
-    
+
   printf "  %b Installing to %s" "${INFO}" "${CYPHER_BAMBOO_OPT_PATH}"
   sudo mkdir -p "${CYPHER_BAMBOO_OPT_PATH}"
   sudo cp -r "${CYPHER_BAMBOO_TMP_PATH}"* "${CYPHER_BAMBOO_OPT_PATH}"
   sudo chmod -R 755 "${CYPHER_BAMBOO_OPT_PATH}"
   sudo chown -R $USER "${CYPHER_BAMBOO_OPT_PATH}"
+  if [ ! -f "${CYPHER_BAMBOO_SYMLINK_PATH}${CYPHER_BAMBOO_EXECUTABLE}" ]; then
+    sudo ln -s "${CYPHER_BAMBOO_OPT_PATH}${CYPHER_BAMBOO_EXECUTABLE}" "${CYPHER_BAMBOO_SYMLINK_PATH}"
+  fi
+
   printf "%b  %b Installed to %s\n" "${OVER}" "${TICK}" "${CYPHER_BAMBOO_OPT_PATH}"   
 }
 
@@ -234,7 +240,8 @@ if [ "${IS_UNINSTALL}" = true ]; then
   printf "  %b Uninstalling\n\n" "${INFO}"
 
   sudo rm -rf "${CYPHER_BAMBOO_OPT_PATH}"
-  
+  sudo rm -f "${CYPHER_BAMBOO_SYMLINK_PATH}${CYPHER_BAMBOO_EXECUTABLE}"
+
   printf "\n\n  %b Uninstall succesful\n\n" "${DONE}"
 
 else
