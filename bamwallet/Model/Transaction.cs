@@ -2,6 +2,9 @@
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
 using System;
+using BAMWallet.Extensions;
+using BAMWallet.Helper;
+using Blake3;
 using LiteDB;
 using MessagePack;
 using NBitcoin;
@@ -26,7 +29,7 @@ namespace BAMWallet.Model
         /// <returns></returns>
         public byte[] ToHash()
         {
-            return NBitcoin.Crypto.Hashes.DoubleSHA256(Stream()).ToBytes(false);
+            return Hasher.Hash(Stream()).HexToByte();
         }
 
         /// <summary>
@@ -35,7 +38,7 @@ namespace BAMWallet.Model
         /// <returns></returns>
         public byte[] Stream()
         {
-            using var ts = new Helper.TangramStream();
+            using var ts = new TangramStream();
             ts
                 .Append(TxnId ?? Array.Empty<byte>())
                 .Append(Mix)

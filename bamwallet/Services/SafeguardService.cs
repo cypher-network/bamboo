@@ -40,9 +40,7 @@ namespace BAMWallet.Services
         {
             var safeGuardPath = SafeguardFilePath();
             var filePath = Directory.EnumerateFiles(safeGuardPath, "*.messagepack").Last();
-            var file = File.Open(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
-
-            return file;
+            return File.Open(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite); ;
         }
 
         /// <summary>
@@ -52,11 +50,9 @@ namespace BAMWallet.Services
         public static Transaction[] GetTransactions()
         {
             var byteArray = Util.ReadFully(GetSafeguardData());
-            var blockHeaders = MessagePackSerializer.Deserialize<GenericList<BlockHeader>>(byteArray);
-
-            blockHeaders.Data.Shuffle();
-
-            return blockHeaders.Data.SelectMany(x => x.Transactions).ToArray();
+            var blocks = MessagePackSerializer.Deserialize<GenericList<Block>>(byteArray);
+            blocks.Data.Shuffle();
+            return blocks.Data.SelectMany(x => x.Txs).ToArray();
         }
 
         /// <summary>
@@ -69,32 +65,25 @@ namespace BAMWallet.Services
             try
             {
                 stoppingToken.ThrowIfCancellationRequested();
-
                 var needData = NeedNewSafeguardData();
-                if (!needData)
-                    return;
-
+                if (!needData) return;
                 _safeguardDownloadingFlagService.IsDownloading = true;
-
                 var baseAddress = _client.GetBaseAddress();
-                var path = _apiGatewaySection.GetSection(RestCall.Routing).GetValue<string>(RestCall.RestSafeguardTransactions);
-
-                var blockHeaders = await _client.GetRangeAsync<BlockHeader>(baseAddress, path, stoppingToken);
-                if (blockHeaders != null)
+                var path = _apiGatewaySection.GetSection(RestCall.Routing)
+                    .GetValue<string>(RestCall.RestSafeguardTransactions);
+                var blocks = await _client.GetRangeAsync<Block>(baseAddress, path, stoppingToken);
+                if (blocks != null)
                 {
                     var fileStream = SafeguardData(GetDays());
-                    var buffer = MessagePackSerializer.Serialize(blockHeaders);
-
+                    var buffer = MessagePackSerializer.Serialize(blocks);
                     await fileStream.WriteAsync(buffer, stoppingToken);
                     await fileStream.FlushAsync(stoppingToken);
                     fileStream.Close();
-
                     _safeguardDownloadingFlagService.IsDownloading = false;
                 }
             }
             catch (TaskCanceledException)
             {
-
             }
             catch (Exception ex)
             {
@@ -114,20 +103,9 @@ namespace BAMWallet.Services
         {
             var safeGuardPath = SafeguardFilePath();
             var d = GetDays();
-
-            if (Directory.Exists(safeGuardPath))
-            {
-                foreach (var filename in Directory.EnumerateFiles(safeGuardPath))
-                {
-                    string filenameWithoutPath = Path.GetFileNameWithoutExtension(filename);
-                    if (filenameWithoutPath.Equals(d.ToString("dd-MM-yyyy")))
-                    {
-                        return false;
-                    }
-                }
-            }
-
-            return true;
+            return !Directory.Exists(safeGuardPath) || Directory.EnumerateFiles(safeGuardPath)
+                .Select(Path.GetFileNameWithoutExtension).All(filenameWithoutPath =>
+                    !filenameWithoutPath.Equals(d.ToString("dd-MM-yyyy")));
         }
 
         /// <summary>
@@ -147,21 +125,20 @@ namespace BAMWallet.Services
         private static Stream SafeguardData(DateTime date)
         {
             var safeGuardPath = SafeguardFilePath();
-            if (!Directory.Exists(safeGuardPath))
+            if (Directory.Exists(safeGuardPath))
+                return File.Open($"{safeGuardPath}/{date:dd-MM-yyyy}.messagepack", FileMode.OpenOrCreate,
+                    FileAccess.ReadWrite, FileShare.ReadWrite);
+            try
             {
-                try
-                {
-                    Directory.CreateDirectory(safeGuardPath);
-                }
-                catch (Exception ex)
-                {
-                    throw new Exception(ex.Message);
-                }
+                Directory.CreateDirectory(safeGuardPath);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
             }
 
-            var file = File.Open($"{safeGuardPath}/{date:dd-MM-yyyy}.messagepack", FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
-
-            return file;
+            return File.Open($"{safeGuardPath}/{date:dd-MM-yyyy}.messagepack", FileMode.OpenOrCreate,
+                FileAccess.ReadWrite, FileShare.ReadWrite);
         }
 
         /// <summary>
@@ -170,7 +147,7 @@ namespace BAMWallet.Services
         /// <returns></returns>
         private static string SafeguardFilePath()
         {
-            return Path.Combine(Path.GetDirectoryName(Helper.Util.AppDomainDirectory()), "safeguard");
+            return Path.Combine(Path.GetDirectoryName(Util.AppDomainDirectory()), "safeguard");
         }
     }
 }
