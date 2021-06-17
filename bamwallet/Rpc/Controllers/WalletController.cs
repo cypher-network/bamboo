@@ -163,7 +163,7 @@ namespace BAMWallet.Rpc.Controllers
                 var transaction = _walletService.GetTransaction(session.SessionId);
                 if (transaction != null)
                 {
-                    return new ObjectResult(new {messagepack = transaction.Serialize()});
+                    return new ObjectResult(new { messagepack = transaction.Serialize() });
                 }
             }
 

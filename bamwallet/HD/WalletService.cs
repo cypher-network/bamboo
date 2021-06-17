@@ -22,6 +22,7 @@ using BAMWallet.Model;
 using BAMWallet.Rpc;
 using BAMWallet.Services;
 using Libsecp256k1Zkp.Net;
+using MessagePack;
 
 namespace BAMWallet.HD
 {
