@@ -38,6 +38,7 @@
     <Folder Include="Services\" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Blake3" Version="0.3.0" />
     <PackageReference Include="MessagePack" Version="2.2.85" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="5.0.0" />
     <PackageReference Include="Dawn.Guard" Version="1.12.0" />
