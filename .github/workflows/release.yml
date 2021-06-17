@@ -5,6 +5,14 @@ on:
     tags:
       - 'v*.*.*'
 
+  # workflow_dispatch:
+  #     inputs:
+  #       logLevel:
+  #         description: 'Log level'
+  #         required: true
+  #         default: 'warning'
+  #       tags:
+  #         description: 'Test scenario tags'
 
 jobs:
   validate-version:
@@ -18,11 +26,11 @@ jobs:
       - name: Get version
         uses: ./.github/actions/get-version
 
-      - name: Verify AssemblyVersion cypcore
+      - name: Verify AssemblyVersion cli
         run: ./.github/actions/get-version/validate.sh ./cli/cli.csproj ${{ env.VERSION }}
         shell: bash
 
-      - name: Verify AssemblyVersion cypnode
+      - name: Verify AssemblyVersion bamwallet
         run: ./.github/actions/get-version/validate.sh ./bamwallet/bamwallet.csproj ${{ env.VERSION }}
         shell: bash
 
@@ -80,6 +88,10 @@ jobs:
   build-windows:
     needs: validate-version
     runs-on: windows-latest
+    env:
+      DOTNET_NOLOGO: true
+      DOTNET_CLI_TELEMETRY_OPTOUT: true
+
     steps:
       - uses: actions/checkout@v2
         with:
@@ -89,10 +101,13 @@ jobs:
         id: get_version
         uses: ./.github/actions/get-version
 
+      - name: Create windows installer
+        uses: ./.github/actions/build-windows
+
       - name: Create Windows release
         id: gh-release
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          files: cypher-cypnode_$VERSION*.msi
+          files: cypher-bamboo_${{ env.VERSION }}*.*
