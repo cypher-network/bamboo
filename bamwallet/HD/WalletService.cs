@@ -36,7 +36,7 @@ namespace BAMWallet.HD
         private readonly NBitcoin.Network _network;
         private readonly Client _client;
         private readonly IConfigurationSection _apiGatewaySection;
-
+        private readonly uint _numberOfConfirmations;
         private ConcurrentDictionary<Guid, Session> Sessions { get; }
 
         public WalletService(ISafeguardDownloadingFlagProvider safeguardDownloadingFlagProvider,
@@ -47,6 +47,7 @@ namespace BAMWallet.HD
             var apiNetworkSection = configuration.GetSection(Constant.Network);
             var environment = apiNetworkSection.GetValue<string>(Constant.Environment);
 
+            _numberOfConfirmations = apiNetworkSection.GetValue<uint>(Constant.NumberOfConfirmations);
             _network = environment == Constant.Mainnet ? NBitcoin.Network.Main : NBitcoin.Network.TestNet;
             _logger = logger;
             _apiGatewaySection = configuration.GetSection(RestCall.Gateway);
