@@ -54,7 +54,7 @@ namespace BAMWallet.HD
             _client = new Client(configuration, _logger);
 
             Sessions = new ConcurrentDictionary<Guid, Session>();
-            
+
             JobManager.Initialize();
         }
 
@@ -451,7 +451,7 @@ namespace BAMWallet.HD
                 {
                     return Enumerable.Empty<Balance>().ToList();
                 }
-                
+
                 balances.AddRange(from balanceSheet in walletTransactions
                                   from output in balanceSheet.Transaction.Vout
                                   let keyImage = GetKeyImage(sessionId, output)
@@ -488,7 +488,7 @@ namespace BAMWallet.HD
             session.LastError = null;
 
             TrackLastTransaction(session.SessionId);
-            
+
             var calculated = CalculateChange(session.SessionId);
             if (!calculated.Success)
             {
@@ -597,7 +597,7 @@ namespace BAMWallet.HD
                     success = false,
                     message = "Unable to save the transaction."
                 }));
-            
+
             return TaskResult<WalletTransaction>.CreateSuccess(session.WalletTransaction);
         }
 
@@ -917,11 +917,11 @@ namespace BAMWallet.HD
         public TaskResult<BalanceSheet[]> History(Guid sessionId)
         {
             Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
-            
+
             var session = Session(sessionId).EnforceDbExists();
-            
+
             TrackLastTransaction(session.SessionId);
-            
+
             var balanceSheets = new List<BalanceSheet>();
             var walletTransactions = session.Database.Query<WalletTransaction>().OrderBy(x => x.DateTime).ToList();
             if (walletTransactions?.Any() != true)
@@ -933,7 +933,7 @@ namespace BAMWallet.HD
             {
                 var (_, scan) = Unlock(session.SessionId);
                 ulong received = 0, sent = 0;
-                
+
                 foreach (var outputs in walletTransactions.Select(x => x.Transaction.Vout))
                 {
                     var paymentOrFee = outputs.Where(z => z.T is CoinType.Payment or CoinType.Fee).ToArray();
@@ -977,7 +977,7 @@ namespace BAMWallet.HD
                             // ignored
                         }
                     }
-                    
+
                     var changeOrFee = outputs.Where(z => z.T is CoinType.Change or CoinType.Fee).ToArray();
                     if (changeOrFee.Any())
                     {
@@ -987,7 +987,7 @@ namespace BAMWallet.HD
                             var messageChange = Transaction.Message(changeOrFee.ElementAt(1), scan);
 
                             received -= messageChange.Paid - messageFee.Amount;
-                        
+
                             balanceSheets.Add(MoneyBalanceSheet(messageChange.Date, messageChange.Memo, messageChange.Paid,
                                 messageFee.Amount, "+", 0, 0, received, changeOrFee));
                         }
@@ -996,7 +996,7 @@ namespace BAMWallet.HD
                             // ignored
                         }
                     }
-                    
+
                     var coinStakeOrCoinbase = outputs.Where(z => z.T is CoinType.Coinstake).ToArray();
                     if (coinStakeOrCoinbase.Any())
                     {
@@ -1012,7 +1012,7 @@ namespace BAMWallet.HD
                             // ignored
                         }
                     }
-                    
+
                     var coinStake = outputs.Where(z => z.T is CoinType.Coinstake or CoinType.Coinbase).ToArray();
                     if (!coinStake.Any()) continue;
                     {
@@ -1237,7 +1237,7 @@ namespace BAMWallet.HD
                 var session = Session(sessionId).EnforceDbExists();
 
                 TrackLastTransaction(session.SessionId);
-                
+
                 if (AlreadyReceivedPayment(paymentId, session, out var taskResult)) return taskResult;
 
                 var baseAddress = _client.GetBaseAddress();
@@ -1342,7 +1342,7 @@ namespace BAMWallet.HD
 
             return fail;
         }
-        
+
         /// <summary>
         /// 
         /// </summary>
@@ -1351,15 +1351,15 @@ namespace BAMWallet.HD
         public WalletTransaction GetLastSentTransaction(Guid sessionId)
         {
             Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
-            
+
             var session = Session(sessionId).EnforceDbExists();
             var walletTransactions = session.Database.Query<WalletTransaction>()
                 .Where(x => x.WalletType == WalletType.Send)
                 .ToList();
-            
+
             return walletTransactions?.Any() != true ? null : walletTransactions.Last();
         }
-        
+
         /// <summary>
         /// 
         /// </summary>
@@ -1385,15 +1385,15 @@ namespace BAMWallet.HD
                         JobManager.RemoveJob(walletTransaction.Id.ToString());
                         return;
                     }
-                    
+
                     var schedule = JobManager.GetSchedule(walletTransaction.Id.ToString());
                     if (schedule == null) return;
-                    
+
                     var timeDiff = new TimeSpan(walletTransaction.DateTime.Ticks - schedule.NextRun.Ticks);
                     if (timeDiff.Minutes <= 1) return;
-                    
+
                     JobManager.RemoveJob(walletTransaction.Id.ToString());
-                    
+
                     var rolledBack = RollBackTransaction(sessionId, walletTransaction.Id);
                     if (!rolledBack.Success)
                     {
@@ -1407,10 +1407,10 @@ namespace BAMWallet.HD
                     .Seconds()
                     .DelayFor(20)
                     .Seconds());
-            
+
             var isRunning = true;
             while (isRunning is true)
-            { 
+            {
                 isRunning = JobManager.GetSchedule(walletTransaction.Id.ToString()) != null;
                 System.Threading.Thread.Sleep(75);
             }
@@ -1423,11 +1423,11 @@ namespace BAMWallet.HD
         public bool ScheduleRunning(Guid sessionId)
         {
             Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
-            
+
             var walletTransaction = GetLastSentTransaction(sessionId);
             if (walletTransaction == null) return false;
             var schedule = JobManager.GetSchedule(walletTransaction.Id.ToString());
-            
+
             return schedule != null;
         }
 
@@ -1512,7 +1512,7 @@ namespace BAMWallet.HD
 
             return TaskResult<bool>.CreateSuccess(true);
         }
-        
+
         /// <summary>
         /// 
         /// </summary>
@@ -1563,7 +1563,7 @@ namespace BAMWallet.HD
 
             return spent;
         }
-        
+
         /// <summary>
         /// 
         /// </summary>

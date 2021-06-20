@@ -157,10 +157,10 @@ namespace BAMWallet.Rpc.Controllers
                         RecipientAddress = payment.Address
                     }
                 });
-            
+
             var walletTransaction = _walletService.CreateTransaction(session.SessionId);
             if (!walletTransaction.Success) return new StatusCodeResult(StatusCodes.Status404NotFound);
-            
+
             var transaction = _walletService.GetTransaction(session.SessionId);
             if (transaction != null)
             {
