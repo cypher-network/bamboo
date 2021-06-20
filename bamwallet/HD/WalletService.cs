@@ -929,104 +929,101 @@ namespace BAMWallet.HD
             {
                 var (_, scan) = Unlock(session.SessionId);
                 ulong received = 0, sent = 0;
-
-                foreach (var outputs in walletTransactions.Select(x =>
-                    x.Transaction.Vout.Where(z => z.T is CoinType.Change or CoinType.Fee)))
+                
+                foreach (var outputs in walletTransactions.Select(x => x.Transaction.Vout))
                 {
-                    try
+                    var paymentOrFee = outputs.Where(z => z.T is CoinType.Payment or CoinType.Fee).ToArray();
+                    if (paymentOrFee.Any())
                     {
-                        var enumerable = outputs as Vout[] ?? outputs.ToArray();
-                        var messageFee = Transaction.Message(enumerable.ElementAt(0), scan);
-                        var messageChange = Transaction.Message(enumerable.ElementAt(1), scan);
-                        sent = sent == 0 ? 0UL : sent - messageChange.Amount - messageFee.Amount;
-                        balanceSheets.Add(MoneyBalanceSheet(messageChange.Date, messageChange.Memo, sent,
-                            messageFee.Amount,
-                            "-", 0, 0, messageChange.Amount, enumerable));
-                        sent = messageChange.Amount;
-                    }
-                    catch (Exception)
-                    {
-                        // ignored
-                    }
-                }
-
-                foreach (var outputs in walletTransactions.Select(x =>
-                    x.Transaction.Vout.Where(z => z.T is CoinType.Payment or CoinType.Fee)))
-                {
-                    try
-                    {
-                        var fee = 0UL;
-                        var index = 0;
-                        WalletTransactionMessage messageFee = null;
-                        var enumerable = outputs as Vout[] ?? outputs.ToArray();
-                        if (enumerable.ElementAt(index).T == CoinType.Fee)
+                        try
                         {
-                            messageFee = Transaction.Message(enumerable.ElementAt(index), scan);
-                            if (messageFee != null)
+                            WalletTransactionMessage messageFee = null;
+                            var fee = 0UL;
+                            var index = 0;
+                            if (paymentOrFee.ElementAt(index).T == CoinType.Fee)
                             {
-                                fee = messageFee.Amount;
+                                messageFee = Transaction.Message(paymentOrFee.ElementAt(index), scan);
+                                if (messageFee != null)
+                                {
+                                    fee = messageFee.Amount;
+                                }
+
+                                index = 1;
                             }
 
-                            index = 1;
+                            var messagePayment = Transaction.Message(paymentOrFee.ElementAt(index), scan);
+                            if (messagePayment != null)
+                            {
+                                if (messagePayment.Amount == 0) continue;
+                                received = sent + messagePayment.Amount + fee;
+                                balanceSheets.Add(MoneyBalanceSheet(messagePayment.Date, messagePayment.Memo, 0, fee, "+",
+                                    messagePayment.Amount, 0, received, paymentOrFee));
+                                sent += messagePayment.Amount + fee;
+                            }
+                            else
+                            {
+                                received = sent - fee;
+                                balanceSheets.Add(MoneyBalanceSheet(messageFee.Date, messageFee.Memo, 0, fee, "-", 0, 0,
+                                    received, paymentOrFee));
+                                sent -= fee;
+                            }
                         }
-
-                        var messagePayment = Transaction.Message(enumerable.ElementAt(index), scan);
-                        if (messagePayment != null)
+                        catch (Exception)
                         {
-                            if (messagePayment.Amount == 0) continue;
-                            received = sent + messagePayment.Amount + fee;
-                            balanceSheets.Add(MoneyBalanceSheet(messagePayment.Date, messagePayment.Memo, 0, fee, "+",
-                                messagePayment.Amount, 0, received, enumerable));
-                            sent += messagePayment.Amount + fee;
+                            // ignored
                         }
-                        else
+                    }
+                    
+                    var changeOrFee = outputs.Where(z => z.T is CoinType.Change or CoinType.Fee).ToArray();
+                    if (changeOrFee.Any())
+                    {
+                        try
                         {
-                            received = sent + fee;
-                            balanceSheets.Add(MoneyBalanceSheet(messageFee.Date, string.Empty, 0, fee, "+", 0, 0,
-                                received, enumerable));
-                            sent += fee;
+                            var messageFee = Transaction.Message(changeOrFee.ElementAt(0), scan);
+                            var messageChange = Transaction.Message(changeOrFee.ElementAt(1), scan);
+
+                            received -= messageChange.Paid - messageFee.Amount;
+                        
+                            balanceSheets.Add(MoneyBalanceSheet(messageChange.Date, messageChange.Memo, messageChange.Paid,
+                                messageFee.Amount, "+", 0, 0, received, changeOrFee));
+                        }
+                        catch (Exception)
+                        {
+                            // ignored
                         }
                     }
-                    catch (Exception)
+                    
+                    var coinStakeOrCoinbase = outputs.Where(z => z.T is CoinType.Coinstake).ToArray();
+                    if (coinStakeOrCoinbase.Any())
                     {
-                        // ignored
+                        try
+                        {
+                            var messageCoinstake = Transaction.Message(coinStakeOrCoinbase.ElementAt(0), scan);
+                            received -= messageCoinstake.Amount;
+                            balanceSheets.Add(MoneyBalanceSheet(messageCoinstake.Date, messageCoinstake.Memo,
+                                messageCoinstake.Amount, 0, null, 0, 0, received, coinStakeOrCoinbase));
+                        }
+                        catch (Exception)
+                        {
+                            // ignored
+                        }
                     }
-                }
-
-                foreach (var outputs in walletTransactions.Select(x =>
-                    x.Transaction.Vout.Where(z => z.T is CoinType.Coinstake or CoinType.Coinbase)))
-                {
-                    try
+                    
+                    var coinStake = outputs.Where(z => z.T is CoinType.Coinstake or CoinType.Coinbase).ToArray();
+                    if (!coinStake.Any()) continue;
                     {
-                        var enumerable = outputs as Vout[] ?? outputs.ToArray();
-                        if (enumerable.Any() != true) continue;
-                        var messageCoinbase = Transaction.Message(enumerable.ElementAt(0), scan);
-                        var messageCoinstake = Transaction.Message(enumerable.ElementAt(1), scan);
-                        received -= messageCoinstake.Amount + messageCoinbase.Amount;
-                        balanceSheets.Add(MoneyBalanceSheet(messageCoinstake.Date, messageCoinstake.Memo,
-                            messageCoinstake.Amount, 0, null, 0, messageCoinbase.Amount, received, enumerable));
-                    }
-                    catch (Exception)
-                    {
-                        // ignored
-                    }
-                }
-
-                foreach (var outputs in walletTransactions.Select(x =>
-                    x.Transaction.Vout.Where(z => z.T is CoinType.Coinstake)))
-                {
-                    try
-                    {
-                        var enumerable = outputs as Vout[] ?? outputs.ToArray();
-                        if (enumerable.Any() != true) continue;
-                        var messageCoinstake = Transaction.Message(enumerable.ElementAt(0), scan);
-                        received += messageCoinstake.Amount;
-                        balanceSheets.Add(MoneyBalanceSheet(messageCoinstake.Date, messageCoinstake.Memo, 0, 0, null,
-                            messageCoinstake.Amount, 0, received, enumerable));
-                    }
-                    catch (Exception)
-                    {
-                        // ignored
+                        try
+                        {
+                            var messageCoinbase = Transaction.Message(coinStake.ElementAt(0), scan);
+                            var messageCoinstake = Transaction.Message(coinStake.ElementAt(1), scan);
+                            received += messageCoinstake.Amount + messageCoinbase.Amount;
+                            balanceSheets.Add(MoneyBalanceSheet(messageCoinstake.Date, messageCoinstake.Memo, 0, 0, null,
+                                messageCoinstake.Amount, messageCoinbase.Amount, received, coinStake));
+                        }
+                        catch (Exception)
+                        {
+                            // ignored
+                        }
                     }
                 }
             }
