@@ -157,17 +157,16 @@ namespace BAMWallet.Rpc.Controllers
                         RecipientAddress = payment.Address
                     }
                 });
+            
             var walletTransaction = _walletService.CreateTransaction(session.SessionId);
-            if (walletTransaction.Success)
+            if (!walletTransaction.Success) return new StatusCodeResult(StatusCodes.Status404NotFound);
+            
+            var transaction = _walletService.GetTransaction(session.SessionId);
+            if (transaction != null)
             {
-                var transaction = _walletService.GetTransaction(session.SessionId);
-                if (transaction != null)
-                {
-                    return new ObjectResult(new { messagepack = transaction.Serialize() });
-                }
+                return new ObjectResult(new { messagepack = transaction.Serialize() });
             }
 
-            _walletService.RollBackTransaction(session.SessionId);
             return new StatusCodeResult(StatusCodes.Status404NotFound);
         }
 
@@ -185,7 +184,7 @@ namespace BAMWallet.Rpc.Controllers
             if (!request.Success)
                 return new BadRequestObjectResult(request.NonSuccessMessage);
 
-            var transaction = _walletService.LastWalletTransaction(session.SessionId, WalletType.Receive);
+            var transaction = _walletService.GetLastTransaction(session.SessionId, WalletType.Receive);
             var txnReceivedAmount = transaction == null ? 0.ToString() : transaction.Payment.DivWithNaT().ToString("F9");
             var txnMemo = transaction == null ? "" : transaction.Memo;
             var balance = _walletService.History(session.SessionId);
@@ -228,7 +227,7 @@ namespace BAMWallet.Rpc.Controllers
                 return new BadRequestObjectResult(send.NonSuccessMessage);
 
             var balance = _walletService.History(session.SessionId);
-            var walletTx = _walletService.LastWalletTransaction(session.SessionId, WalletType.Send);
+            var walletTx = _walletService.GetLastTransaction(session.SessionId, WalletType.Send);
 
             return new OkObjectResult(new
             {

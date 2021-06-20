@@ -64,7 +64,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                             return;
                         }
 
-                        var transaction = _walletService.LastWalletTransaction(session.SessionId, WalletType.Receive);
+                        var transaction = _walletService.GetLastTransaction(session.SessionId, WalletType.Receive);
                         var txnReceivedAmount = transaction == null ? 0.ToString() : transaction.Payment.DivWithNaT().ToString("F9");
                         var txnMemo = transaction == null ? "" : transaction.Memo;
                         var balance = _walletService.History(session.SessionId);

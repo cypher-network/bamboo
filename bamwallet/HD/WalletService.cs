@@ -21,8 +21,8 @@ using BAMWallet.Helper;
 using BAMWallet.Model;
 using BAMWallet.Rpc;
 using BAMWallet.Services;
+using FluentScheduler;
 using Libsecp256k1Zkp.Net;
-using MessagePack;
 
 namespace BAMWallet.HD
 {
@@ -54,6 +54,8 @@ namespace BAMWallet.HD
             _client = new Client(configuration, _logger);
 
             Sessions = new ConcurrentDictionary<Guid, Session>();
+            
+            JobManager.Initialize();
         }
 
         public Client HttpClient() => _client;
@@ -239,7 +241,7 @@ namespace BAMWallet.HD
         /// <param name="sessionId"></param>
         /// <param name="transactionType"></param>
         /// <returns></returns>
-        public WalletTransaction LastWalletTransaction(Guid sessionId, WalletType transactionType)
+        public WalletTransaction GetLastTransaction(Guid sessionId, WalletType transactionType)
         {
             Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
 
@@ -357,16 +359,11 @@ namespace BAMWallet.HD
             try
             {
                 var session = Session(sessionId);
-                var history = History(session.SessionId);
-                if (!history.Success)
-                {
-                    return TaskResult<bool>.CreateFailure(history.NonSuccessMessage);
-                }
                 var multiBalance = new List<decimal>();
                 var divisions = new List<Balance>();
                 var divisionAmount = session.WalletTransaction.Payment.DivWithNaT();
                 var amount = session.WalletTransaction.Payment.DivWithNaT();
-                var balances = AddBalances(session.SessionId, history.Result);
+                var balances = AddBalances(session.SessionId);
 
                 foreach (var balance in balances.OrderByDescending(x => x.Total))
                 {
@@ -439,20 +436,24 @@ namespace BAMWallet.HD
         /// 
         /// </summary>
         /// <param name="sessionId"></param>
-        /// <param name="history"></param>
         /// <returns></returns>
-        private List<Balance> AddBalances(Guid sessionId, BalanceSheet[] history)
+        private List<Balance> AddBalances(Guid sessionId)
         {
             Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
-            Guard.Argument(history, nameof(history)).NotNull();
 
             var balances = new List<Balance>();
-            var session = Session(sessionId);
-            var (_, scan) = Unlock(session.SessionId);
             try
             {
-                balances.AddRange(from balanceSheet in history
-                                  from output in balanceSheet.Outputs
+                var session = Session(sessionId);
+                var (_, scan) = Unlock(session.SessionId);
+                var walletTransactions = session.Database.Query<WalletTransaction>().OrderBy(x => x.DateTime).ToList();
+                if (walletTransactions?.Any() != true)
+                {
+                    return Enumerable.Empty<Balance>().ToList();
+                }
+                
+                balances.AddRange(from balanceSheet in walletTransactions
+                                  from output in balanceSheet.Transaction.Vout
                                   let keyImage = GetKeyImage(sessionId, output)
                                   where keyImage != null
                                   let spent = WalletTransactionSpent(sessionId, keyImage)
@@ -486,6 +487,8 @@ namespace BAMWallet.HD
             var session = Session(sessionId).EnforceDbExists();
             session.LastError = null;
 
+            TrackLastTransaction(session.SessionId);
+            
             var calculated = CalculateChange(session.SessionId);
             if (!calculated.Success)
             {
@@ -588,16 +591,14 @@ namespace BAMWallet.HD
                 bulletChange.Result.proof, offsets);
 
             var saved = Save(session.SessionId, session.WalletTransaction);
-            if (saved.Success)
-            {
-                return TaskResult<WalletTransaction>.CreateSuccess(session.WalletTransaction);
-            }
-
-            return TaskResult<WalletTransaction>.CreateFailure(JObject.FromObject(new
-            {
-                success = false,
-                message = "Unable to save the transaction."
-            }));
+            if (!saved.Success)
+                return TaskResult<WalletTransaction>.CreateFailure(JObject.FromObject(new
+                {
+                    success = false,
+                    message = "Unable to save the transaction."
+                }));
+            
+            return TaskResult<WalletTransaction>.CreateSuccess(session.WalletTransaction);
         }
 
         /// <summary>
@@ -916,10 +917,12 @@ namespace BAMWallet.HD
         public TaskResult<BalanceSheet[]> History(Guid sessionId)
         {
             Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
-
-            var balanceSheets = new List<BalanceSheet>();
+            
             var session = Session(sessionId).EnforceDbExists();
-
+            
+            TrackLastTransaction(session.SessionId);
+            
+            var balanceSheets = new List<BalanceSheet>();
             var walletTransactions = session.Database.Query<WalletTransaction>().OrderBy(x => x.DateTime).ToList();
             if (walletTransactions?.Any() != true)
             {
@@ -1064,22 +1067,18 @@ namespace BAMWallet.HD
             {
                 balanceSheet.MoneyOut = $"-{sent.DivWithNaT():F9}";
             }
-
             if (fee != 0)
             {
                 balanceSheet.Fee = $"{feeSign}{fee.DivWithNaT():F9}";
             }
-
             if (received != 0)
             {
                 balanceSheet.MoneyIn = $"{received.DivWithNaT():F9}";
             }
-
             if (reward != 0)
             {
                 balanceSheet.Reward = $"{reward.DivWithNaT():F9}";
             }
-
             return balanceSheet;
         }
 
@@ -1088,7 +1087,7 @@ namespace BAMWallet.HD
         /// </summary>
         /// <param name="session"></param>
         /// <returns></returns>
-        private Vout GetLastMoneySpent(Session session)
+        private Vout GetLasTransactionSpent(Session session)
         {
             Guard.Argument(session, nameof(session)).NotNull();
 
@@ -1237,6 +1236,8 @@ namespace BAMWallet.HD
             {
                 var session = Session(sessionId).EnforceDbExists();
 
+                TrackLastTransaction(session.SessionId);
+                
                 if (AlreadyReceivedPayment(paymentId, session, out var taskResult)) return taskResult;
 
                 var baseAddress = _client.GetBaseAddress();
@@ -1297,30 +1298,6 @@ namespace BAMWallet.HD
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="paymentId"></param>
-        /// <param name="session"></param>
-        /// <param name="taskResult"></param>
-        /// <returns></returns>
-        private bool AlreadyReceivedPayment(string paymentId, Session session,
-            out TaskResult<WalletTransaction> taskResult)
-        {
-            taskResult = null;
-            var walletTransactions = session.Database.Query<WalletTransaction>().ToList();
-            if (!walletTransactions.Any()) return false;
-            var walletTransaction = walletTransactions.FirstOrDefault(x => x.Transaction.TxnId.SequenceEqual(paymentId.HexToByte()));
-            if (walletTransaction == null) return false;
-            var output = TaskResult<WalletTransaction>.CreateFailure(
-                new Exception($"Transaction with paymentId: {paymentId} already exists"));
-            SetLastError(session, output);
-            {
-                taskResult = output;
-                return true;
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
         /// <param name="sessionId"></param>
         /// <param name="output"></param>
         /// <returns></returns>
@@ -1361,39 +1338,97 @@ namespace BAMWallet.HD
             var fail = TaskResult<bool>.CreateFailure(
                 new Exception($"Unable to send transaction with paymentId: {transaction.TxnId.ByteToHex()}"));
             SetLastError(session, fail);
-            RollBackTransaction(session.SessionId);
+            RollBackTransaction(session.SessionId, transaction.Id);
 
             return fail;
+        }
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sessionId"></param>
+        /// <returns></returns>
+        public WalletTransaction GetLastSentTransaction(Guid sessionId)
+        {
+            Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
+            
+            var session = Session(sessionId).EnforceDbExists();
+            var walletTransactions = session.Database.Query<WalletTransaction>()
+                .Where(x => x.WalletType == WalletType.Send)
+                .ToList();
+            
+            return walletTransactions?.Any() != true ? null : walletTransactions.Last();
+        }
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sessionId"></param>
+        /// <returns></returns>
+        public void TrackLastTransaction(Guid sessionId)
+        {
+            Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
+            var session = Session(sessionId).EnforceDbExists();
+            var walletTransaction = GetLastSentTransaction(session.SessionId);
+
+            JobManager.AddJob(async () =>
+                {
+                    var baseAddress = _client.GetBaseAddress();
+                    var path = string.Format(
+                        _apiGatewaySection.GetSection(RestCall.Routing)
+                            .GetValue<string>(RestCall.GetTransactionId.ToString()),
+                        walletTransaction.Transaction.TxnId.ByteToHex());
+                    var isTransaction = await _client.GetAsync<Transaction>(baseAddress, path,
+                        new System.Threading.CancellationToken());
+                    if (isTransaction != null)
+                    {
+                        JobManager.RemoveJob(walletTransaction.Id.ToString());
+                        return;
+                    }
+                    
+                    var schedule = JobManager.GetSchedule(walletTransaction.Id.ToString());
+                    if (schedule == null) return;
+                    
+                    var timeDiff = new TimeSpan(walletTransaction.DateTime.Ticks - schedule.NextRun.Ticks);
+                    if (timeDiff.Minutes <= 1) return;
+                    
+                    JobManager.RemoveJob(walletTransaction.Id.ToString());
+                    
+                    var rolledBack = RollBackTransaction(sessionId, walletTransaction.Id);
+                    if (!rolledBack.Success)
+                    {
+                        _logger.LogError(rolledBack.Exception.Message);
+                    }
+                },
+                s => s.WithName(walletTransaction.Id.ToString())
+                    .NonReentrant()
+                    .ToRunOnceAt(DateTime.UtcNow)
+                    .AndEvery(10)
+                    .Seconds()
+                    .DelayFor(20)
+                    .Seconds());
+            
+            var isRunning = true;
+            while (isRunning is true)
+            { 
+                isRunning = JobManager.GetSchedule(walletTransaction.Id.ToString()) != null;
+                System.Threading.Thread.Sleep(75);
+            }
         }
 
         /// <summary>
         /// 
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="session"></param>
-        /// <param name="obj"></param>
-        private void SetLastError<T>(Session session, TaskResult<T> obj)
+        /// <returns></returns>
+        public bool ScheduleRunning(Guid sessionId)
         {
-            Guard.Argument(session, nameof(session)).NotNull();
-            Guard.Argument(obj, nameof(obj)).NotNull();
-
-            if (obj.Exception == null)
-            {
-                session.LastError = obj.NonSuccessMessage;
-                _logger.LogError($"{obj.NonSuccessMessage.message}");
-            }
-            else
-            {
-                session.LastError = JObject.FromObject(new
-                {
-                    success = false,
-                    message = obj.Exception.Message
-                });
-
-                _logger.LogError(obj.Exception.Message);
-            }
-
-            SessionAddOrUpdate(session);
+            Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
+            
+            var walletTransaction = GetLastSentTransaction(sessionId);
+            if (walletTransaction == null) return false;
+            var schedule = JobManager.GetSchedule(walletTransaction.Id.ToString());
+            
+            return schedule != null;
         }
 
         /// <summary>
@@ -1453,16 +1488,17 @@ namespace BAMWallet.HD
         /// 
         /// </summary>
         /// <param name="sessionId"></param>
+        /// <param name="id"></param>
         /// <returns></returns>
-        public TaskResult<bool> RollBackTransaction(Guid sessionId)
+        public TaskResult<bool> RollBackTransaction(Guid sessionId, Guid id)
         {
             Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
-
+            Guard.Argument(id, nameof(id)).NotDefault();
             try
             {
                 var session = Session(sessionId);
                 var walletTransaction = session.Database.Query<WalletTransaction>()
-                    .Where(s => s.Id == session.SessionId).FirstOrDefault();
+                    .Where(s => s.Id == id).FirstOrDefault();
                 if (walletTransaction != null)
                 {
                     session.Database.Delete<WalletTransaction>(new LiteDB.BsonValue(walletTransaction.Id));
@@ -1475,6 +1511,30 @@ namespace BAMWallet.HD
             }
 
             return TaskResult<bool>.CreateSuccess(true);
+        }
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="paymentId"></param>
+        /// <param name="session"></param>
+        /// <param name="taskResult"></param>
+        /// <returns></returns>
+        private bool AlreadyReceivedPayment(string paymentId, Session session,
+            out TaskResult<WalletTransaction> taskResult)
+        {
+            taskResult = null;
+            var walletTransactions = session.Database.Query<WalletTransaction>().ToList();
+            if (!walletTransactions.Any()) return false;
+            var walletTransaction = walletTransactions.FirstOrDefault(x => x.Transaction.TxnId.SequenceEqual(paymentId.HexToByte()));
+            if (walletTransaction == null) return false;
+            var output = TaskResult<WalletTransaction>.CreateFailure(
+                new Exception($"Transaction with paymentId: {paymentId} already exists"));
+            SetLastError(session, output);
+            {
+                taskResult = output;
+                return true;
+            }
         }
 
         /// <summary>
@@ -1502,6 +1562,36 @@ namespace BAMWallet.HD
             }
 
             return spent;
+        }
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="session"></param>
+        /// <param name="obj"></param>
+        private void SetLastError<T>(Session session, TaskResult<T> obj)
+        {
+            Guard.Argument(session, nameof(session)).NotNull();
+            Guard.Argument(obj, nameof(obj)).NotNull();
+
+            if (obj.Exception == null)
+            {
+                session.LastError = obj.NonSuccessMessage;
+                _logger.LogError($"{obj.NonSuccessMessage.message}");
+            }
+            else
+            {
+                session.LastError = JObject.FromObject(new
+                {
+                    success = false,
+                    message = obj.Exception.Message
+                });
+
+                _logger.LogError(obj.Exception.Message);
+            }
+
+            SessionAddOrUpdate(session);
         }
     }
 }

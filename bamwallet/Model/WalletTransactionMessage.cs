@@ -14,5 +14,6 @@ namespace BAMWallet.Model
         [Key(2)] public string Memo { get; set; }
         [Key(3)] public DateTime Date { get; set; }
         [Key(4)] public Vout Output { get; set; }
+        [Key(5)] public ulong Paid { get; set; }
     }
 }

@@ -15,6 +15,7 @@ namespace BAMWallet.HD
         public const string SecretKey = "SecretKey";
         public const string AddressKey = "Address";
         public const string Hash = "Hash";
+        public const string NumberOfConfirmations = "number_of_confirmations";
         public const int Tan = 1;
         public const int MicroTan = 100;
         public const int NanoTan = 1000_000_000;
