@@ -650,7 +650,7 @@ namespace BAMWallet.HD
                         N = ScanPublicKey(session.WalletTransaction.SenderAddress).Encrypt(Transaction.Message(
                             session.SessionType == SessionType.Coin
                                 ? session.WalletTransaction.Fee
-                                : session.WalletTransaction.Reward, blinds[1], session.WalletTransaction.Memo)),
+                                : session.WalletTransaction.Reward, 0, blinds[1], session.WalletTransaction.Memo)),
                         P = outPkFee.ToBytes(),
                         S = new Script(Op.GetPushOp(feeLockTime.Value), OpcodeType.OP_CHECKLOCKTIMEVERIFY)
                             .ToString(),
@@ -662,7 +662,7 @@ namespace BAMWallet.HD
                         C = pcmOut[1],
                         E = stealthPayment.Metadata.EphemKey.ToBytes(),
                         N = ScanPublicKey(session.WalletTransaction.RecipientAddress).Encrypt(
-                            Transaction.Message(session.WalletTransaction.Payment, blinds[2], session.WalletTransaction.Memo)),
+                            Transaction.Message(session.WalletTransaction.Payment, 0, blinds[2], session.WalletTransaction.Memo)),
                         P = outPkPayment.ToBytes(),
                         S = null,
                         T = session.SessionType == SessionType.Coin ? CoinType.Payment : CoinType.Coinstake
@@ -674,7 +674,7 @@ namespace BAMWallet.HD
                         E = stealthChange.Metadata.EphemKey.ToBytes(),
                         L = changeLockTime.Value,
                         N = ScanPublicKey(session.WalletTransaction.SenderAddress).Encrypt(
-                            Transaction.Message(session.WalletTransaction.Change, blinds[3], session.WalletTransaction.Memo)),
+                            Transaction.Message(session.WalletTransaction.Change, session.WalletTransaction.Payment, blinds[3], session.WalletTransaction.Memo)),
                         P = outPkChange.ToBytes(),
                         S = new Script(Op.GetPushOp(changeLockTime.Value), OpcodeType.OP_CHECKLOCKTIMEVERIFY)
                             .ToString(),

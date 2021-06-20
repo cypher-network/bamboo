@@ -164,14 +164,15 @@ namespace BAMWallet.Model
         /// <param name="blind"></param>
         /// <param name="memo"></param>
         /// <returns></returns>
-        public static byte[] Message(ulong amount, byte[] blind, string memo)
+        public static byte[] Message(ulong amount, ulong paid, byte[] blind, string memo)
         {
             return MessagePackSerializer.Serialize(new WalletTransactionMessage
             {
                 Amount = amount,
                 Blind = blind,
                 Memo = memo,
-                Date = DateTime.UtcNow
+                Date = DateTime.UtcNow,
+                Paid = paid
             });
         }
     }
