@@ -29,7 +29,7 @@ namespace BAMWallet.HD
     public class WalletService : IWalletService
     {
         private static readonly AutoResetEvent _resetEvent = new(false);
-        
+
         private const string HdPath = "m/44'/847177'/0'/0/";
         private const int FeeNByte = 6000;
 
@@ -40,7 +40,7 @@ namespace BAMWallet.HD
         private readonly IConfigurationSection _apiGatewaySection;
         private readonly uint _numberOfConfirmations;
         private readonly Timer _transactionTrackingTimer;
-        
+
         private ConcurrentDictionary<Guid, Session> Sessions { get; }
 
         public WalletService(ISafeguardDownloadingFlagProvider safeguardDownloadingFlagProvider,
@@ -1394,21 +1394,21 @@ namespace BAMWallet.HD
 
                     var retryDelay = TimeSpan.FromSeconds(Math.Pow(2, currentRetry)) +
                                      TimeSpan.FromMilliseconds(jitter.Next(0, 1000));
-                
+
                     currentRetry++;
-                    
+
                     if (retryDelay.Minutes <= 1)
                     {
                         await Task.Delay(retryDelay);
                         continue;
                     }
-                    
+
                     var rolledBack = RollBackTransaction(sessionId, walletTransaction.Id);
                     if (!rolledBack.Success)
                     {
                         _logger.LogError(rolledBack.Exception.Message);
                     }
-                    
+
                     _resetEvent.Set();
                     break;
                 }
