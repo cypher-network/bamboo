@@ -154,7 +154,8 @@ namespace BAMWallet.Rpc.Controllers
                         Payment = payment.Amount,
                         Reward = payment.SessionType == SessionType.Coinstake ? payment.Fee : 0,
                         Memo = payment.Memo,
-                        RecipientAddress = payment.Address
+                        RecipientAddress = payment.Address,
+                        WalletType = WalletType.Send
                     }
                 });
 
