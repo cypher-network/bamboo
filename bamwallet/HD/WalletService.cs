@@ -39,7 +39,6 @@ namespace BAMWallet.HD
         private readonly Client _client;
         private readonly IConfigurationSection _apiGatewaySection;
         private readonly uint _numberOfConfirmations;
-        private readonly Timer _transactionTrackingTimer;
 
         private ConcurrentDictionary<Guid, Session> Sessions { get; }
 
