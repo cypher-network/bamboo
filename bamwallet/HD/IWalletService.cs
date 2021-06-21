@@ -46,7 +46,6 @@ namespace BAMWallet.HD
         byte[] GetKeyImage(Guid sessionId, Vout output);
         TaskResult<bool> RollBackTransaction(Guid sessionId, Guid id);
         WalletTransaction GetLastSentTransaction(Guid sessionId);
-        void TrackLastTransaction(Guid sessionId);
-        bool ScheduleRunning(Guid sessionId);
+        Task TrackLastTransaction(Guid sessionId);
     }
 }

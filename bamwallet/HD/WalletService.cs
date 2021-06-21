@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Security;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
+using System.Threading;
 using BAMWallet.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
@@ -21,13 +22,14 @@ using BAMWallet.Helper;
 using BAMWallet.Model;
 using BAMWallet.Rpc;
 using BAMWallet.Services;
-using FluentScheduler;
 using Libsecp256k1Zkp.Net;
 
 namespace BAMWallet.HD
 {
     public class WalletService : IWalletService
     {
+        private static readonly AutoResetEvent _resetEvent = new(false);
+        
         private const string HdPath = "m/44'/847177'/0'/0/";
         private const int FeeNByte = 6000;
 
@@ -37,6 +39,8 @@ namespace BAMWallet.HD
         private readonly Client _client;
         private readonly IConfigurationSection _apiGatewaySection;
         private readonly uint _numberOfConfirmations;
+        private readonly Timer _transactionTrackingTimer;
+        
         private ConcurrentDictionary<Guid, Session> Sessions { get; }
 
         public WalletService(ISafeguardDownloadingFlagProvider safeguardDownloadingFlagProvider,
@@ -54,8 +58,6 @@ namespace BAMWallet.HD
             _client = new Client(configuration, _logger);
 
             Sessions = new ConcurrentDictionary<Guid, Session>();
-
-            JobManager.Initialize();
         }
 
         public Client HttpClient() => _client;
@@ -487,7 +489,7 @@ namespace BAMWallet.HD
             var session = Session(sessionId).EnforceDbExists();
             session.LastError = null;
 
-            TrackLastTransaction(session.SessionId);
+            TrackLastTransaction(session.SessionId).GetAwaiter();
 
             var calculated = CalculateChange(session.SessionId);
             if (!calculated.Success)
@@ -920,7 +922,7 @@ namespace BAMWallet.HD
 
             var session = Session(sessionId).EnforceDbExists();
 
-            TrackLastTransaction(session.SessionId);
+            TrackLastTransaction(session.SessionId).GetAwaiter();
 
             var balanceSheets = new List<BalanceSheet>();
             var walletTransactions = session.Database.Query<WalletTransaction>().OrderBy(x => x.DateTime).ToList();
@@ -1236,7 +1238,7 @@ namespace BAMWallet.HD
             {
                 var session = Session(sessionId).EnforceDbExists();
 
-                TrackLastTransaction(session.SessionId);
+                await TrackLastTransaction(session.SessionId);
 
                 if (AlreadyReceivedPayment(paymentId, session, out var taskResult)) return taskResult;
 
@@ -1365,13 +1367,17 @@ namespace BAMWallet.HD
         /// </summary>
         /// <param name="sessionId"></param>
         /// <returns></returns>
-        public void TrackLastTransaction(Guid sessionId)
+        public async Task TrackLastTransaction(Guid sessionId)
         {
             Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
             var session = Session(sessionId).EnforceDbExists();
             var walletTransaction = GetLastSentTransaction(session.SessionId);
 
-            JobManager.AddJob(async () =>
+            await Task.Factory.StartNew(async () =>
+            {
+                var currentRetry = 0;
+                var jitter = new Random();
+                for (; ; )
                 {
                     var baseAddress = _client.GetBaseAddress();
                     var path = string.Format(
@@ -1382,53 +1388,33 @@ namespace BAMWallet.HD
                         new System.Threading.CancellationToken());
                     if (isTransaction != null)
                     {
-                        JobManager.RemoveJob(walletTransaction.Id.ToString());
-                        return;
+                        _resetEvent.Set();
+                        break;
                     }
 
-                    var schedule = JobManager.GetSchedule(walletTransaction.Id.ToString());
-                    if (schedule == null) return;
-
-                    var timeDiff = new TimeSpan(walletTransaction.DateTime.Ticks - schedule.NextRun.Ticks);
-                    if (timeDiff.Minutes <= 1) return;
-
-                    JobManager.RemoveJob(walletTransaction.Id.ToString());
-
+                    var retryDelay = TimeSpan.FromSeconds(Math.Pow(2, currentRetry)) +
+                                     TimeSpan.FromMilliseconds(jitter.Next(0, 1000));
+                
+                    currentRetry++;
+                    
+                    if (retryDelay.Minutes <= 1)
+                    {
+                        await Task.Delay(retryDelay);
+                        continue;
+                    }
+                    
                     var rolledBack = RollBackTransaction(sessionId, walletTransaction.Id);
                     if (!rolledBack.Success)
                     {
                         _logger.LogError(rolledBack.Exception.Message);
                     }
-                },
-                s => s.WithName(walletTransaction.Id.ToString())
-                    .NonReentrant()
-                    .ToRunOnceAt(DateTime.UtcNow)
-                    .AndEvery(10)
-                    .Seconds()
-                    .DelayFor(20)
-                    .Seconds());
+                    
+                    _resetEvent.Set();
+                    break;
+                }
+            });
 
-            var isRunning = true;
-            while (isRunning is true)
-            {
-                isRunning = JobManager.GetSchedule(walletTransaction.Id.ToString()) != null;
-                System.Threading.Thread.Sleep(75);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public bool ScheduleRunning(Guid sessionId)
-        {
-            Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
-
-            var walletTransaction = GetLastSentTransaction(sessionId);
-            if (walletTransaction == null) return false;
-            var schedule = JobManager.GetSchedule(walletTransaction.Id.ToString());
-
-            return schedule != null;
+            _resetEvent.WaitOne();
         }
 
         /// <summary>
