@@ -2,6 +2,7 @@
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
 using System;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Mime;
@@ -13,6 +14,7 @@ using Newtonsoft.Json.Linq;
 using MessagePack;
 using Dawn;
 using BAMWallet.Model;
+using Microsoft.AspNetCore.Http;
 
 namespace BAMWallet.Rpc
 {
@@ -37,13 +39,12 @@ namespace BAMWallet.Rpc
         /// <param name="path">Path.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <typeparam name="T">The 1st type parameter.</typeparam>
-        public async Task<T> GetAsync<T>(Uri baseAddress, string path, CancellationToken cancellationToken) where T : class
+        public async Task<GenericResponse<T>> GetAsync<T>(Uri baseAddress, string path, CancellationToken cancellationToken) where T : class
         {
             Guard.Argument(baseAddress, nameof(baseAddress)).NotNull();
             Guard.Argument(path, nameof(path)).NotNull().NotEmpty();
 
-            T result = default;
-
+            GenericResponse<T> result = default;
             using var client = new HttpClient
             {
                 BaseAddress = baseAddress,
@@ -66,16 +67,30 @@ namespace BAMWallet.Rpc
                 var byteArray = Convert.FromBase64String(jToken.Value<string>());
 
                 if (response.IsSuccessStatusCode)
-                    result = MessagePackSerializer.Deserialize<T>(byteArray, cancellationToken: cancellationToken);
+                {
+                    var t = MessagePackSerializer.Deserialize<T>(byteArray, cancellationToken: cancellationToken);
+                    result = new GenericResponse<T> { Data = t, HttpStatusCode = HttpStatusCode.OK };
+                }
                 else
                 {
                     var content = await response.Content.ReadAsStringAsync(cancellationToken);
                     _logger.LogError($"Result: {content}\n StatusCode: {(int)response.StatusCode}");
-                    throw new Exception(content);
+                    result = new GenericResponse<T> { Data = null, HttpStatusCode = response.StatusCode };
                 }
             }
             catch (Exception ex)
             {
+                if (ex.InnerException != null)
+                {
+                    result = ex.InnerException.Message == "Connection refused"
+                        ? new GenericResponse<T> { Data = null, HttpStatusCode = HttpStatusCode.ServiceUnavailable }
+                        : new GenericResponse<T> { Data = null, HttpStatusCode = HttpStatusCode.NotFound };
+                }
+                else
+                {
+                    result = new GenericResponse<T> { Data = null, HttpStatusCode = HttpStatusCode.ServiceUnavailable };
+                }
+
                 _logger.LogError($"Message: {ex.Message}\n Stack: {ex.StackTrace}");
             }
 
@@ -152,49 +167,33 @@ namespace BAMWallet.Rpc
         /// <param name="path"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task<bool> PostAsync<T>(T payload, Uri baseAddress, string path, CancellationToken cancellationToken) where T : class
+        public async Task<HttpStatusCode> PostAsync<T>(T payload, Uri baseAddress, string path,
+            CancellationToken cancellationToken) where T : class
         {
             Guard.Argument(baseAddress, nameof(baseAddress)).NotNull();
             Guard.Argument(path, nameof(path)).NotNull().NotEmpty();
-
             using var client = new HttpClient
             {
                 BaseAddress = baseAddress,
-                DefaultRequestHeaders =
-                {
-                    Accept =
-                    {
-                        new MediaTypeWithQualityHeaderValue("application/x-protobuf")
-                    }
-                }
+                DefaultRequestHeaders = { Accept = { new MediaTypeWithQualityHeaderValue("application/x-protobuf") } }
             };
-
             try
             {
-
                 var buffer = MessagePackSerializer.Serialize(payload, cancellationToken: cancellationToken);
-
                 using var response = await client.PostAsJsonAsync(path, buffer, cancellationToken);
-
                 var _ = response.Content.ReadAsStringAsync(cancellationToken).Result;
-
-                if (response.IsSuccessStatusCode)
-                    return true;
-                else
-                {
-                    var content = await response.Content.ReadAsStringAsync(cancellationToken);
-                    _logger.LogError($"Result: {content}\n StatusCode: {(int)response.StatusCode}");
-                    throw new Exception(content);
-                }
+                if (response.IsSuccessStatusCode) return HttpStatusCode.OK;
+                var content = await response.Content.ReadAsStringAsync(cancellationToken);
+                _logger.LogError($"Result: {content}\n StatusCode: {(int)response.StatusCode}");
+                return response.StatusCode;
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Message: {ex.Message}\n Stack: {ex.StackTrace}");
             }
 
-            return false;
+            return HttpStatusCode.ServiceUnavailable;
         }
-
     }
 }
 
