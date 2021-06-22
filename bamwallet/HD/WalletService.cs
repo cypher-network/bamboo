@@ -1430,6 +1430,7 @@ namespace BAMWallet.HD
                     {
                         _logger.LogError(ex.Message);
                         _resetEvent.Set();
+                        break;
                     }
                 }
             });
