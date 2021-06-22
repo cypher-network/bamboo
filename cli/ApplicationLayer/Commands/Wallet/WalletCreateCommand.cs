@@ -31,64 +31,55 @@ namespace CLi.ApplicationLayer.Commands.Wallet
             _walletService = serviceProvider.GetService<IWalletService>();
         }
 
-        public async override Task Execute()
+        public override async Task Execute()
         {
-            var yesNo = Prompt.GetYesNo("Create default mnemonic and passphrase?", true, ConsoleColor.Yellow);
-
             try
             {
-                if (yesNo)
-                {
-                    var mnemonicDefault = await _walletService.CreateMnemonic(NBitcoin.Language.English, NBitcoin.WordCount.TwentyFour);
-                    var passphraseDefault = await _walletService.CreateMnemonic(NBitcoin.Language.English, NBitcoin.WordCount.Twelve);
-                    var joinMmnemonic = string.Join(" ", mnemonicDefault);
-                    var joinPassphrase = string.Join(" ", passphraseDefault);
-                    var id = _walletService.CreateWallet(joinMmnemonic.ToSecureString(), joinPassphrase.ToSecureString());
-                    var path = Util.WalletPath(id);
+                var mnemonicDefault = await _walletService.CreateMnemonic(NBitcoin.Language.English, NBitcoin.WordCount.TwentyFour);
+                var passphraseDefault = await _walletService.CreateMnemonic(NBitcoin.Language.English, NBitcoin.WordCount.Twelve);
+                var joinMmnemonic = string.Join(" ", mnemonicDefault);
+                var joinPassphrase = string.Join(" ", passphraseDefault);
+                var id = _walletService.CreateWallet(joinMmnemonic.ToSecureString(), joinPassphrase.ToSecureString());
+                var path = Util.WalletPath(id);
 
-                    _console.WriteLine();
+                _console.WriteLine();
 
-                    _console.WriteLine("Wallet Path:");
-                    _console.ForegroundColor = ConsoleColor.Green;
-                    _console.WriteLine($"{path}");
-                    _console.ForegroundColor = ConsoleColor.White;
+                _console.WriteLine("Wallet Path:");
+                _console.ForegroundColor = ConsoleColor.Green;
+                _console.WriteLine($"{path}");
+                _console.ForegroundColor = ConsoleColor.White;
 
-                    _console.WriteLine();
+                _console.WriteLine();
 
-                    _console.WriteLine("Wallet ID:");
-                    _console.ForegroundColor = ConsoleColor.Green;
-                    _console.WriteLine($"{id}");
-                    _console.ForegroundColor = ConsoleColor.White;
+                _console.WriteLine("Wallet ID:");
+                _console.ForegroundColor = ConsoleColor.Green;
+                _console.WriteLine($"{id}");
+                _console.ForegroundColor = ConsoleColor.White;
 
-                    _console.WriteLine();
+                _console.WriteLine();
 
-                    _console.WriteLine("Seed phrase:");
-                    _console.ForegroundColor = ConsoleColor.Green;
-                    _console.WriteLine($"{joinMmnemonic}");
-                    _console.ForegroundColor = ConsoleColor.White;
+                _console.WriteLine("Seed phrase:");
+                _console.ForegroundColor = ConsoleColor.Green;
+                _console.WriteLine($"{joinMmnemonic}");
+                _console.ForegroundColor = ConsoleColor.White;
 
-                    _console.WriteLine();
+                _console.WriteLine();
 
-                    _console.WriteLine("Passphrase:");
-                    _console.ForegroundColor = ConsoleColor.Green;
-                    _console.WriteLine($"{joinPassphrase}");
-                    _console.ForegroundColor = ConsoleColor.White;
+                _console.WriteLine("Passphrase:");
+                _console.ForegroundColor = ConsoleColor.Green;
+                _console.WriteLine($"{joinPassphrase}");
+                _console.ForegroundColor = ConsoleColor.White;
 
 
-                    _console.WriteLine();
+                _console.WriteLine();
 
-                    joinMmnemonic.ZeroString();
-                    joinPassphrase.ZeroString();
-                }
-                else
-                {
-                    Shared.CreateWalletFromKnownMnemonic(_console, _walletService);
-                }
+                joinMmnemonic.ZeroString();
+                joinPassphrase.ZeroString();
             }
             catch (Exception ex)
             {
                 _console.ForegroundColor = ConsoleColor.Red;
-                _console.WriteLine($"Please create the mnemonics first. See help for more info.\n {ex.Message}");
+                _console.WriteLine($"{ex.Message}");
                 _console.ForegroundColor = ConsoleColor.White;
             }
         }
