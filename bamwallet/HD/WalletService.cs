@@ -1234,10 +1234,10 @@ namespace BAMWallet.HD
             Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
             Guard.Argument(paymentId, nameof(paymentId)).NotNull().NotEmpty().NotWhiteSpace();
 
+            var session = Session(sessionId).EnforceDbExists();
+
             try
             {
-                var session = Session(sessionId).EnforceDbExists();
-
                 await TrackLastTransaction(session.SessionId);
 
                 if (AlreadyReceivedPayment(paymentId, session, out var taskResult)) return taskResult;
@@ -1300,7 +1300,15 @@ namespace BAMWallet.HD
             catch (Exception ex)
             {
                 _logger.LogError($"Message: {ex.Message}\n Stack: {ex.StackTrace}");
-                throw;
+                var message = ex.Message;
+                if (ex is UriFormatException)
+                {
+                    message = "appsettings.json api_gateway:{endpoint} -> " + message;
+                }
+
+                var output = TaskResult<WalletTransaction>.CreateFailure(new Exception($"{message}"));
+                SetLastError(session, output);
+                return output;
             }
         }
 
@@ -1334,22 +1342,40 @@ namespace BAMWallet.HD
             var session = Session(sessionId).EnforceDbExists();
             session.LastError = null;
 
-            var transaction = GetTransaction(session.SessionId);
+            Transaction transaction = null;
+            try
+            {
+                transaction = GetTransaction(session.SessionId);
 
-            var baseAddress = _client.GetBaseAddress();
-            var path = _apiGatewaySection.GetSection(RestCall.Routing)
-                .GetValue<string>(RestCall.PostTransaction.ToString());
+                var baseAddress = _client.GetBaseAddress();
+                var path = _apiGatewaySection.GetSection(RestCall.Routing)
+                    .GetValue<string>(RestCall.PostTransaction.ToString());
 
-            var postedStatusCode =
-                await _client.PostAsync(transaction, baseAddress, path, new CancellationToken());
-            if (postedStatusCode == HttpStatusCode.OK) return TaskResult<bool>.CreateSuccess(true);
+                var postedStatusCode =
+                    await _client.PostAsync(transaction, baseAddress, path, new CancellationToken());
+                if (postedStatusCode == HttpStatusCode.OK) return TaskResult<bool>.CreateSuccess(true);
 
-            var fail = TaskResult<bool>.CreateFailure(
-                new Exception($"Unable to send transaction with paymentId: {transaction.TxnId.ByteToHex()}"));
-            SetLastError(session, fail);
-            RollBackTransaction(session.SessionId, transaction.Id);
+                var fail = TaskResult<bool>.CreateFailure(
+                    new Exception($"Unable to send transaction with paymentId: {transaction.TxnId.ByteToHex()}"));
+                SetLastError(session, fail);
+                RollBackTransaction(session.SessionId, transaction.Id);
 
-            return fail;
+                return fail;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Message: {ex.Message}\n Stack: {ex.StackTrace}");
+                var message = ex.Message;
+                if (ex is UriFormatException)
+                {
+                    message = "appsettings.json api_gateway:{endpoint} -> " + message;
+                }
+
+                var output = TaskResult<bool>.CreateFailure(new Exception($"{message}"));
+                SetLastError(session, output);
+                if (transaction != null) RollBackTransaction(session.SessionId, transaction.Id);
+                return output;
+            }
         }
 
         /// <summary>
