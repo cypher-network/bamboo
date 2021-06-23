@@ -934,7 +934,7 @@ namespace BAMWallet.HD
             try
             {
                 var (_, scan) = Unlock(session.SessionId);
-                ulong received = 0, sent = 0;
+                ulong received = 0;
 
                 foreach (var outputs in walletTransactions.Select(x => x.Transaction.Vout))
                 {
@@ -961,17 +961,15 @@ namespace BAMWallet.HD
                             if (messagePayment != null)
                             {
                                 if (messagePayment.Amount == 0) continue;
-                                received = sent + messagePayment.Amount + fee;
+                                received += messagePayment.Amount + fee;
                                 balanceSheets.Add(MoneyBalanceSheet(messagePayment.Date, messagePayment.Memo, 0, fee, "+",
                                     messagePayment.Amount, 0, received, paymentOrFee));
-                                sent += messagePayment.Amount + fee;
                             }
                             else
                             {
-                                received = sent - fee;
+                                received -= fee;
                                 balanceSheets.Add(MoneyBalanceSheet(messageFee.Date, messageFee.Memo, 0, fee, "-", 0, 0,
                                     received, paymentOrFee));
-                                sent -= fee;
                             }
                         }
                         catch (Exception)
@@ -987,9 +985,7 @@ namespace BAMWallet.HD
                         {
                             var messageFee = Transaction.Message(changeOrFee.ElementAt(0), scan);
                             var messageChange = Transaction.Message(changeOrFee.ElementAt(1), scan);
-
                             received -= messageChange.Paid - messageFee.Amount;
-
                             balanceSheets.Add(MoneyBalanceSheet(messageChange.Date, messageChange.Memo, messageChange.Paid,
                                 messageFee.Amount, "+", 0, 0, received, changeOrFee));
                         }
