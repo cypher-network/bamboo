@@ -29,15 +29,13 @@ namespace CLi.ApplicationLayer.Commands.Wallet
     public class WalletTransferCommand : Command
     {
         private readonly IWalletService _walletService;
-        private readonly IConsole _console;
         private readonly ILogger _logger;
 
-        private Spinner spinner;
+        private Spinner _spinner;
 
         public WalletTransferCommand(IServiceProvider serviceProvider)
         {
             _walletService = serviceProvider.GetService<IWalletService>();
-            _console = serviceProvider.GetService<IConsole>();
             _logger = serviceProvider.GetService<ILogger<WalletTransferCommand>>();
         }
 
@@ -54,7 +52,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
             {
                 await Spinner.StartAsync("Processing payment ...", async spinner =>
                 {
-                    this.spinner = spinner;
+                    _spinner = spinner;
 
                     try
                     {
@@ -92,7 +90,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                         var walletTx = _walletService.GetLastTransaction(session.SessionId, WalletType.Send);
                         if (walletTx != null)
                         {
-                            message += $"PaymentID: {walletTx.Transaction.TxnId.ByteToHex()}";
+                            message += $"\nPaymentID: {walletTx.Transaction.TxnId.ByteToHex()}";
                         }
 
                         spinner.Succeed(message);

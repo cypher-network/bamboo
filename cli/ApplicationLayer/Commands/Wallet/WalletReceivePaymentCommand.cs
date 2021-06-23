@@ -45,31 +45,24 @@ namespace CLi.ApplicationLayer.Commands.Wallet
             using var passphrase = Prompt.GetPasswordAsSecureString("Passphrase:", ConsoleColor.Yellow);
 
             var paymentId = Prompt.GetString("PAYMENTID:", null, ConsoleColor.Green);
-
             if (!string.IsNullOrEmpty(paymentId))
             {
                 await Spinner.StartAsync("Receiving payment...", async spinner =>
                 {
                     this.spinner = spinner;
-
                     try
                     {
                         var session = _walletService.SessionAddOrUpdate(new Session(identifier, passphrase));
-
                         await _walletService.ReceivePayment(session.SessionId, paymentId);
-
                         if (session.LastError != null)
                         {
                             spinner.Fail(JsonConvert.SerializeObject(session.LastError.GetValue("message")));
                             return;
                         }
 
-                        var transaction = _walletService.GetLastTransaction(session.SessionId, WalletType.Receive);
-                        var txnReceivedAmount = transaction == null ? 0.ToString() : transaction.Payment.DivWithNaT().ToString("F9");
-                        var txnMemo = transaction == null ? "" : transaction.Memo;
-                        var balance = _walletService.History(session.SessionId);
-
-                        spinner.Succeed($"Memo: {txnMemo}  Received: {txnReceivedAmount}  Available Balance: {balance.Result.Last().Balance}");
+                        var balance = _walletService.History(session.SessionId).Result.Last();
+                        spinner.Succeed(
+                            $"Memo: {balance.Memo}  Received: {balance.MoneyIn}  Available Balance: {balance.Balance}");
                     }
                     catch (Exception ex)
                     {
