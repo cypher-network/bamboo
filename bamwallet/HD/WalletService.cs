@@ -1394,7 +1394,7 @@ namespace BAMWallet.HD
                                 {
                                     _resetEvent.Set();
                                 }
-                            
+
                                 break;
                             }
 

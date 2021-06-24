@@ -64,17 +64,17 @@ namespace BAMWallet.Rpc
                     var jToken = jObject.GetValue("messagepack");
                     var byteArray = Convert.FromBase64String(jToken.Value<string>());
                     var t = MessagePackSerializer.Deserialize<T>(byteArray, cancellationToken: cancellationToken);
-                    return new GenericResponse<T> {Data = t, HttpStatusCode = HttpStatusCode.OK};
+                    return new GenericResponse<T> { Data = t, HttpStatusCode = HttpStatusCode.OK };
                 }
 
                 var content = await response.Content.ReadAsStringAsync(cancellationToken);
-                _logger.LogError($"Result: {content}\n StatusCode: {(int) response.StatusCode}");
-                return new GenericResponse<T> {Data = null, HttpStatusCode = response.StatusCode};
+                _logger.LogError($"Result: {content}\n StatusCode: {(int)response.StatusCode}");
+                return new GenericResponse<T> { Data = null, HttpStatusCode = response.StatusCode };
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Message: {ex.Message}\n Stack: {ex.StackTrace}");
-                return new GenericResponse<T> {Data = null, HttpStatusCode = HttpStatusCode.ServiceUnavailable};
+                return new GenericResponse<T> { Data = null, HttpStatusCode = HttpStatusCode.ServiceUnavailable };
             }
         }
 
