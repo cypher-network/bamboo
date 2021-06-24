@@ -185,16 +185,12 @@ namespace BAMWallet.Rpc.Controllers
             if (!request.Success)
                 return new BadRequestObjectResult(request.NonSuccessMessage);
 
-            var transaction = _walletService.GetLastTransaction(session.SessionId, WalletType.Receive);
-            var txnReceivedAmount = transaction == null ? 0.ToString() : transaction.Payment.DivWithNaT().ToString("F9");
-            var txnMemo = transaction == null ? "" : transaction.Memo;
-            var balance = _walletService.History(session.SessionId);
-
+            var balanceSheet = _walletService.History(session.SessionId).Result.Last();
             return new OkObjectResult(new
             {
-                memo = txnMemo,
-                received = txnReceivedAmount,
-                balance = $"{balance.Result.Last().Balance}"
+                memo = balanceSheet.Memo,
+                received = balanceSheet.MoneyIn,
+                balance = $"{balanceSheet.Balance}"
             });
         }
 
@@ -228,12 +224,12 @@ namespace BAMWallet.Rpc.Controllers
                 return new BadRequestObjectResult(send.NonSuccessMessage);
 
             var balance = _walletService.History(session.SessionId);
-            var walletTx = _walletService.GetLastTransaction(session.SessionId, WalletType.Send);
+            var walletTx = _walletService.GetTransaction(session.SessionId);
 
             return new OkObjectResult(new
             {
                 balance = $"{balance.Result.Last().Balance}",
-                paymentId = walletTx?.Transaction.TxnId.ByteToHex()
+                paymentId = walletTx?.TxnId.ByteToHex()
             });
         }
     }

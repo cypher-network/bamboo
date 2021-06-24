@@ -21,7 +21,6 @@ namespace BAMWallet.HD
         string CreateWallet(SecureString mnemonic, SecureString passphrase);
         SecureString NewId(int bytes = 32);
         Task<string[]> CreateMnemonic(Language language, WordCount wordCount);
-        WalletTransaction GetLastTransaction(Guid sessionId, WalletType transactionType);
         TaskResult<bool> CalculateChange(Guid sessionId);
         TaskResult<IEnumerable<string>> WalletList();
         TaskResult<BalanceSheet[]> History(Guid sessionId);
@@ -45,7 +44,6 @@ namespace BAMWallet.HD
         Transaction GetTransaction(Guid sessionId);
         byte[] GetKeyImage(Guid sessionId, Vout output);
         TaskResult<bool> RollBackTransaction(Guid sessionId, Guid id);
-        WalletTransaction GetLastSentTransaction(Guid sessionId);
-        Task TrackLastTransaction(Guid sessionId);
+        Task SyncWallet(Guid sessionId, int n = 3);
     }
 }

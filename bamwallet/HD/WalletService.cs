@@ -243,29 +243,6 @@ namespace BAMWallet.HD
         /// 
         /// </summary>
         /// <param name="sessionId"></param>
-        /// <param name="transactionType"></param>
-        /// <returns></returns>
-        public WalletTransaction GetLastTransaction(Guid sessionId, WalletType transactionType)
-        {
-            Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
-
-            var session = Session(sessionId);
-
-            var transactions = session.Database.Query<WalletTransaction>()
-                .Where(x => x.Id == session.SessionId && x.WalletType == transactionType).ToList();
-            if (transactions?.Any() != true)
-            {
-                return null;
-            }
-
-            var walletTx = transactions.Last();
-            return walletTx;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="sessionId"></param>
         /// <returns></returns>
         public Transaction GetTransaction(Guid sessionId)
         {
@@ -485,13 +462,13 @@ namespace BAMWallet.HD
 
             while (_safeguardDownloadingFlagProvider.IsDownloading)
             {
-                System.Threading.Thread.Sleep(100);
+                Thread.Sleep(100);
             }
 
             var session = Session(sessionId).EnforceDbExists();
             session.LastError = null;
 
-            TrackLastTransaction(session.SessionId).GetAwaiter();
+            SyncWallet(session.SessionId).GetAwaiter();
 
             var calculated = CalculateChange(session.SessionId);
             if (!calculated.Success)
@@ -924,7 +901,7 @@ namespace BAMWallet.HD
 
             var session = Session(sessionId).EnforceDbExists();
 
-            TrackLastTransaction(session.SessionId).GetAwaiter();
+            SyncWallet(session.SessionId).GetAwaiter();
 
             var balanceSheets = new List<BalanceSheet>();
             var walletTransactions = session.Database.Query<WalletTransaction>().OrderBy(x => x.DateTime).ToList();
@@ -1237,7 +1214,7 @@ namespace BAMWallet.HD
 
             try
             {
-                await TrackLastTransaction(session.SessionId);
+                await SyncWallet(session.SessionId);
 
                 if (AlreadyReceivedPayment(paymentId, session, out var taskResult)) return taskResult;
 
@@ -1388,84 +1365,82 @@ namespace BAMWallet.HD
         /// </summary>
         /// <param name="sessionId"></param>
         /// <returns></returns>
-        public WalletTransaction GetLastSentTransaction(Guid sessionId)
-        {
-            Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
-
-            var session = Session(sessionId).EnforceDbExists();
-            var walletTransactions = session.Database.Query<WalletTransaction>()
-                .Where(x => x.WalletType == WalletType.Send)
-                .ToList();
-
-            return walletTransactions?.Any() != true ? null : walletTransactions.Last();
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="sessionId"></param>
-        /// <returns></returns>
-        public async Task TrackLastTransaction(Guid sessionId)
+        public async Task SyncWallet(Guid sessionId, int n = 3)
         {
             Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
             var session = Session(sessionId).EnforceDbExists();
-            var walletTransaction = GetLastSentTransaction(session.SessionId);
-
+            var walletTransactions = session.Database.Query<WalletTransaction>().ToList().TakeLast(n).ToArray();
             await Task.Factory.StartNew(async () =>
             {
-                var currentRetry = 0;
-                var jitter = new Random();
-                for (; ; )
+                foreach (var (walletTransaction, index) in walletTransactions.Select((value, i) => (value, i)))
                 {
-                    try
+                    var count = walletTransactions.Length == 0 ? 0 : walletTransactions.Length - 1;
+                    var currentRetry = 0;
+                    var jitter = new Random();
+                    for (; ; )
                     {
-                        var baseAddress = _client.GetBaseAddress();
-                        var path = string.Format(
+                        try
+                        {
+                            var baseAddress = _client.GetBaseAddress();
+                            var path = string.Format(
                                 _networkSection.GetSection(Constant.Routing)
-                                .GetValue<string>(RestCall.GetTransactionId.ToString()),
-                            walletTransaction.Transaction.TxnId.ByteToHex());
-                        var genericResponse = await _client.GetAsync<Transaction>(baseAddress, path, new CancellationToken());
-                        if (genericResponse.Data != null && genericResponse.HttpStatusCode == HttpStatusCode.OK)
+                                    .GetValue<string>(RestCall.GetTransactionId.ToString()),
+                                walletTransaction.Transaction.TxnId.ByteToHex());
+                            var genericResponse =
+                                await _client.GetAsync<Transaction>(baseAddress, path, new CancellationToken());
+                            if (genericResponse.Data != null && genericResponse.HttpStatusCode == HttpStatusCode.OK)
+                            {
+                                if (index == count)
+                                {
+                                    _resetEvent.Set();
+                                }
+
+                                break;
+                            }
+
+                            if (genericResponse.HttpStatusCode is HttpStatusCode.ServiceUnavailable or HttpStatusCode
+                                .NotFound)
+                            {
+                                if (index == count)
+                                {
+                                    _resetEvent.Set();
+                                }
+
+                                break;
+                            }
+
+                            currentRetry++;
+                            var retryDelay = TimeSpan.FromSeconds(Math.Pow(2, currentRetry)) +
+                                             TimeSpan.FromMilliseconds(jitter.Next(0, 1000));
+
+                            if (retryDelay.Minutes <= 1)
+                            {
+                                await Task.Delay(retryDelay);
+                                continue;
+                            }
+
+                            var rolledBack = RollBackTransaction(sessionId, walletTransaction.Transaction.Id);
+                            if (!rolledBack.Success)
+                            {
+                                _logger.LogError(rolledBack.Exception.Message);
+                            }
+
+                            if (index == count)
+                            {
+                                _resetEvent.Set();
+                            }
+
+                            break;
+                        }
+                        catch (Exception ex)
                         {
+                            _logger.LogError(ex.Message);
                             _resetEvent.Set();
                             break;
                         }
-
-                        if (genericResponse.HttpStatusCode is HttpStatusCode.ServiceUnavailable or HttpStatusCode.NotFound)
-                        {
-                            _resetEvent.Set();
-                            break;
-                        }
-
-                        var retryDelay = TimeSpan.FromSeconds(Math.Pow(2, currentRetry)) +
-                                         TimeSpan.FromMilliseconds(jitter.Next(0, 1000));
-
-                        currentRetry++;
-
-                        if (retryDelay.Minutes <= 1)
-                        {
-                            await Task.Delay(retryDelay);
-                            continue;
-                        }
-
-                        var rolledBack = RollBackTransaction(sessionId, walletTransaction.Id);
-                        if (!rolledBack.Success)
-                        {
-                            _logger.LogError(rolledBack.Exception.Message);
-                        }
-
-                        _resetEvent.Set();
-                        break;
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex.Message);
-                        _resetEvent.Set();
-                        break;
                     }
                 }
             });
-
             _resetEvent.WaitOne();
         }
 

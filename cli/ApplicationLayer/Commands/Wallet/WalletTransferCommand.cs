@@ -87,10 +87,10 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                         var balance = _walletService.History(session.SessionId);
                         var message = $"Available Balance: {balance.Result.Last().Balance}";
 
-                        var walletTx = _walletService.GetLastTransaction(session.SessionId, WalletType.Send);
+                        var walletTx = _walletService.GetTransaction(session.SessionId);
                         if (walletTx != null)
                         {
-                            message += $"\nPaymentID: {walletTx.Transaction.TxnId.ByteToHex()}";
+                            message += $"\nPaymentID: {walletTx?.TxnId.ByteToHex()}";
                         }
 
                         spinner.Succeed(message);
