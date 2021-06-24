@@ -1422,7 +1422,7 @@ namespace BAMWallet.HD
                             var retryDelay = TimeSpan.FromSeconds(Math.Pow(2, currentRetry)) +
                                              TimeSpan.FromMilliseconds(jitter.Next(0, 1000));
 
-                            if (retryDelay.Minutes <= 1)
+                            if (retryDelay.Minutes * 60 + retryDelay.Seconds < 60)
                             {
                                 await Task.Delay(retryDelay);
                                 continue;
