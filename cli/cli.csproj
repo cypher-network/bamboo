@@ -51,13 +51,6 @@
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0" />
   </ItemGroup>
   <ItemGroup>
-    <Content Update="appsettings.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
-    </Content>
-  </ItemGroup>
-  </ItemGroup>
-  <ItemGroup>
     <Folder Include="Helper\" />
   </ItemGroup>
     <ItemGroup>
@@ -67,6 +60,9 @@
       <ProjectReference Include="..\bamwallet\bamwallet.csproj" />
     </ItemGroup>
     <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="appsettings.Local.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <DependentUpon>appsettings.json</DependentUpon>
