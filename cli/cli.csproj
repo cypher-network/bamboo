@@ -51,9 +51,11 @@
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0" />
   </ItemGroup>
   <ItemGroup>
-    <None Update="appsettings.json">
+    <Content Update="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
+      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Helper\" />
