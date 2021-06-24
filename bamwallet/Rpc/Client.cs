@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Mime;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using BAMWallet.HD;
@@ -38,62 +39,43 @@ namespace BAMWallet.Rpc
         /// <param name="path">Path.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <typeparam name="T">The 1st type parameter.</typeparam>
-        public async Task<GenericResponse<T>> GetAsync<T>(Uri baseAddress, string path, CancellationToken cancellationToken) where T : class
+        public async Task<GenericResponse<T>> GetAsync<T>(Uri baseAddress, string path,
+            CancellationToken cancellationToken) where T : class
         {
             Guard.Argument(baseAddress, nameof(baseAddress)).NotNull();
             Guard.Argument(path, nameof(path)).NotNull().NotEmpty();
-
-            GenericResponse<T> result = default;
             using var client = new HttpClient
             {
                 BaseAddress = baseAddress,
                 DefaultRequestHeaders =
                 {
-                    Accept =
-                    {
-                        new MediaTypeWithQualityHeaderValue(MediaTypeNames.Application.Json)
-                    }
+                    Accept = {new MediaTypeWithQualityHeaderValue(MediaTypeNames.Application.Json)}
                 }
             };
-
             try
             {
                 using var request = new HttpRequestMessage(HttpMethod.Get, path);
-                using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
-                var read = response.Content.ReadAsStringAsync(cancellationToken).Result;
-                var jObject = JObject.Parse(read);
-                var jToken = jObject.GetValue("messagepack");
-                var byteArray = Convert.FromBase64String(jToken.Value<string>());
-
+                using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead,
+                    cancellationToken);
                 if (response.IsSuccessStatusCode)
                 {
+                    var read = response.Content.ReadAsStringAsync(cancellationToken).Result;
+                    var jObject = JObject.Parse(read);
+                    var jToken = jObject.GetValue("messagepack");
+                    var byteArray = Convert.FromBase64String(jToken.Value<string>());
                     var t = MessagePackSerializer.Deserialize<T>(byteArray, cancellationToken: cancellationToken);
-                    result = new GenericResponse<T> { Data = t, HttpStatusCode = HttpStatusCode.OK };
+                    return new GenericResponse<T> {Data = t, HttpStatusCode = HttpStatusCode.OK};
                 }
-                else
-                {
-                    var content = await response.Content.ReadAsStringAsync(cancellationToken);
-                    _logger.LogError($"Result: {content}\n StatusCode: {(int)response.StatusCode}");
-                    result = new GenericResponse<T> { Data = null, HttpStatusCode = response.StatusCode };
-                }
+
+                var content = await response.Content.ReadAsStringAsync(cancellationToken);
+                _logger.LogError($"Result: {content}\n StatusCode: {(int) response.StatusCode}");
+                return new GenericResponse<T> {Data = null, HttpStatusCode = response.StatusCode};
             }
             catch (Exception ex)
             {
-                if (ex.InnerException != null)
-                {
-                    result = ex.InnerException.Message == "Connection refused"
-                        ? new GenericResponse<T> { Data = null, HttpStatusCode = HttpStatusCode.ServiceUnavailable }
-                        : new GenericResponse<T> { Data = null, HttpStatusCode = HttpStatusCode.NotFound };
-                }
-                else
-                {
-                    result = new GenericResponse<T> { Data = null, HttpStatusCode = HttpStatusCode.ServiceUnavailable };
-                }
-
                 _logger.LogError($"Message: {ex.Message}\n Stack: {ex.StackTrace}");
+                return new GenericResponse<T> {Data = null, HttpStatusCode = HttpStatusCode.ServiceUnavailable};
             }
-
-            return Task.FromResult(result).Result;
         }
 
         /// <summary>
@@ -135,13 +117,14 @@ namespace BAMWallet.Rpc
             {
                 using var request = new HttpRequestMessage(HttpMethod.Get, path);
                 using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
-                var read = response.Content.ReadAsStringAsync(cancellationToken).Result;
-                var jObject = JObject.Parse(read);
-                var jToken = jObject.GetValue("messagepack");
-                var byteArray = Convert.FromBase64String(jToken.Value<string>());
-
                 if (response.IsSuccessStatusCode)
+                {
+                    var read = response.Content.ReadAsStringAsync(cancellationToken).Result;
+                    var jObject = JObject.Parse(read);
+                    var jToken = jObject.GetValue("messagepack");
+                    var byteArray = Convert.FromBase64String(jToken.Value<string>());
                     results = MessagePackSerializer.Deserialize<GenericList<T>>(byteArray, cancellationToken: cancellationToken);
+                }
                 else
                 {
                     var content = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -154,7 +137,7 @@ namespace BAMWallet.Rpc
                 _logger.LogError($"Message: {ex.Message}\n Stack: {ex.StackTrace}");
             }
 
-            return Task.FromResult(results).Result;
+            return results;
         }
 
         /// <summary>

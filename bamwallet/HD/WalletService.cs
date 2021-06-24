@@ -1394,12 +1394,21 @@ namespace BAMWallet.HD
                                 {
                                     _resetEvent.Set();
                                 }
+                            
+                                break;
+                            }
+
+                            if (genericResponse.HttpStatusCode is HttpStatusCode.NotFound)
+                            {
+                                if (index == count)
+                                {
+                                    _resetEvent.Set();
+                                }
 
                                 break;
                             }
 
-                            if (genericResponse.HttpStatusCode is HttpStatusCode.ServiceUnavailable or HttpStatusCode
-                                .NotFound)
+                            if (genericResponse.HttpStatusCode is HttpStatusCode.ServiceUnavailable)
                             {
                                 if (index == count)
                                 {
