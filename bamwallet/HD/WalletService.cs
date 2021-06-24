@@ -936,9 +936,9 @@ namespace BAMWallet.HD
                 var (_, scan) = Unlock(session.SessionId);
                 ulong received = 0;
 
-                foreach (var outputs in walletTransactions.Select(x => x.Transaction.Vout))
+                foreach (var transaction in walletTransactions.Select(x => x.Transaction))
                 {
-                    var paymentOrFee = outputs.Where(z => z.T is CoinType.Payment or CoinType.Fee).ToArray();
+                    var paymentOrFee = transaction.Vout.Where(z => z.T is CoinType.Payment or CoinType.Fee).ToArray();
                     if (paymentOrFee.Any())
                     {
                         try
@@ -963,13 +963,13 @@ namespace BAMWallet.HD
                                 if (messagePayment.Amount == 0) continue;
                                 received += messagePayment.Amount + fee;
                                 balanceSheets.Add(MoneyBalanceSheet(messagePayment.Date, messagePayment.Memo, 0, fee, "+",
-                                    messagePayment.Amount, 0, received, paymentOrFee));
+                                    messagePayment.Amount, 0, received, paymentOrFee, transaction.TxnId.ByteToHex()));
                             }
                             else
                             {
                                 received -= fee;
                                 balanceSheets.Add(MoneyBalanceSheet(messageFee.Date, messageFee.Memo, 0, fee, "-", 0, 0,
-                                    received, paymentOrFee));
+                                    received, paymentOrFee, transaction.TxnId.ByteToHex()));
                             }
                         }
                         catch (Exception)
@@ -978,7 +978,7 @@ namespace BAMWallet.HD
                         }
                     }
 
-                    var changeOrFee = outputs.Where(z => z.T is CoinType.Change or CoinType.Fee).ToArray();
+                    var changeOrFee = transaction.Vout.Where(z => z.T is CoinType.Change or CoinType.Fee).ToArray();
                     if (changeOrFee.Any())
                     {
                         try
@@ -987,7 +987,7 @@ namespace BAMWallet.HD
                             var messageChange = Transaction.Message(changeOrFee.ElementAt(1), scan);
                             received -= messageChange.Paid - messageFee.Amount;
                             balanceSheets.Add(MoneyBalanceSheet(messageChange.Date, messageChange.Memo, messageChange.Paid,
-                                messageFee.Amount, "+", 0, 0, received, changeOrFee));
+                                messageFee.Amount, "+", 0, 0, received, changeOrFee, transaction.TxnId.ByteToHex()));
                         }
                         catch (Exception)
                         {
@@ -995,7 +995,7 @@ namespace BAMWallet.HD
                         }
                     }
 
-                    var coinStakeOrCoinbase = outputs.Where(z => z.T is CoinType.Coinstake).ToArray();
+                    var coinStakeOrCoinbase = transaction.Vout.Where(z => z.T is CoinType.Coinstake).ToArray();
                     if (coinStakeOrCoinbase.Any())
                     {
                         try
@@ -1003,7 +1003,7 @@ namespace BAMWallet.HD
                             var messageCoinstake = Transaction.Message(coinStakeOrCoinbase.ElementAt(0), scan);
                             received -= messageCoinstake.Amount;
                             balanceSheets.Add(MoneyBalanceSheet(messageCoinstake.Date, messageCoinstake.Memo,
-                                messageCoinstake.Amount, 0, null, 0, 0, received, coinStakeOrCoinbase));
+                                messageCoinstake.Amount, 0, null, 0, 0, received, coinStakeOrCoinbase, transaction.TxnId.ByteToHex()));
                         }
                         catch (Exception)
                         {
@@ -1011,7 +1011,7 @@ namespace BAMWallet.HD
                         }
                     }
 
-                    var coinStake = outputs.Where(z => z.T is CoinType.Coinstake or CoinType.Coinbase).ToArray();
+                    var coinStake = transaction.Vout.Where(z => z.T is CoinType.Coinstake or CoinType.Coinbase).ToArray();
                     if (!coinStake.Any()) continue;
                     {
                         try
@@ -1020,7 +1020,7 @@ namespace BAMWallet.HD
                             var messageCoinstake = Transaction.Message(coinStake.ElementAt(1), scan);
                             received += messageCoinstake.Amount + messageCoinbase.Amount;
                             balanceSheets.Add(MoneyBalanceSheet(messageCoinstake.Date, messageCoinstake.Memo, 0, 0, null,
-                                messageCoinstake.Amount, messageCoinbase.Amount, received, coinStake));
+                                messageCoinstake.Amount, messageCoinbase.Amount, received, coinStake, transaction.TxnId.ByteToHex()));
                         }
                         catch (Exception)
                         {
@@ -1052,14 +1052,15 @@ namespace BAMWallet.HD
         /// <param name="outputs"></param>
         /// <returns></returns>
         private static BalanceSheet MoneyBalanceSheet(DateTime dateTime, string memo, ulong sent, ulong fee,
-            string feeSign, ulong received, ulong reward, ulong balance, Vout[] outputs)
+            string feeSign, ulong received, ulong reward, ulong balance, Vout[] outputs, string txId)
         {
             var balanceSheet = new BalanceSheet
             {
                 Date = dateTime.ToShortDateString(),
                 Memo = memo,
                 Balance = balance.DivWithNaT().ToString("F9"),
-                Outputs = outputs
+                Outputs = outputs,
+                TxId = txId
             };
             if (sent != 0)
             {

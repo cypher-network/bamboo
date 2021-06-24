@@ -65,11 +65,11 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                        return Task.CompletedTask;
                    }
 
-                   var table = new ConsoleTable("DateTime", "Memo", "Money In", "Money Out", "Fee", "Reward", "Balance");
+                   var table = new ConsoleTable("DateTime", "Payment Id", "Memo", "Money In", "Money Out", "Fee", "Reward", "Balance");
 
                    foreach (var sheet in request.Result)
                    {
-                       table.AddRow(sheet.Date, sheet.Memo, sheet.MoneyIn, sheet.MoneyOut, sheet.Fee, sheet.Reward,
+                       table.AddRow(sheet.Date, sheet.TxId, sheet.Memo, sheet.MoneyIn, sheet.MoneyOut, sheet.Fee, sheet.Reward,
                            sheet.Balance);
                    }
 

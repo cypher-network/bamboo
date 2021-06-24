@@ -13,5 +13,6 @@ namespace BAMWallet.Model
         public string Reward { get; set; }
         public string Balance { get; set; }
         public Vout[] Outputs { get; set; }
+        public string TxId { get; set; }
     }
 }
