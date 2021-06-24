@@ -58,6 +58,8 @@ namespace BAMWallet.HD
             _client = new Client(configuration, _logger);
 
             Sessions = new ConcurrentDictionary<Guid, Session>();
+
+            var tx = Convert.FromBase64String("MUEe3Hs8XVE+6um8Oa8OfR1NsMErcDQqqQCDOKHhGo0=").ByteToHex();
         }
 
         public Client HttpClient() => _client;
@@ -1266,9 +1268,15 @@ namespace BAMWallet.HD
                                let uncover = spend.Uncover(scan, new PubKey(v.E))
                                where uncover.PubKey.ToBytes().SequenceEqual(v.P)
                                select v.Cast<Vout>()).ToList();
-
                 if (outputs.Any() != true)
-                    return TaskResult<WalletTransaction>.CreateFailure("Outputs are empty");
+                {
+                    var emptyPayment =
+                        TaskResult<WalletTransaction>.CreateFailure(
+                            new Exception("Your stealth address does not control this payment"));
+                    SetLastError(session, emptyPayment);
+                    return emptyPayment;
+                }
+
                 session.WalletTransaction = new WalletTransaction
                 {
                     SenderAddress = session.WalletTransaction.SenderAddress,
@@ -1526,7 +1534,7 @@ namespace BAMWallet.HD
             Guard.Argument(id, nameof(id)).NotDefault();
             try
             {
-                var session = Session(sessionId);
+                var session = Session(sessionId).EnforceDbExists();
                 var walletTransaction = session.Database.Query<WalletTransaction>()
                     .Where(s => s.Id == id).FirstOrDefault();
                 if (walletTransaction != null)
@@ -1556,7 +1564,7 @@ namespace BAMWallet.HD
             taskResult = null;
             var walletTransactions = session.Database.Query<WalletTransaction>().ToList();
             if (!walletTransactions.Any()) return false;
-            var walletTransaction = walletTransactions.FirstOrDefault(x => x.Transaction.TxnId.SequenceEqual(paymentId.HexToByte()));
+            var walletTransaction = walletTransactions.FirstOrDefault(x => x.Transaction.TxnId.Xor(paymentId.HexToByte()));
             if (walletTransaction == null) return false;
             var output = TaskResult<WalletTransaction>.CreateFailure(
                 new Exception($"Transaction with paymentId: {paymentId} already exists"));
