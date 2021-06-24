@@ -50,7 +50,7 @@ namespace BAMWallet.Rpc
                             Url = new Uri("https://raw.githubusercontent.com/tangramproject/Cypher/master/LICENSE")
                         },
                         Title = "Bamboo Rest API",
-                        Version = "v1",
+                        Version = Helper.Util.GetAssemblyVersion(),
                         Description = "Bamboo Wallet Service.",
                         TermsOfService = new Uri("https://tangrams.io/legal/"),
                         Contact = new Microsoft.OpenApi.Models.OpenApiContact
@@ -92,30 +92,27 @@ namespace BAMWallet.Rpc
             }
         }
 
-        private readonly IConfigurationSection _restAPISection;
-
-        public bool EnableRestAPI { get; }
-        public string Endpoint { get; }
+        public bool WebServerRunning { get; }
+        public string Advertise { get; }
 
         public SelfHosted(IConfiguration configuration)
         {
-            _restAPISection = configuration.GetSection("network");
-            EnableRestAPI = _restAPISection.GetValue<bool>("enabled_restAPI");
-            Endpoint = _restAPISection.GetValue<string>("restApi_endpoint");
+            var networkSection = configuration.GetSection(Constant.Network);
+            WebServerRunning = networkSection.GetValue<bool>(Constant.RunAsWebServer);
+            Advertise = networkSection.GetValue<string>(Constant.Advertise);
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            if (EnableRestAPI == true)
+            if (WebServerRunning)
             {
                 WebHost.CreateDefaultBuilder()
                     .UseKestrel()
                     .UseContentRoot(Directory.GetCurrentDirectory())
-                    .UseUrls(Endpoint)
+                    .UseUrls(Advertise)
                     .UseStartup<Startup>()
                     .Build().RunAsync(stoppingToken);
             }
-
             return Task.CompletedTask;
         }
     }

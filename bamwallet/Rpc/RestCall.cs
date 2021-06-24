@@ -5,10 +5,6 @@ namespace BAMWallet.Rpc
 {
     public sealed class RestCall
     {
-        public const string Gateway = "api_gateway";
-        public const string Endpoint = "endpoint";
-        public const string Routing = "routing";
-
         public const string RestPostTransaction = "postTransaction";
         public const string RestGetTransactionId = "getTransactionId";
         public const string RestSafeguardTransactions = "getSafeguardTransactions";

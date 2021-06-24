@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BAMWallet.HD;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -19,14 +20,14 @@ namespace BAMWallet.Services
     public class SafeguardService : BackgroundService
     {
         private readonly ISafeguardDownloadingFlagProvider _safeguardDownloadingFlagService;
-        private readonly IConfigurationSection _apiGatewaySection;
+        private readonly IConfigurationSection _networkSection;
         private readonly Client _client;
         private readonly ILogger _logger;
 
         public SafeguardService(ISafeguardDownloadingFlagProvider safeguardDownloadingFlagService, IConfiguration configuration, ILogger<SafeguardService> logger)
         {
             _safeguardDownloadingFlagService = safeguardDownloadingFlagService;
-            _apiGatewaySection = configuration.GetSection(RestCall.Gateway);
+            _networkSection = configuration.GetSection(Constant.Network);
             _logger = logger;
 
             _client = new Client(configuration, _logger);
@@ -69,7 +70,7 @@ namespace BAMWallet.Services
                 if (!needData) return;
                 _safeguardDownloadingFlagService.IsDownloading = true;
                 var baseAddress = _client.GetBaseAddress();
-                var path = _apiGatewaySection.GetSection(RestCall.Routing)
+                var path = _networkSection.GetSection(Constant.Routing)
                     .GetValue<string>(RestCall.RestSafeguardTransactions);
                 var blocks = await _client.GetRangeAsync<Block>(baseAddress, path, stoppingToken);
                 if (blocks != null)

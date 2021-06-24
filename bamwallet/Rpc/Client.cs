@@ -8,6 +8,7 @@ using System.Net.Http.Headers;
 using System.Net.Mime;
 using System.Threading;
 using System.Threading.Tasks;
+using BAMWallet.HD;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
@@ -20,14 +21,12 @@ namespace BAMWallet.Rpc
 {
     public class Client
     {
-        internal const string ErrorMessage = "Please check the logs for any details.";
-
         private readonly ILogger _logger;
-        private readonly IConfigurationSection _apiRestSection;
+        private readonly IConfigurationSection _networkSection;
 
-        public Client(IConfiguration apiRestSection, ILogger logger)
+        public Client(IConfiguration networkSection, ILogger logger)
         {
-            _apiRestSection = apiRestSection.GetSection(RestCall.Gateway);
+            _networkSection = networkSection.GetSection(Constant.Network);
             _logger = logger;
         }
 
@@ -103,7 +102,7 @@ namespace BAMWallet.Rpc
         /// <returns></returns>
         public Uri GetBaseAddress()
         {
-            return new Uri(_apiRestSection.GetValue<string>(RestCall.Endpoint));
+            return new Uri(_networkSection.GetValue<string>(Constant.RemoteNode));
         }
 
         /// <summary>

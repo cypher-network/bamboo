@@ -38,7 +38,7 @@ namespace BAMWallet.HD
         private readonly ILogger _logger;
         private readonly NBitcoin.Network _network;
         private readonly Client _client;
-        private readonly IConfigurationSection _apiGatewaySection;
+        private readonly IConfigurationSection _networkSection;
         private readonly uint _numberOfConfirmations;
 
         private ConcurrentDictionary<Guid, Session> Sessions { get; }
@@ -54,7 +54,7 @@ namespace BAMWallet.HD
             _numberOfConfirmations = apiNetworkSection.GetValue<uint>(Constant.NumberOfConfirmations);
             _network = environment == Constant.Mainnet ? NBitcoin.Network.Main : NBitcoin.Network.TestNet;
             _logger = logger;
-            _apiGatewaySection = configuration.GetSection(RestCall.Gateway);
+            _networkSection = configuration.GetSection(Constant.Network);
             _client = new Client(configuration, _logger);
 
             Sessions = new ConcurrentDictionary<Guid, Session>();
@@ -1243,7 +1243,7 @@ namespace BAMWallet.HD
 
                 var baseAddress = _client.GetBaseAddress();
                 var path = string.Format(
-                    _apiGatewaySection.GetSection(RestCall.Routing)
+                    _networkSection.GetSection(Constant.Routing)
                         .GetValue<string>(RestCall.GetTransactionId.ToString()), paymentId);
 
                 var genericResponse = await _client.GetAsync<Transaction>(baseAddress, path,
@@ -1353,7 +1353,7 @@ namespace BAMWallet.HD
                 transaction = GetTransaction(session.SessionId);
 
                 var baseAddress = _client.GetBaseAddress();
-                var path = _apiGatewaySection.GetSection(RestCall.Routing)
+                var path = _networkSection.GetSection(Constant.Routing)
                     .GetValue<string>(RestCall.PostTransaction.ToString());
 
                 var postedStatusCode =
@@ -1421,7 +1421,7 @@ namespace BAMWallet.HD
                     {
                         var baseAddress = _client.GetBaseAddress();
                         var path = string.Format(
-                            _apiGatewaySection.GetSection(RestCall.Routing)
+                                _networkSection.GetSection(Constant.Routing)
                                 .GetValue<string>(RestCall.GetTransactionId.ToString()),
                             walletTransaction.Transaction.TxnId.ByteToHex());
                         var genericResponse = await _client.GetAsync<Transaction>(baseAddress, path, new CancellationToken());
