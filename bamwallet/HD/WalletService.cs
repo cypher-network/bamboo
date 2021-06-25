@@ -1476,10 +1476,10 @@ namespace BAMWallet.HD
                             var message = $"Unable to drop collection for {nameof(WalletTransaction)}";
                             _logger.LogError(message);
                             return TaskResult<bool>.CreateFailure(new Exception(message));
-                        } 
+                        }
                     }
                 }
-                
+
                 var baseAddress = _client.GetBaseAddress();
                 var path = _networkSection.GetSection(Constant.Routing)
                     .GetValue<string>(RestCall.GetBlockHeight.ToString());
