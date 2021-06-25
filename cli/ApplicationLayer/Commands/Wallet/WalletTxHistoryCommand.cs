@@ -65,7 +65,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                        return Task.CompletedTask;
                    }
 
-                   var table = new ConsoleTable("DateTime", "Payment Id", "Memo", "Money In", "Money Out", "Fee", "Reward", "Balance");
+                   var table = new ConsoleTable("DateTime", "Payment Id", "Memo", "Money In", "Money Out", "Temp locked fund", "Reward", "Balance");
 
                    foreach (var sheet in request.Result)
                    {

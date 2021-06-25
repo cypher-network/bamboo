@@ -1465,6 +1465,21 @@ namespace BAMWallet.HD
             var session = Session(sessionId).EnforceDbExists();
             try
             {
+                using (var db = Util.LiteRepositoryFactory(session.Identifier, session.Passphrase))
+                {
+                    var wExists = db.Query<WalletTransaction>().Exists();
+                    if (wExists)
+                    {
+                        var dropped = db.Database.DropCollection($"{nameof(WalletTransaction)}");
+                        if (!dropped)
+                        {
+                            var message = $"Unable to drop collection for {nameof(WalletTransaction)}";
+                            _logger.LogError(message);
+                            return TaskResult<bool>.CreateFailure(new Exception(message));
+                        } 
+                    }
+                }
+                
                 var baseAddress = _client.GetBaseAddress();
                 var path = _networkSection.GetSection(Constant.Routing)
                     .GetValue<string>(RestCall.GetBlockHeight.ToString());
