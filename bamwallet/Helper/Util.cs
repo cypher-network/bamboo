@@ -73,7 +73,7 @@ namespace BAMWallet.Helper
             return source.Aggregate(0UL, (current, number) => current + number);
         }
 
-        public static byte[] ReadFully(Stream input)
+        public static byte[] StreamToArray(Stream input)
         {
             using var ms = new MemoryStream();
 

@@ -50,7 +50,7 @@ namespace BAMWallet.Services
         /// <returns></returns>
         public static Transaction[] GetTransactions()
         {
-            var byteArray = Util.ReadFully(GetSafeguardData());
+            var byteArray = Util.StreamToArray(GetSafeguardData());
             var blocks = MessagePackSerializer.Deserialize<GenericList<Block>>(byteArray);
             blocks.Data.Shuffle();
             return blocks.Data.SelectMany(x => x.Txs).ToArray();
@@ -76,7 +76,7 @@ namespace BAMWallet.Services
                 if (blocks != null)
                 {
                     var fileStream = SafeguardData(GetDays());
-                    var buffer = MessagePackSerializer.Serialize(blocks);
+                    var buffer = MessagePackSerializer.Serialize(blocks, cancellationToken: stoppingToken);
                     await fileStream.WriteAsync(buffer, stoppingToken);
                     await fileStream.FlushAsync(stoppingToken);
                     fileStream.Close();

@@ -931,6 +931,10 @@ namespace BAMWallet.HD
                                 if (messageFee != null)
                                 {
                                     fee = messageFee.Amount;
+
+                                    received -= fee;
+                                    balanceSheets.Add(MoneyBalanceSheet(messageFee.Date, messageFee.Memo, 0, fee, "-", 0, 0,
+                                        received, paymentOrFee, transaction.TxnId.ByteToHex()));
                                 }
 
                                 index = 1;
@@ -943,12 +947,6 @@ namespace BAMWallet.HD
                                 received += messagePayment.Amount + fee;
                                 balanceSheets.Add(MoneyBalanceSheet(messagePayment.Date, messagePayment.Memo, 0, fee, "+",
                                     messagePayment.Amount, 0, received, paymentOrFee, transaction.TxnId.ByteToHex()));
-                            }
-                            else
-                            {
-                                received -= fee;
-                                balanceSheets.Add(MoneyBalanceSheet(messageFee.Date, messageFee.Memo, 0, fee, "-", 0, 0,
-                                    received, paymentOrFee, transaction.TxnId.ByteToHex()));
                             }
                         }
                         catch (Exception)
