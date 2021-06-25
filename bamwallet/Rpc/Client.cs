@@ -17,6 +17,7 @@ using MessagePack;
 using Dawn;
 using BAMWallet.Model;
 using Microsoft.AspNetCore.Http;
+using Newtonsoft.Json;
 
 namespace BAMWallet.Rpc
 {
@@ -75,6 +76,40 @@ namespace BAMWallet.Rpc
             {
                 _logger.LogError($"Message: {ex.Message}\n Stack: {ex.StackTrace}");
                 return new GenericResponse<T> { Data = null, HttpStatusCode = HttpStatusCode.ServiceUnavailable };
+            }
+        }
+
+        public async Task<BlockHeight> GetBlockHeightAsync(Uri baseAddress, string path, CancellationToken cancellationToken)
+        {
+            Guard.Argument(baseAddress, nameof(baseAddress)).NotNull();
+            Guard.Argument(path, nameof(path)).NotNull().NotEmpty();
+            using var client = new HttpClient
+            {
+                BaseAddress = baseAddress,
+                DefaultRequestHeaders =
+                {
+                    Accept = {new MediaTypeWithQualityHeaderValue(MediaTypeNames.Application.Json)}
+                }
+            };
+            try
+            {
+                using var request = new HttpRequestMessage(HttpMethod.Get, path);
+                using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead,
+                    cancellationToken);
+                if (response.IsSuccessStatusCode)
+                {
+                    var read = response.Content.ReadAsStringAsync(cancellationToken).Result;
+                    return JsonConvert.DeserializeObject<BlockHeight>(read);
+                }
+
+                var content = await response.Content.ReadAsStringAsync(cancellationToken);
+                _logger.LogError($"Result: {content}\n StatusCode: {(int)response.StatusCode}");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Message: {ex.Message}\n Stack: {ex.StackTrace}");
+                return null;
             }
         }
 

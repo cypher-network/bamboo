@@ -6,6 +6,7 @@ namespace BAMWallet.Model
     public enum WalletType
     {
         Send,
-        Receive
+        Receive,
+        Restore
     }
 }

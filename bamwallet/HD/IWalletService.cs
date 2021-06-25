@@ -45,5 +45,6 @@ namespace BAMWallet.HD
         byte[] GetKeyImage(Guid sessionId, Vout output);
         TaskResult<bool> RollBackTransaction(Guid sessionId, Guid id);
         Task SyncWallet(Guid sessionId, int n = 3);
+        Task<TaskResult<bool>> RecoverTransactions(Guid sessionId, int start);
     }
 }

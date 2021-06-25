@@ -19,6 +19,7 @@ using NBitcoin;
 using NBitcoin.Stealth;
 using Transaction = BAMWallet.Model.Transaction;
 using Util = BAMWallet.Helper.Util;
+using Block = BAMWallet.Model.Block;
 using BAMWallet.Helper;
 using BAMWallet.Model;
 using BAMWallet.Rpc;
@@ -1449,6 +1450,95 @@ namespace BAMWallet.HD
                 }
             });
             _resetEvent.WaitOne();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sessionId"></param>
+        /// <param name="start"></param>
+        /// <returns></returns>
+        public async Task<TaskResult<bool>> RecoverTransactions(Guid sessionId, int start)
+        {
+            Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
+            Guard.Argument(start, nameof(start)).NotNegative();
+            var session = Session(sessionId).EnforceDbExists();
+            try
+            {
+                var baseAddress = _client.GetBaseAddress();
+                var path = _networkSection.GetSection(Constant.Routing)
+                    .GetValue<string>(RestCall.GetBlockHeight.ToString());
+                var blockHeight = await _client.GetBlockHeightAsync(baseAddress, path, new CancellationToken());
+                if (blockHeight == null)
+                {
+                    var output = TaskResult<bool>.CreateFailure(new Exception("Failed to find any blocks"));
+                    SetLastError(session, output);
+                    return output;
+                }
+
+                var height = (int)blockHeight.Height;
+                const int maxBlocks = 10;
+                var chunks = Enumerable.Repeat(maxBlocks, (height / maxBlocks)).ToList();
+                if (height % maxBlocks != 0) chunks.Add(height % maxBlocks);
+                foreach (var chunk in chunks)
+                {
+                    path = string.Format(
+                        _networkSection.GetSection(Constant.Routing)
+                            .GetValue<string>(RestCall.GetBlocks.ToString()), start, chunk);
+                    var blocks = await _client.GetRangeAsync<Block>(baseAddress, path, new CancellationToken());
+                    if (blocks != null)
+                    {
+                        foreach (var transaction in blocks.Data.SelectMany(x => x.Txs))
+                        {
+                            var (spend, scan) = Unlock(session.SessionId);
+                            var outputs = (from v in transaction.Vout
+                                           let uncover = spend.Uncover(scan, new PubKey(v.E))
+                                           where uncover.PubKey.ToBytes().Xor(v.P)
+                                           select v.Cast<Vout>()).ToList();
+                            if (outputs.Any() != true)
+                            {
+                                continue;
+                            }
+
+                            session.WalletTransaction = new WalletTransaction
+                            {
+                                Id = sessionId,
+                                SenderAddress = session.WalletTransaction.SenderAddress,
+                                DateTime = DateTime.UtcNow,
+                                Transaction = new Transaction
+                                {
+                                    Id = sessionId,
+                                    Bp = transaction.Bp,
+                                    Mix = transaction.Mix,
+                                    Rct = transaction.Rct,
+                                    TxnId = transaction.TxnId,
+                                    Vout = outputs.ToArray(),
+                                    Vin = transaction.Vin,
+                                    Ver = transaction.Ver
+                                },
+                                WalletType = WalletType.Restore
+                            };
+                            SessionAddOrUpdate(session);
+                            var saved = Save(session.SessionId, session.WalletTransaction);
+                            if (!saved.Success)
+                            {
+                                _logger.LogError($"Unable to save transaction: {transaction.TxnId.ByteToHex()}");
+                            }
+
+                            session = SessionAddOrUpdate(new Session(session.Identifier, session.Passphrase));
+                        }
+                    }
+
+                    start += chunk;
+                }
+
+                return TaskResult<bool>.CreateSuccess(true);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return TaskResult<bool>.CreateSuccess(false);
+            }
         }
 
         /// <summary>
