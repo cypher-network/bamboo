@@ -1208,6 +1208,11 @@ namespace BAMWallet.HD
                 if (AlreadyReceivedPayment(paymentId, session, out var taskResult)) return taskResult;
 
                 var baseAddress = _client.GetBaseAddress();
+                if (baseAddress == null)
+                {
+                    throw new Exception("Cannot get base address");
+                }
+
                 var path = string.Format(_networkSettings.Routing.TransactionId, paymentId);
                 var genericResponse = await _client.GetAsync<Transaction>(baseAddress, path,
                     new CancellationToken());
@@ -1316,6 +1321,11 @@ namespace BAMWallet.HD
                 transaction = GetTransaction(session.SessionId);
 
                 var baseAddress = _client.GetBaseAddress();
+                if (baseAddress == null)
+                {
+                    throw new Exception("Cannot get base address");
+                }
+
                 var postedStatusCode =
                     await _client.PostAsync(transaction, baseAddress, _networkSettings.Routing.Transaction, new CancellationToken());
                 if (postedStatusCode == HttpStatusCode.OK) return TaskResult<bool>.CreateSuccess(true);
@@ -1365,6 +1375,11 @@ namespace BAMWallet.HD
                         try
                         {
                             var baseAddress = _client.GetBaseAddress();
+                            if (baseAddress == null)
+                            {
+                                throw new Exception("Cannot get base address");
+                            }
+
                             var path = string.Format(_networkSettings.Routing.TransactionId,
                                 walletTransaction.Transaction.TxnId.ByteToHex());
                             var genericResponse =
@@ -1463,6 +1478,11 @@ namespace BAMWallet.HD
                 }
 
                 var baseAddress = _client.GetBaseAddress();
+                if (baseAddress == null)
+                {
+                    throw new Exception("Cannot get base address");
+                }
+
                 var blockHeight = await _client.GetBlockHeightAsync(baseAddress, _networkSettings.Routing.BlockHeight, new CancellationToken());
                 if (blockHeight == null)
                 {

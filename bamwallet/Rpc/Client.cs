@@ -119,7 +119,25 @@ namespace BAMWallet.Rpc
         /// <returns></returns>
         public Uri GetBaseAddress()
         {
-            return new(_networkSettings.RemoteNode);
+            var uriString = _networkSettings.RemoteNode;
+            if (string.IsNullOrEmpty(uriString))
+            {
+                _logger.LogError("Remote node address not set in config");
+            }
+            else
+            {
+                if (Uri.TryCreate(uriString, UriKind.Absolute, out var baseAddress))
+                {
+                    if (baseAddress.Scheme == Uri.UriSchemeHttp)
+                    {
+                        return baseAddress;
+                    }
+
+                    _logger.LogError($"Invalid URI scheme '{baseAddress.Scheme}' in '{uriString}'");
+                }
+            }
+
+            return null;
         }
 
         /// <summary>
