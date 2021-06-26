@@ -24,11 +24,11 @@ namespace BAMWallet.Rpc
     public class Client
     {
         private readonly ILogger _logger;
-        private readonly IConfigurationSection _networkSection;
+        private readonly NetworkSettings _networkSettings;
 
-        public Client(IConfiguration networkSection, ILogger logger)
+        public Client(NetworkSettings networkSettings, ILogger logger)
         {
-            _networkSection = networkSection.GetSection(Constant.Network);
+            _networkSettings = networkSettings;
             _logger = logger;
         }
 
@@ -119,7 +119,7 @@ namespace BAMWallet.Rpc
         /// <returns></returns>
         public Uri GetBaseAddress()
         {
-            return new Uri(_networkSection.GetValue<string>(Constant.RemoteNode));
+            return new(_networkSettings.RemoteNode);
         }
 
         /// <summary>

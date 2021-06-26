@@ -14,8 +14,10 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore;
 
 using BAMWallet.HD;
+using BAMWallet.Model;
 using BAMWallet.Rpc.Formatters;
 using BAMWallet.Services;
+using Microsoft.Extensions.Options;
 
 namespace BAMWallet.Rpc
 {
@@ -61,11 +63,11 @@ namespace BAMWallet.Rpc
                     });
                 });
 
-                services.AddHttpContextAccessor()
+                services.AddHttpContextAccessor().AddOptions()
+                    .Configure<NetworkSettings>(options => Configuration.GetSection("NetworkSettings").Bind(options))
                     .AddSingleton<ISafeguardDownloadingFlagProvider, SafeguardDownloadingFlagProvider>()
                     .AddHostedService<SafeguardService>()
-                    .AddSingleton<IWalletService, WalletService>()
-                    .AddOptions();
+                    .AddSingleton<IWalletService, WalletService>();
             }
 
             public void Configure(IApplicationBuilder app)
@@ -92,24 +94,21 @@ namespace BAMWallet.Rpc
             }
         }
 
-        public bool WebServerRunning { get; }
-        public string Advertise { get; }
+        private readonly NetworkSettings _networkSettings;
 
-        public SelfHosted(IConfiguration configuration)
+        public SelfHosted(IOptions<NetworkSettings> networkSettings)
         {
-            var networkSection = configuration.GetSection(Constant.Network);
-            WebServerRunning = networkSection.GetValue<bool>(Constant.RunAsWebServer);
-            Advertise = networkSection.GetValue<string>(Constant.Advertise);
+            _networkSettings = networkSettings.Value;
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            if (WebServerRunning)
+            if (_networkSettings.RunAsWebServer)
             {
                 WebHost.CreateDefaultBuilder()
                     .UseKestrel()
                     .UseContentRoot(Directory.GetCurrentDirectory())
-                    .UseUrls(Advertise)
+                    .UseUrls(_networkSettings.Advertise)
                     .UseStartup<Startup>()
                     .Build().RunAsync(stoppingToken);
             }

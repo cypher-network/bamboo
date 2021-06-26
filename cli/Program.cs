@@ -8,38 +8,44 @@
 
 using System;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 using Serilog.Events;
-using Serilog.Extensions.Logging;
-using McMaster.Extensions.CommandLineUtils;
-using CLi.ApplicationLayer.Commands;
-using BAMWallet.HD;
-using BAMWallet.Services;
+using Microsoft.AspNetCore.Hosting;
 
 namespace Cli
 {
-    class Program
+    public static class Program
     {
         public static async Task<int> Main(string[] args)
         {
-            Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Debug()
-                .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
-                .Enrich.FromLogContext()
-                .WriteTo.File("Bamboo.log", rollingInterval: RollingInterval.Day)
-                .CreateLogger();
-
             try
             {
+                var config = new ConfigurationBuilder()
+                    .SetBasePath(Directory.GetCurrentDirectory())
+                    .AddJsonFile("appsettings.json", false)
+                    .AddCommandLine(args)
+                    .Build();
+
+                Log.Logger = new LoggerConfiguration()
+                    .MinimumLevel.Debug()
+                    .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+                    .Enrich.FromLogContext()
+                    .WriteTo.File("Bamboo.log", rollingInterval: RollingInterval.Day)
+                    .CreateLogger();
+
                 Log.Information("Starting host");
                 Log.Information($"Version: {BAMWallet.Helper.Util.GetAssemblyVersion()}");
-                await CreateHostBuilder(args);
+
+
+                var builder = CreateWebHostBuilder(args, config);
+                builder.UseConsoleLifetime();
+
+                using var host = builder.Build();
+                await host.RunAsync();
+                await host.WaitForShutdownAsync();
 
                 return 0;
             }
@@ -55,50 +61,10 @@ namespace Cli
             }
         }
 
-        public static async Task CreateHostBuilder(string[] args)
-        {
-            var builder = new HostBuilder()
-                .ConfigureAppConfiguration((hostingContext, config) =>
-                {
-                    config.SetBasePath(Directory.GetCurrentDirectory())
-                        .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-                        .AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
-
-                    if (args != null)
-                        config.AddCommandLine(args);
-                })
-                .ConfigureLogging(logging =>
-                {
-                    logging.ClearProviders()
-                        .AddSerilog()
-                        .SetMinimumLevel(LogLevel.Trace);
-                })
-                .ConfigureServices((hostContext, services) =>
-                {
-                    services.AddOptions()
-                        .AddSingleton<ISafeguardDownloadingFlagProvider, SafeguardDownloadingFlagProvider>()
-                        .AddHostedService<SafeguardService>()
-                        .AddSingleton<IWalletService, WalletService>()
-                        .AddSingleton<ICommandService, CommandService>()
-                        .AddSingleton<IHostedService, BAMWallet.Rpc.SelfHosted>()
-                        .AddSingleton<IHostedService, CommandService>(sp =>
-                        {
-                            return sp.GetService<ICommandService>() as CommandService;
-                        })
-                        .AddLogging(config =>
-                        {
-                            config.ClearProviders()
-                                .AddProvider(new SerilogLoggerProvider(Log.Logger));
-                        })
-                        .Add(new ServiceDescriptor(typeof(IConsole), PhysicalConsole.Singleton));
-                })
-                .UseSerilog((context, configuration) => configuration
-                .Enrich.FromLogContext()
-                .MinimumLevel.Debug()
-                .WriteTo.File("Cli.log", rollingInterval: RollingInterval.Day))
-                .UseConsoleLifetime();
-
-            await builder.RunConsoleAsync();
-        }
+        private static IHostBuilder CreateWebHostBuilder(string[] args, IConfigurationRoot configurationRoot) => Host
+            .CreateDefaultBuilder(args).ConfigureWebHostDefaults(webBuilder =>
+            {
+                webBuilder.UseStartup<Startup>().UseSerilog();
+            });
     }
 }

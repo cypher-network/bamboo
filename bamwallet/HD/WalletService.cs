@@ -12,7 +12,6 @@ using System.Net;
 using System.Threading;
 using BAMWallet.Extensions;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
 using Dawn;
 using NBitcoin;
@@ -25,6 +24,7 @@ using BAMWallet.Model;
 using BAMWallet.Rpc;
 using BAMWallet.Services;
 using Libsecp256k1Zkp.Net;
+using Microsoft.Extensions.Options;
 
 namespace BAMWallet.HD
 {
@@ -39,28 +39,18 @@ namespace BAMWallet.HD
         private readonly ILogger _logger;
         private readonly NBitcoin.Network _network;
         private readonly Client _client;
-        private readonly IConfigurationSection _networkSection;
-        private readonly uint _numberOfConfirmations;
-
+        private readonly NetworkSettings _networkSettings;
         private ConcurrentDictionary<Guid, Session> Sessions { get; }
 
-        public WalletService(ISafeguardDownloadingFlagProvider safeguardDownloadingFlagProvider,
-            IConfiguration configuration, ILogger<WalletService> logger)
+        public WalletService(ISafeguardDownloadingFlagProvider safeguardDownloadingFlagProvider, IOptions<NetworkSettings> networkSettings, ILogger<WalletService> logger)
         {
             _safeguardDownloadingFlagProvider = safeguardDownloadingFlagProvider;
-
-            var apiNetworkSection = configuration.GetSection(Constant.Network);
-            var environment = apiNetworkSection.GetValue<string>(Constant.Environment);
-
-            _numberOfConfirmations = apiNetworkSection.GetValue<uint>(Constant.NumberOfConfirmations);
-            _network = environment == Constant.Mainnet ? NBitcoin.Network.Main : NBitcoin.Network.TestNet;
+            _networkSettings = networkSettings.Value;
+            _network = _networkSettings.Environment == Constant.Mainnet ? NBitcoin.Network.Main : NBitcoin.Network.TestNet;
             _logger = logger;
-            _networkSection = configuration.GetSection(Constant.Network);
-            _client = new Client(configuration, _logger);
+            _client = new Client(networkSettings.Value, _logger);
 
             Sessions = new ConcurrentDictionary<Guid, Session>();
-
-            var tx = Convert.FromBase64String("MUEe3Hs8XVE+6um8Oa8OfR1NsMErcDQqqQCDOKHhGo0=").ByteToHex();
         }
 
         public Client HttpClient() => _client;
@@ -1218,10 +1208,7 @@ namespace BAMWallet.HD
                 if (AlreadyReceivedPayment(paymentId, session, out var taskResult)) return taskResult;
 
                 var baseAddress = _client.GetBaseAddress();
-                var path = string.Format(
-                    _networkSection.GetSection(Constant.Routing)
-                        .GetValue<string>(RestCall.GetTransactionId.ToString()), paymentId);
-
+                var path = string.Format(_networkSettings.Routing.TransactionId, paymentId);
                 var genericResponse = await _client.GetAsync<Transaction>(baseAddress, path,
                     new CancellationToken());
                 if (genericResponse == null)
@@ -1329,11 +1316,8 @@ namespace BAMWallet.HD
                 transaction = GetTransaction(session.SessionId);
 
                 var baseAddress = _client.GetBaseAddress();
-                var path = _networkSection.GetSection(Constant.Routing)
-                    .GetValue<string>(RestCall.PostTransaction.ToString());
-
                 var postedStatusCode =
-                    await _client.PostAsync(transaction, baseAddress, path, new CancellationToken());
+                    await _client.PostAsync(transaction, baseAddress, _networkSettings.Routing.Transaction, new CancellationToken());
                 if (postedStatusCode == HttpStatusCode.OK) return TaskResult<bool>.CreateSuccess(true);
 
                 var fail = TaskResult<bool>.CreateFailure(
@@ -1381,9 +1365,7 @@ namespace BAMWallet.HD
                         try
                         {
                             var baseAddress = _client.GetBaseAddress();
-                            var path = string.Format(
-                                _networkSection.GetSection(Constant.Routing)
-                                    .GetValue<string>(RestCall.GetTransactionId.ToString()),
+                            var path = string.Format(_networkSettings.Routing.TransactionId,
                                 walletTransaction.Transaction.TxnId.ByteToHex());
                             var genericResponse =
                                 await _client.GetAsync<Transaction>(baseAddress, path, new CancellationToken());
@@ -1481,9 +1463,7 @@ namespace BAMWallet.HD
                 }
 
                 var baseAddress = _client.GetBaseAddress();
-                var path = _networkSection.GetSection(Constant.Routing)
-                    .GetValue<string>(RestCall.GetBlockHeight.ToString());
-                var blockHeight = await _client.GetBlockHeightAsync(baseAddress, path, new CancellationToken());
+                var blockHeight = await _client.GetBlockHeightAsync(baseAddress, _networkSettings.Routing.BlockHeight, new CancellationToken());
                 if (blockHeight == null)
                 {
                     var output = TaskResult<bool>.CreateFailure(new Exception("Failed to find any blocks"));
@@ -1497,9 +1477,7 @@ namespace BAMWallet.HD
                 if (height % maxBlocks != 0) chunks.Add(height % maxBlocks);
                 foreach (var chunk in chunks)
                 {
-                    path = string.Format(
-                        _networkSection.GetSection(Constant.Routing)
-                            .GetValue<string>(RestCall.GetBlocks.ToString()), start, chunk);
+                    var path = string.Format(_networkSettings.Routing.Blocks, start, chunk);
                     var blocks = await _client.GetRangeAsync<Block>(baseAddress, path, new CancellationToken());
                     if (blocks != null)
                     {

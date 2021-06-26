@@ -6,38 +6,37 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using BAMWallet.HD;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using BAMWallet.Rpc;
 using BAMWallet.Helper;
 using BAMWallet.Model;
 using MessagePack;
+using Microsoft.Extensions.Options;
 
 namespace BAMWallet.Services
 {
     public class SafeguardService : BackgroundService
     {
         private readonly ISafeguardDownloadingFlagProvider _safeguardDownloadingFlagService;
-        private readonly IConfigurationSection _networkSection;
+        private readonly NetworkSettings _networkSettings;
         private readonly Client _client;
         private readonly ILogger _logger;
 
-        public SafeguardService(ISafeguardDownloadingFlagProvider safeguardDownloadingFlagService, IConfiguration configuration, ILogger<SafeguardService> logger)
+        public SafeguardService(ISafeguardDownloadingFlagProvider safeguardDownloadingFlagService, IOptions<NetworkSettings> networkSettings, ILogger<SafeguardService> logger)
         {
             _safeguardDownloadingFlagService = safeguardDownloadingFlagService;
-            _networkSection = configuration.GetSection(Constant.Network);
+            _networkSettings = networkSettings.Value;
             _logger = logger;
 
-            _client = new Client(configuration, _logger);
+            _client = new Client(networkSettings.Value, _logger);
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        public static Stream GetSafeguardData()
+        private static Stream GetSafeguardData()
         {
             var safeGuardPath = SafeguardFilePath();
             var filePath = Directory.EnumerateFiles(safeGuardPath, "*.messagepack").Last();
@@ -70,9 +69,7 @@ namespace BAMWallet.Services
                 if (!needData) return;
                 _safeguardDownloadingFlagService.IsDownloading = true;
                 var baseAddress = _client.GetBaseAddress();
-                var path = _networkSection.GetSection(Constant.Routing)
-                    .GetValue<string>(RestCall.RestSafeguardTransactions);
-                var blocks = await _client.GetRangeAsync<Block>(baseAddress, path, stoppingToken);
+                var blocks = await _client.GetRangeAsync<Block>(baseAddress, _networkSettings.Routing.SafeguardTransactions, stoppingToken);
                 if (blocks != null)
                 {
                     var fileStream = SafeguardData(GetDays());
