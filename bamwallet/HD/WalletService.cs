@@ -1363,30 +1363,79 @@ namespace BAMWallet.HD
             Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
             var session = Session(sessionId).EnforceDbExists();
             var walletTransactions = session.Database.Query<WalletTransaction>().ToList().TakeLast(n).ToArray();
-            await Task.Factory.StartNew(async () =>
+            if (walletTransactions.Any())
             {
-                foreach (var (walletTransaction, index) in walletTransactions.Select((value, i) => (value, i)))
+                await Task.Factory.StartNew(async () =>
                 {
-                    var count = walletTransactions.Length == 0 ? 0 : walletTransactions.Length - 1;
-                    var currentRetry = 0;
-                    var jitter = new Random();
-                    for (; ; )
+                    foreach (var (walletTransaction, index) in walletTransactions.Select((value, i) => (value, i)))
                     {
-                        _logger.Here().Debug("Syncing wallet");
-                        try
+                        var count = walletTransactions.Length == 0 ? 0 : walletTransactions.Length - 1;
+                        var currentRetry = 0;
+                        var jitter = new Random();
+                        for (;;)
                         {
-                            var baseAddress = _client.GetBaseAddress();
-                            if (baseAddress == null)
+                            _logger.Here().Debug("Syncing wallet");
+                            try
                             {
-                                throw new Exception("Cannot get base address");
-                            }
+                                var baseAddress = _client.GetBaseAddress();
+                                if (baseAddress == null)
+                                {
+                                    throw new Exception("Cannot get base address");
+                                }
 
-                            var path = string.Format(_networkSettings.Routing.TransactionId,
-                                walletTransaction.Transaction.TxnId.ByteToHex());
-                            var genericResponse =
-                                await _client.GetAsync<Transaction>(baseAddress, path, new CancellationToken());
-                            if (genericResponse.Data != null && genericResponse.HttpStatusCode == HttpStatusCode.OK)
-                            {
+                                var path = string.Format(_networkSettings.Routing.TransactionId,
+                                    walletTransaction.Transaction.TxnId.ByteToHex());
+                                var genericResponse =
+                                    await _client.GetAsync<Transaction>(baseAddress, path, new CancellationToken());
+                                if (genericResponse.Data != null && genericResponse.HttpStatusCode == HttpStatusCode.OK)
+                                {
+                                    if (index == count)
+                                    {
+                                        _resetEvent.Set();
+                                    }
+
+                                    break;
+                                }
+
+                                if (genericResponse.HttpStatusCode is HttpStatusCode.NotFound)
+                                {
+                                    if (index == count)
+                                    {
+                                        _resetEvent.Set();
+                                    }
+
+                                    break;
+                                }
+
+                                if (genericResponse.HttpStatusCode is HttpStatusCode.ServiceUnavailable)
+                                {
+                                    if (index == count)
+                                    {
+                                        _resetEvent.Set();
+                                    }
+
+                                    break;
+                                }
+
+                                currentRetry++;
+                                var retryDelay = TimeSpan.FromSeconds(Math.Pow(2, currentRetry)) +
+                                                 TimeSpan.FromMilliseconds(jitter.Next(0, 1000));
+
+                                _logger.Here().Debug("Retrying {@CurrentRetry} {@RetryDelay}", currentRetry,
+                                    retryDelay);
+
+                                if (retryDelay.Minutes * 60 + retryDelay.Seconds < 60)
+                                {
+                                    await Task.Delay(retryDelay);
+                                    continue;
+                                }
+
+                                var rolledBack = RollBackTransaction(sessionId, walletTransaction.Transaction.Id);
+                                if (!rolledBack.Success)
+                                {
+                                    _logger.Here().Error(rolledBack.Exception.Message);
+                                }
+
                                 if (index == count)
                                 {
                                     _resetEvent.Set();
@@ -1394,62 +1443,17 @@ namespace BAMWallet.HD
 
                                 break;
                             }
-
-                            if (genericResponse.HttpStatusCode is HttpStatusCode.NotFound)
+                            catch (Exception ex)
                             {
-                                if (index == count)
-                                {
-                                    _resetEvent.Set();
-                                }
-
-                                break;
-                            }
-
-                            if (genericResponse.HttpStatusCode is HttpStatusCode.ServiceUnavailable)
-                            {
-                                if (index == count)
-                                {
-                                    _resetEvent.Set();
-                                }
-
-                                break;
-                            }
-
-                            currentRetry++;
-                            var retryDelay = TimeSpan.FromSeconds(Math.Pow(2, currentRetry)) +
-                                             TimeSpan.FromMilliseconds(jitter.Next(0, 1000));
-
-                            _logger.Here().Debug("Retrying {@CurrentRetry} {@RetryDelay}", currentRetry, retryDelay);
-
-                            if (retryDelay.Minutes * 60 + retryDelay.Seconds < 60)
-                            {
-                                await Task.Delay(retryDelay);
-                                continue;
-                            }
-
-                            var rolledBack = RollBackTransaction(sessionId, walletTransaction.Transaction.Id);
-                            if (!rolledBack.Success)
-                            {
-                                _logger.Here().Error(rolledBack.Exception.Message);
-                            }
-
-                            if (index == count)
-                            {
+                                _logger.Here().Error(ex, "Error syncing wallet");
                                 _resetEvent.Set();
+                                break;
                             }
-
-                            break;
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.Here().Error(ex, "Error syncing wallet");
-                            _resetEvent.Set();
-                            break;
                         }
                     }
-                }
-            });
-            _resetEvent.WaitOne();
+                });
+                _resetEvent.WaitOne();
+            }
         }
 
         /// <summary>
