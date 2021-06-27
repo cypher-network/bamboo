@@ -8,7 +8,9 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
+using BAMWallet.Model;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Serilog;
@@ -19,52 +21,87 @@ namespace Cli
 {
     public static class Program
     {
+        public const string AppSettingsFile = "appsettings.json";
+        private const string AppSettingsFileDev = "appsettings.Development.json";
+
         public static async Task<int> Main(string[] args)
         {
+            var basePath = AppDomain.CurrentDomain.BaseDirectory;
+            var appsettingsExists = File.Exists(Path.Combine(basePath, AppSettingsFile));
+
+            if (args.FirstOrDefault(arg => arg == "--configure") != null)
+            {
+                if (appsettingsExists)
+                {
+                    // Do not return an error; this check is part of the application installation process
+                    Console.WriteLine($"{AppSettingsFile} already exists. Please remove file before running configuration again");
+                    return 0;
+                }
+
+                // TODO: Add configuration wizard for wallet
+                return 0;
+            }
+
+            if (!appsettingsExists)
+            {
+                Console.Error.WriteLine($"{AppSettingsFile} not found. Please create one running 'clibamwallet --configure'");
+                return 1;
+            }
+
+            var config = new ConfigurationBuilder()
+
+                .SetBasePath(basePath)
+                .AddJsonFile(AppSettingsFile, false)
+                .AddJsonFile(AppSettingsFileDev, true)
+                .AddCommandLine(args)
+                .Build();
+
+            const string logSectionName = "Log";
+            if (config.GetSection(logSectionName) != null)
+            {
+                Log.Logger = new LoggerConfiguration()
+                    .ReadFrom.Configuration(config, logSectionName)
+                    .CreateLogger();
+            }
+            else
+            {
+                throw new Exception(string.Format($"No \"{@logSectionName}\" section found in appsettings.json", logSectionName));
+            }
+
             try
             {
-                var config = new ConfigurationBuilder()
-                    .SetBasePath(Directory.GetCurrentDirectory())
-                    .AddJsonFile("appsettings.json", false)
-                    .AddCommandLine(args)
-                    .Build();
-
-                Log.Logger = new LoggerConfiguration()
-                    .MinimumLevel.Debug()
-                    .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
-                    .Enrich.FromLogContext()
-                    .WriteTo.File("Bamboo.log", rollingInterval: RollingInterval.Day)
-                    .CreateLogger();
-
                 Log.Information("Starting host");
                 Log.Information($"Version: {BAMWallet.Helper.Util.GetAssemblyVersion()}");
-
-
                 var builder = CreateWebHostBuilder(args, config);
                 builder.UseConsoleLifetime();
 
                 using var host = builder.Build();
                 await host.RunAsync();
                 await host.WaitForShutdownAsync();
-
-                return 0;
             }
             catch (Exception ex)
             {
                 Log.Fatal(ex, "Host terminated unexpectedly");
-
                 return 1;
             }
             finally
             {
                 Log.CloseAndFlush();
             }
+
+            return 0;
         }
 
-        private static IHostBuilder CreateWebHostBuilder(string[] args, IConfigurationRoot configurationRoot) => Host
-            .CreateDefaultBuilder(args).ConfigureWebHostDefaults(webBuilder =>
-            {
-                webBuilder.UseStartup<Startup>().UseSerilog();
-            });
+        private static IHostBuilder CreateWebHostBuilder(string[] args, IConfigurationRoot configurationRoot) =>
+            Host.CreateDefaultBuilder(args)
+                .ConfigureWebHostDefaults(webBuilder =>
+                {
+                    NetworkSettings networkSettings = new();
+                    configurationRoot.Bind("NetworkSettings", networkSettings);
+
+                    webBuilder.UseStartup<Startup>()
+                        .UseUrls(networkSettings.Advertise)
+                        .UseSerilog();
+                });
     }
 }

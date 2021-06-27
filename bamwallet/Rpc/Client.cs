@@ -6,18 +6,15 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Mime;
-using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
-using BAMWallet.HD;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
+using BAMWallet.Extensions;
 using Newtonsoft.Json.Linq;
 using MessagePack;
 using Dawn;
 using BAMWallet.Model;
-using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
+using Serilog;
 
 namespace BAMWallet.Rpc
 {
@@ -29,7 +26,7 @@ namespace BAMWallet.Rpc
         public Client(NetworkSettings networkSettings, ILogger logger)
         {
             _networkSettings = networkSettings;
-            _logger = logger;
+            _logger = logger.ForContext("SourceContext", nameof(Client));
         }
 
         /// <summary>
@@ -69,12 +66,12 @@ namespace BAMWallet.Rpc
                 }
 
                 var content = await response.Content.ReadAsStringAsync(cancellationToken);
-                _logger.LogError($"Result: {content}\n StatusCode: {(int)response.StatusCode}");
+                _logger.Here().Error("Result: {@Content}\n StatusCode: {@StatusCode}", content, response.StatusCode);
                 return new GenericResponse<T> { Data = null, HttpStatusCode = response.StatusCode };
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Message: {ex.Message}\n Stack: {ex.StackTrace}");
+                _logger.Here().Error(ex, "Error while communicating with client");
                 return new GenericResponse<T> { Data = null, HttpStatusCode = HttpStatusCode.ServiceUnavailable };
             }
         }
@@ -103,12 +100,12 @@ namespace BAMWallet.Rpc
                 }
 
                 var content = await response.Content.ReadAsStringAsync(cancellationToken);
-                _logger.LogError($"Result: {content}\n StatusCode: {(int)response.StatusCode}");
+                _logger.Here().Error("Result: {@Content}\n StatusCode: {@StatusCode}", content, response.StatusCode);
                 return null;
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Message: {ex.Message}\n Stack: {ex.StackTrace}");
+                _logger.Here().Error(ex, "Error getting block height");
                 return null;
             }
         }
@@ -122,7 +119,7 @@ namespace BAMWallet.Rpc
             var uriString = _networkSettings.RemoteNode;
             if (string.IsNullOrEmpty(uriString))
             {
-                _logger.LogError("Remote node address not set in config");
+                _logger.Here().Error("Remote node address not set in config");
             }
             else
             {
@@ -133,7 +130,8 @@ namespace BAMWallet.Rpc
                         return baseAddress;
                     }
 
-                    _logger.LogError($"Invalid URI scheme '{baseAddress.Scheme}' in '{uriString}'");
+                    _logger.Here().Error("Invalid URI scheme '{@Scheme}' in '{@UriString}'",
+                        baseAddress.Scheme, uriString);
                 }
             }
 
@@ -181,13 +179,14 @@ namespace BAMWallet.Rpc
                 else
                 {
                     var content = await response.Content.ReadAsStringAsync(cancellationToken);
-                    _logger.LogError($"Result: {content}\n StatusCode: {(int)response.StatusCode}");
+                    _logger.Here().Error("Result: {@Content}\n StatusCode: {@StatusCode}",
+                        content, response.StatusCode);
                     throw new Exception(content);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Message: {ex.Message}\n Stack: {ex.StackTrace}");
+                _logger.Here().Error(ex, "Error getting range");
             }
 
             return results;
@@ -219,12 +218,13 @@ namespace BAMWallet.Rpc
                 var _ = response.Content.ReadAsStringAsync(cancellationToken).Result;
                 if (response.IsSuccessStatusCode) return HttpStatusCode.OK;
                 var content = await response.Content.ReadAsStringAsync(cancellationToken);
-                _logger.LogError($"Result: {content}\n StatusCode: {(int)response.StatusCode}");
+                _logger.Here().Error("Result: {@Content}\n StatusCode: {@StatusCode}",
+                    content, response.StatusCode);
                 return response.StatusCode;
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Message: {ex.Message}\n Stack: {ex.StackTrace}");
+                _logger.Error(ex, "Error POSTing data to client");
             }
 
             return HttpStatusCode.ServiceUnavailable;

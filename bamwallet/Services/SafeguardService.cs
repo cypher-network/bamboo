@@ -6,13 +6,14 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BAMWallet.Extensions;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using BAMWallet.Rpc;
 using BAMWallet.Helper;
 using BAMWallet.Model;
 using MessagePack;
 using Microsoft.Extensions.Options;
+using Serilog;
 
 namespace BAMWallet.Services
 {
@@ -23,11 +24,11 @@ namespace BAMWallet.Services
         private readonly Client _client;
         private readonly ILogger _logger;
 
-        public SafeguardService(ISafeguardDownloadingFlagProvider safeguardDownloadingFlagService, IOptions<NetworkSettings> networkSettings, ILogger<SafeguardService> logger)
+        public SafeguardService(ISafeguardDownloadingFlagProvider safeguardDownloadingFlagService, IOptions<NetworkSettings> networkSettings, ILogger logger)
         {
             _safeguardDownloadingFlagService = safeguardDownloadingFlagService;
             _networkSettings = networkSettings.Value;
-            _logger = logger;
+            _logger = logger.ForContext("SourceContext", nameof(SafeguardService));
 
             _client = new Client(networkSettings.Value, _logger);
         }
@@ -91,7 +92,7 @@ namespace BAMWallet.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError($"<<< SafeguardService.ExecuteAsync >>>: {ex}");
+                _logger.Here().Error(ex, "SafeGuardService execution error");
             }
             finally
             {

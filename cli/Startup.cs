@@ -8,9 +8,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Serilog;
-using Serilog.Extensions.Logging;
 
 namespace Cli
 {
@@ -44,7 +42,7 @@ namespace Cli
                 .AddSingleton<ICommandService, CommandService>()
                 .AddSingleton<IHostedService, BAMWallet.Rpc.SelfHosted>()
                 .AddSingleton<IHostedService, CommandService>(sp => sp.GetService<ICommandService>() as CommandService)
-                .AddLogging(config => { config.ClearProviders().AddProvider(new SerilogLoggerProvider(Log.Logger)); })
+                .AddSingleton(Log.Logger)
                 .Add(new ServiceDescriptor(typeof(IConsole), PhysicalConsole.Singleton));
         }
 

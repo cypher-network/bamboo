@@ -11,7 +11,6 @@ using System.Collections.Concurrent;
 using System.Net;
 using System.Threading;
 using BAMWallet.Extensions;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using Dawn;
 using NBitcoin;
@@ -25,6 +24,7 @@ using BAMWallet.Rpc;
 using BAMWallet.Services;
 using Libsecp256k1Zkp.Net;
 using Microsoft.Extensions.Options;
+using Serilog;
 
 namespace BAMWallet.HD
 {
@@ -42,12 +42,12 @@ namespace BAMWallet.HD
         private readonly NetworkSettings _networkSettings;
         private ConcurrentDictionary<Guid, Session> Sessions { get; }
 
-        public WalletService(ISafeguardDownloadingFlagProvider safeguardDownloadingFlagProvider, IOptions<NetworkSettings> networkSettings, ILogger<WalletService> logger)
+        public WalletService(ISafeguardDownloadingFlagProvider safeguardDownloadingFlagProvider, IOptions<NetworkSettings> networkSettings, ILogger logger)
         {
             _safeguardDownloadingFlagProvider = safeguardDownloadingFlagProvider;
             _networkSettings = networkSettings.Value;
             _network = _networkSettings.Environment == Constant.Mainnet ? NBitcoin.Network.Main : NBitcoin.Network.TestNet;
-            _logger = logger;
+            _logger = logger.ForContext("SourceContext", nameof(WalletService));
             _client = new Client(networkSettings.Value, _logger);
 
             Sessions = new ConcurrentDictionary<Guid, Session>();
@@ -127,7 +127,7 @@ namespace BAMWallet.HD
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex.Message);
+                _logger.Here().Error(ex, "Error adding key set");
                 throw new Exception(ex.Message);
             }
         }
@@ -194,7 +194,7 @@ namespace BAMWallet.HD
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex.Message);
+                _logger.Here().Error(ex, "Error creating wallet");
                 throw new Exception("Failed to create wallet.");
             }
             finally
@@ -272,7 +272,7 @@ namespace BAMWallet.HD
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex.Message);
+                _logger.Here().Error(ex, "Error getting wallet list");
                 return TaskResult<IEnumerable<string>>.CreateFailure(ex);
             }
 
@@ -312,7 +312,7 @@ namespace BAMWallet.HD
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex.Message);
+                _logger.Here().Error(ex, "Error getting addresses");
                 return TaskResult<IEnumerable<string>>.CreateFailure(ex);
             }
 
@@ -397,7 +397,7 @@ namespace BAMWallet.HD
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex.Message);
+                _logger.Error(ex, "Error calculating change");
                 return TaskResult<bool>.CreateFailure(ex);
             }
 
@@ -436,7 +436,7 @@ namespace BAMWallet.HD
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex.Message);
+                _logger.Here().Error(ex, "Error adding balances");
             }
 
             return balances.DistinctBy(x => x.Total).ToList();
@@ -999,7 +999,7 @@ namespace BAMWallet.HD
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex.Message);
+                _logger.Here().Error(ex, "Error getting history");
                 return TaskResult<BalanceSheet[]>.CreateFailure(ex.Message);
             }
 
@@ -1152,7 +1152,7 @@ namespace BAMWallet.HD
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex.Message);
+                _logger.Here().Error(ex, "Error getting next key set");
             }
 
             return keySet;
@@ -1272,7 +1272,7 @@ namespace BAMWallet.HD
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Message: {ex.Message}\n Stack: {ex.StackTrace}");
+                _logger.Here().Error(ex, "Error receiving payment");
                 var message = ex.Message;
                 if (ex is UriFormatException)
                 {
@@ -1339,7 +1339,7 @@ namespace BAMWallet.HD
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Message: {ex.Message}\n Stack: {ex.StackTrace}");
+                _logger.Here().Error(ex, "Error sending transaction");
                 var message = ex.Message;
                 if (ex is UriFormatException)
                 {
@@ -1372,6 +1372,7 @@ namespace BAMWallet.HD
                     var jitter = new Random();
                     for (; ; )
                     {
+                        _logger.Here().Debug("Syncing wallet");
                         try
                         {
                             var baseAddress = _client.GetBaseAddress();
@@ -1418,6 +1419,8 @@ namespace BAMWallet.HD
                             var retryDelay = TimeSpan.FromSeconds(Math.Pow(2, currentRetry)) +
                                              TimeSpan.FromMilliseconds(jitter.Next(0, 1000));
 
+                            _logger.Here().Debug("Retrying {@CurrentRetry} {@RetryDelay}", currentRetry, retryDelay);
+
                             if (retryDelay.Minutes * 60 + retryDelay.Seconds < 60)
                             {
                                 await Task.Delay(retryDelay);
@@ -1427,7 +1430,7 @@ namespace BAMWallet.HD
                             var rolledBack = RollBackTransaction(sessionId, walletTransaction.Transaction.Id);
                             if (!rolledBack.Success)
                             {
-                                _logger.LogError(rolledBack.Exception.Message);
+                                _logger.Here().Error(rolledBack.Exception.Message);
                             }
 
                             if (index == count)
@@ -1439,7 +1442,7 @@ namespace BAMWallet.HD
                         }
                         catch (Exception ex)
                         {
-                            _logger.LogError(ex.Message);
+                            _logger.Here().Error(ex, "Error syncing wallet");
                             _resetEvent.Set();
                             break;
                         }
@@ -1471,7 +1474,7 @@ namespace BAMWallet.HD
                         if (!dropped)
                         {
                             var message = $"Unable to drop collection for {nameof(WalletTransaction)}";
-                            _logger.LogError(message);
+                            _logger.Here().Error(message);
                             return TaskResult<bool>.CreateFailure(new Exception(message));
                         }
                     }
@@ -1535,7 +1538,7 @@ namespace BAMWallet.HD
                             var saved = Save(session.SessionId, session.WalletTransaction);
                             if (!saved.Success)
                             {
-                                _logger.LogError($"Unable to save transaction: {transaction.TxnId.ByteToHex()}");
+                                _logger.Here().Error("Unable to save transaction: {@Transaction}", transaction.TxnId.ByteToHex());
                             }
 
                             session = SessionAddOrUpdate(new Session(session.Identifier, session.Passphrase));
@@ -1549,7 +1552,7 @@ namespace BAMWallet.HD
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex.Message);
+                _logger.Here().Error(ex, "Error recovering transactions");
                 return TaskResult<bool>.CreateSuccess(false);
             }
         }
@@ -1576,7 +1579,7 @@ namespace BAMWallet.HD
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Message: {ex.Message}\n Stack: {ex.StackTrace}");
+                _logger.Here().Error(ex, "Error unlocking");
             }
 
             return (spend, scan);
@@ -1600,7 +1603,7 @@ namespace BAMWallet.HD
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex.Message);
+                _logger.Here().Error(ex, "Error saving");
                 return TaskResult<bool>.CreateFailure(ex);
             }
 
@@ -1629,7 +1632,7 @@ namespace BAMWallet.HD
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex.Message);
+                _logger.Here().Error(ex, "Error rolling back transaction");
                 TaskResult<bool>.CreateFailure(ex);
             }
 
@@ -1701,7 +1704,7 @@ namespace BAMWallet.HD
             if (obj.Exception == null)
             {
                 session.LastError = obj.NonSuccessMessage;
-                _logger.LogError($"{obj.NonSuccessMessage.message}");
+                _logger.Here().Error("Last session error: {@Error}", obj.NonSuccessMessage.message);
             }
             else
             {
@@ -1711,7 +1714,7 @@ namespace BAMWallet.HD
                     message = obj.Exception.Message
                 });
 
-                _logger.LogError(obj.Exception.Message);
+                _logger.Here().Error("Last session error: {@Error}", obj.Exception.Message);
             }
 
             SessionAddOrUpdate(session);
