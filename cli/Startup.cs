@@ -1,5 +1,7 @@
+using System;
 using BAMWallet.HD;
 using BAMWallet.Model;
+using BAMWallet.Rpc;
 using BAMWallet.Services;
 using CLi.ApplicationLayer.Commands;
 using McMaster.Extensions.CommandLineUtils;
@@ -8,6 +10,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using Serilog;
 
 namespace Cli
@@ -35,14 +38,26 @@ namespace Cli
         /// <param name="services"></param>
         public void ConfigureServices(IServiceCollection services)
         {
+            var ranAsWebServer = Convert.ToBoolean(Configuration["NetworkSettings:RunAsWebServer"]);
             services.AddOptions()
                 .Configure<NetworkSettings>(options => Configuration.GetSection("NetworkSettings").Bind(options))
+                .AddSingleton(Log.Logger);
+            
+            if (ranAsWebServer)
+            {
+                services.AddSingleton<IHostedService, SelfHosted>(sp =>
+                {
+                    var selfHosted = new SelfHosted(sp.GetService<IOptions<NetworkSettings>>());
+
+                    return selfHosted;
+                });
+            }
+            
+            services
                 .AddSingleton<ISafeguardDownloadingFlagProvider, SafeguardDownloadingFlagProvider>()
                 .AddHostedService<SafeguardService>().AddSingleton<IWalletService, WalletService>()
                 .AddSingleton<ICommandService, CommandService>()
-                .AddSingleton<IHostedService, BAMWallet.Rpc.SelfHosted>()
                 .AddSingleton<IHostedService, CommandService>(sp => sp.GetService<ICommandService>() as CommandService)
-                .AddSingleton(Log.Logger)
                 .Add(new ServiceDescriptor(typeof(IConsole), PhysicalConsole.Singleton));
         }
 
