@@ -39,11 +39,10 @@ namespace BAMWallet.HD
         Task<TaskResult<bool>> Send(Guid sessionId);
         Task<TaskResult<WalletTransaction>> ReceivePayment(Guid sessionId, string paymentId);
         TaskResult<WalletTransaction> CreateTransaction(Guid sessionId);
-        ulong Fee(int nByte);
         PubKey ScanPublicKey(string address);
         Transaction GetTransaction(Guid sessionId);
         byte[] GetKeyImage(Guid sessionId, Vout output);
-        TaskResult<bool> RollBackTransaction(Guid sessionId, Guid id);
+        TaskResult<bool> RollBackTransaction(Session session, Guid id);
         Task SyncWallet(Guid sessionId, int n = 3);
         Task<TaskResult<bool>> RecoverTransactions(Guid sessionId, int start);
     }

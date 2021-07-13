@@ -11,7 +11,6 @@ namespace BAMWallet.Model
         public ulong Balance { get; set; }
         public ulong Change { get; set; }
         public DateTime DateTime { get; set; }
-        public ulong Fee { get; set; }
         [BsonId]
         public Guid Id { get; set; }
         public string Memo { get; set; }
@@ -23,5 +22,6 @@ namespace BAMWallet.Model
         public Vout Spending { get; set; }
         public Transaction Transaction { get; set; }
         public WalletType WalletType { get; set; }
+        public int Delay { get; set; }
     }
 }

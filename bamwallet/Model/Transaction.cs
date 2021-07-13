@@ -22,25 +22,24 @@ namespace BAMWallet.Model
         [Key(4)] public Vin[] Vin { get; set; }
         [Key(5)] public Vout[] Vout { get; set; }
         [Key(6)] public RCT[] Rct { get; set; }
-
+        [Key(7)] public Vtime Vtime { get; set; }
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
         public byte[] ToHash()
         {
-            return Hasher.Hash(Stream()).HexToByte();
+            return Hasher.Hash(ToStream()).HexToByte();
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        public byte[] Stream()
+        public byte[] ToStream()
         {
             using var ts = new TangramStream();
             ts
-                .Append(TxnId ?? Array.Empty<byte>())
                 .Append(Mix)
                 .Append(Ver);
 
@@ -75,6 +74,17 @@ namespace BAMWallet.Model
                     .Append(rct.M)
                     .Append(rct.P)
                     .Append(rct.S);
+            }
+
+            if (Vtime != null)
+            {
+                ts
+                    .Append(Vtime.I)
+                    .Append(Vtime.L)
+                    .Append(Vtime.M)
+                    .Append(Vtime.N)
+                    .Append(Vtime.S)
+                    .Append(Vtime.W);
             }
 
             return ts.ToArray();

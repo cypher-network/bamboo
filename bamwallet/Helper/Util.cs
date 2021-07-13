@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
+using System.Numerics;
 using System.Reflection;
 using System.Security;
 using LiteDB;
@@ -79,6 +80,32 @@ namespace BAMWallet.Helper
 
             input.CopyTo(ms);
             return ms.ToArray();
+        }
+        
+        public static BigInteger Mod(BigInteger a, BigInteger n)
+        {
+            var result = a % n;
+            if (result < 0 && n > 0 || result > 0 && n < 0)
+            {
+                result += n;
+            }
+
+            return result;
+        }
+        
+        public static DateTime GetUtcNow()
+        {
+            return DateTime.UtcNow;
+        }
+        
+        public static DateTime GetAdjustedTime()
+        {
+            return GetUtcNow().Add(TimeSpan.Zero);
+        }
+
+        public static long GetAdjustedTimeAsUnixTimestamp()
+        {
+            return new DateTimeOffset(GetAdjustedTime()).ToUnixTimeSeconds();
         }
     }
 }

@@ -150,9 +150,9 @@ namespace BAMWallet.Rpc.Controllers
                     SessionType = payment.SessionType,
                     WalletTransaction = new WalletTransaction
                     {
-                        Fee = payment.SessionType == SessionType.Coin ? payment.Fee : 0,
+                        Delay = 5,
                         Payment = payment.Amount,
-                        Reward = payment.SessionType == SessionType.Coinstake ? payment.Fee : 0,
+                        Reward = payment.SessionType == SessionType.Coinstake ? payment.Reward : 0,
                         Memo = payment.Memo,
                         RecipientAddress = payment.Address,
                         WalletType = WalletType.Send

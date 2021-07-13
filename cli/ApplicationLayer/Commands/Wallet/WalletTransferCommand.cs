@@ -47,7 +47,8 @@ namespace CLi.ApplicationLayer.Commands.Wallet
             var address = Prompt.GetString("Address:", null, ConsoleColor.Red);
             var amount = Prompt.GetString("Amount:", null, ConsoleColor.Red);
             var memo = Prompt.GetString("Memo:", null, ConsoleColor.Green);
-
+            var delay = Prompt.GetInt("Higher value ≈ faster transaction:", 5, ConsoleColor.Magenta);
+            
             if (decimal.TryParse(amount, out var t))
             {
                 await Spinner.StartAsync("Processing payment ...", async spinner =>
@@ -64,7 +65,8 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                                 Memo = memo,
                                 Payment = t.ConvertToUInt64(),
                                 RecipientAddress = address,
-                                WalletType = WalletType.Send
+                                WalletType = WalletType.Send,
+                                Delay = delay
                             }
                         });
 
