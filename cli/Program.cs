@@ -7,6 +7,7 @@
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
 
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -44,12 +45,11 @@ namespace Cli
 
             if (!appsettingsExists)
             {
-                Console.Error.WriteLine($"{AppSettingsFile} not found. Please create one running 'clibamwallet --configure'");
+                await Console.Error.WriteLineAsync($"{AppSettingsFile} not found. Please create one running 'clibamwallet --configure'");
                 return 1;
             }
 
             var config = new ConfigurationBuilder()
-
                 .SetBasePath(basePath)
                 .AddJsonFile(AppSettingsFile, false)
                 .AddJsonFile(AppSettingsFileDev, true)
@@ -70,7 +70,7 @@ namespace Cli
 
             try
             {
-                Log.Information("Starting host");
+                Log.Information("Starting wallet");
                 Log.Information($"Version: {BAMWallet.Helper.Util.GetAssemblyVersion()}");
                 var builder = CreateWebHostBuilder(args, config);
                 builder.UseConsoleLifetime();
@@ -92,15 +92,14 @@ namespace Cli
             return 0;
         }
 
-        private static IHostBuilder CreateWebHostBuilder(string[] args, IConfigurationRoot configurationRoot) =>
+        private static IHostBuilder CreateWebHostBuilder(string[] args, IConfiguration configuration) =>
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    NetworkSettings networkSettings = new();
-                    configurationRoot.Bind("NetworkSettings", networkSettings);
-
-                    webBuilder.UseStartup<Startup>()
-                        .UseUrls(networkSettings.Advertise)
+                    var listening = configuration["NetworkSettings:Listening"];
+                    webBuilder
+                        .UseStartup<Startup>()
+                        .UseUrls(listening)
                         .UseSerilog();
                 });
     }
