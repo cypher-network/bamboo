@@ -1617,16 +1617,15 @@ namespace BAMWallet.HD
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="sessionId"></param>
+        /// <param name="session"></param>
         /// <param name="id"></param>
         /// <returns></returns>
-        public TaskResult<bool> RollBackTransaction(Guid sessionId, Guid id)
+        public TaskResult<bool> RollBackTransaction(Session session, Guid id)
         {
-            Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
+            Guard.Argument(session, nameof(session)).NotNull();
             Guard.Argument(id, nameof(id)).NotDefault();
             try
             {
-                var session = Session(sessionId).EnforceDbExists();
                 var walletTransaction = session.Database.Query<WalletTransaction>()
                     .Where(s => s.Id == id).FirstOrDefault();
                 if (walletTransaction != null)
@@ -1637,7 +1636,7 @@ namespace BAMWallet.HD
             catch (Exception ex)
             {
                 _logger.Here().Error(ex, "Error rolling back transaction");
-                TaskResult<bool>.CreateFailure(ex);
+                return TaskResult<bool>.CreateFailure(ex);
             }
 
             return TaskResult<bool>.CreateSuccess(true);
