@@ -12,6 +12,7 @@ namespace BAMWallet.Model
         Fee = 4,
         Genesis = 5,
         Payment = 6,
-        Change = 7
+        Change = 7,
+        Timebase = 8
     }
 }

@@ -2,22 +2,20 @@
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
 using System;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.AspNetCore;
-
 using BAMWallet.HD;
 using BAMWallet.Model;
 using BAMWallet.Rpc.Formatters;
 using BAMWallet.Services;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Serilog;
 
 namespace BAMWallet.Rpc
 {
@@ -25,13 +23,24 @@ namespace BAMWallet.Rpc
     {
         private class Startup
         {
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <param name="configuration"></param>
             public Startup(IConfiguration configuration)
             {
                 Configuration = configuration;
             }
 
+            /// <summary>
+            /// 
+            /// </summary>
             public IConfiguration Configuration { get; }
 
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <param name="services"></param>
             public void ConfigureServices(IServiceCollection services)
             {
                 services.AddMvcCore()
@@ -63,13 +72,25 @@ namespace BAMWallet.Rpc
                     });
                 });
 
-                services.AddHttpContextAccessor().AddOptions()
+                services
+                    .AddHttpContextAccessor()
+                    .AddOptions()
+                    .AddSingleton(Log.Logger)
                     .Configure<NetworkSettings>(options => Configuration.GetSection("NetworkSettings").Bind(options))
                     .AddSingleton<ISafeguardDownloadingFlagProvider, SafeguardDownloadingFlagProvider>()
                     .AddHostedService<SafeguardService>()
                     .AddSingleton<IWalletService, WalletService>();
+
+                services.AddLogging(loggingBuilder =>
+                {
+                    loggingBuilder.ClearProviders();
+                });
             }
 
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <param name="app"></param>
             public void Configure(IApplicationBuilder app)
             {
                 var pathBase = Configuration["PATH_BASE"];
@@ -96,23 +117,42 @@ namespace BAMWallet.Rpc
 
         private readonly NetworkSettings _networkSettings;
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="networkSettings"></param>
         public SelfHosted(IOptions<NetworkSettings> networkSettings)
         {
             _networkSettings = networkSettings.Value;
         }
 
-        protected override Task ExecuteAsync(CancellationToken stoppingToken)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="stoppingToken"></param>
+        /// <returns></returns>
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            if (_networkSettings.RunAsWebServer)
-            {
-                WebHost.CreateDefaultBuilder()
-                    .UseKestrel()
-                    .UseContentRoot(Directory.GetCurrentDirectory())
-                    .UseUrls(_networkSettings.Advertise)
-                    .UseStartup<Startup>()
-                    .Build().RunAsync(stoppingToken);
-            }
-            return Task.CompletedTask;
+            var builder = CreateWebHostBuilder();
+            using var host = builder.Build();
+            await host.RunAsync(token: stoppingToken);
+            await host.WaitForShutdownAsync(token: stoppingToken);
         }
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        private IHostBuilder CreateWebHostBuilder() =>
+            Host.CreateDefaultBuilder(null)
+                .ConfigureLogging(logging =>
+                {
+                    logging.ClearProviders();
+                })
+                .ConfigureWebHostDefaults(webBuilder =>
+                {
+                    webBuilder.UseStartup<Startup>()
+                        .UseUrls(_networkSettings.Advertise);
+                });
     }
 }

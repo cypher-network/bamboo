@@ -123,16 +123,14 @@ namespace BAMWallet.Rpc
             }
             else
             {
-                if (Uri.TryCreate(uriString, UriKind.Absolute, out var baseAddress))
+                if (!Uri.TryCreate(uriString, UriKind.Absolute, out var baseAddress)) return null;
+                if (baseAddress.Scheme == Uri.UriSchemeHttp)
                 {
-                    if (baseAddress.Scheme == Uri.UriSchemeHttp)
-                    {
-                        return baseAddress;
-                    }
-
-                    _logger.Here().Error("Invalid URI scheme '{@Scheme}' in '{@UriString}'",
-                        baseAddress.Scheme, uriString);
+                    return baseAddress;
                 }
+
+                _logger.Here().Error("Invalid URI scheme '{@Scheme}' in '{@UriString}'",
+                    baseAddress.Scheme, uriString);
             }
 
             return null;
@@ -167,14 +165,16 @@ namespace BAMWallet.Rpc
             try
             {
                 using var request = new HttpRequestMessage(HttpMethod.Get, path);
-                using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+                using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead,
+                    cancellationToken);
                 if (response.IsSuccessStatusCode)
                 {
                     var read = response.Content.ReadAsStringAsync(cancellationToken).Result;
                     var jObject = JObject.Parse(read);
                     var jToken = jObject.GetValue("messagepack");
                     var byteArray = Convert.FromBase64String(jToken.Value<string>());
-                    results = MessagePackSerializer.Deserialize<GenericList<T>>(byteArray, cancellationToken: cancellationToken);
+                    results = MessagePackSerializer.Deserialize<GenericList<T>>(byteArray,
+                        cancellationToken: cancellationToken);
                 }
                 else
                 {
@@ -183,6 +183,10 @@ namespace BAMWallet.Rpc
                         content, response.StatusCode);
                     throw new Exception(content);
                 }
+            }
+            catch (TaskCanceledException)
+            {
+                
             }
             catch (Exception ex)
             {
