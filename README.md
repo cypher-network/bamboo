@@ -9,7 +9,7 @@
 
 For quick installation on Linux and macOS, execute the following command:
 
-`bash <(curl -sSL https://raw.githubusercontent.com/cypher-network/bamboo/master/install/install.sh)`
+`bash <(curl -sSL https://tangrams.io/bamboo/install.sh)`
 
 The following parameters can be supplied:
 
@@ -22,7 +22,7 @@ Uninstall wallet
   
 For example:
 
-`bash <(curl -sSL https://raw.githubusercontent.com/cypher-network/bamboo/master/install/install.sh) --uninstall`
+`bash <(curl -sSL https://tangrams.io/bamboo/install.sh) --uninstall`
 
 
 ## Contribution
