@@ -79,6 +79,7 @@ namespace BAMWallet.HD
 
                 try
                 {
+                    existingVal.Syncing = session.Syncing;
                     existingVal.WalletTransaction.Balance = session.WalletTransaction.Balance;
                     existingVal.WalletTransaction.Change = session.WalletTransaction.Change;
                     existingVal.WalletTransaction.DateTime = session.WalletTransaction.DateTime;
@@ -317,7 +318,7 @@ namespace BAMWallet.HD
         public TaskResult<bool> CalculateChange(Guid sessionId)
         {
             Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
-        
+
             try
             {
                 var session = Session(sessionId);
@@ -327,7 +328,7 @@ namespace BAMWallet.HD
                 var divisionAmount = session.WalletTransaction.Payment.DivWithNaT();
                 var amount = session.WalletTransaction.Payment.DivWithNaT();
                 var balances = AddBalances(session.SessionId);
-        
+
                 foreach (var balance in balances.OrderByDescending(x => x.Total))
                 {
                     var t = balance.Total.DivWithNaT();
@@ -344,30 +345,29 @@ namespace BAMWallet.HD
                     {
                         // Ignore
                     }
-        
+
                     if (count != 0)
                         for (var k = 0; k < count; k++)
                             multiBalance.Add(balance.Total.DivWithNaT());
                     amount %= t;
                 }
-        
+
                 var useAmount = divisions.Min(x => x.Total);
                 if (useAmount == 0)
                 {
                     return TaskResult<bool>.CreateFailure(new Exception("Multi single transactions are not implemented"));
                 }
-        
+
                 var rem = useAmount.DivWithNaT();
                 var closest = balances.Select(x => x.Total.DivWithNaT())
                     .Aggregate((x, y) => Math.Abs(x - rem) < Math.Abs(y - rem) ? x : y);
                 var tx = balances.First(a => a.Total.DivWithNaT() == closest);
-                var reward = session.SessionType == SessionType.Coinstake ? session.WalletTransaction.Reward : 0;
                 var total = Transaction.Amount(tx.Commitment, scan);
                 if (session.WalletTransaction.Payment > total)
                 {
                     return TaskResult<bool>.CreateFailure(new Exception("The payment exceeds the total commitment balance"));
                 }
-                
+
                 var change = total - session.WalletTransaction.Payment;
 
                 session.WalletTransaction = new WalletTransaction
@@ -378,13 +378,14 @@ namespace BAMWallet.HD
                     Id = session.SessionId,
                     Memo = session.WalletTransaction.Memo,
                     Payment = session.WalletTransaction.Payment,
-                    Reward = reward,
+                    Reward = session.SessionType == SessionType.Coinstake ? session.WalletTransaction.Reward : 0,
                     RecipientAddress = session.WalletTransaction.RecipientAddress,
                     SenderAddress = session.WalletTransaction.SenderAddress,
                     Spending = tx.Commitment,
                     Spent = change == 0,
                     Delay = session.WalletTransaction.Delay
                 };
+
                 SessionAddOrUpdate(session);
             }
             catch (Exception ex)
@@ -392,10 +393,10 @@ namespace BAMWallet.HD
                 _logger.Error(ex, "Error calculating change");
                 return TaskResult<bool>.CreateFailure(ex);
             }
-        
+
             return TaskResult<bool>.CreateSuccess(true);
         }
-        
+
         /// <summary>
         /// 
         /// </summary>
@@ -451,8 +452,6 @@ namespace BAMWallet.HD
             var session = Session(sessionId).EnforceDbExists();
             session.LastError = null;
 
-            SyncWallet(session.SessionId).GetAwaiter().GetResult();
-
             var calculated = CalculateChange(session.SessionId);
             if (!calculated.Success)
             {
@@ -481,13 +480,13 @@ namespace BAMWallet.HD
             var pkIn = new Span<byte[]>(new byte[nCols * 1][]);
 
             m = M(sessionId, blinds, sk, nRows, nCols, index, m, pcmIn, pkIn);
-            
+
             var payment = session.WalletTransaction.Payment;
             var change = session.WalletTransaction.Change;
-            
+
             blinds[1] = pedersen.BlindSwitch(payment, secp256K1.CreatePrivateKey());
             blinds[2] = pedersen.BlindSwitch(change, secp256K1.CreatePrivateKey());
-            
+
             pcmOut[0] = pedersen.Commit(payment, blinds[1]);
             pcmOut[1] = pedersen.Commit(change, blinds[2]);
 
@@ -598,14 +597,13 @@ namespace BAMWallet.HD
                 var (outPkChange, stealthChange) = StealthPayment(session.WalletTransaction.SenderAddress);
 
                 var changeLockTime = new LockTime(Utils.DateTimeToUnixTime(DateTimeOffset.UtcNow.AddMinutes(10)));
-
                 var tx = new Transaction
                 {
-                    Bp = new[] {new Bp {Proof = bp}},
+                    Bp = new[] { new Bp { Proof = bp } },
                     Mix = nCols,
-                    Rct = new[] {new RCT {I = preimage, M = m, P = pc, S = ss}},
+                    Rct = new[] { new RCT { I = preimage, M = m, P = pc, S = ss } },
                     Ver = 0x2,
-                    Vin = new[] {new Vin {Key = new KeyOffsetImage {KImage = ki, KOffsets = offsets}}},
+                    Vin = new[] { new Vin { Key = new KeyOffsetImage { KImage = ki, KOffsets = offsets } } },
                     Vout = new[]
                     {
                         new Vout
@@ -772,11 +770,11 @@ namespace BAMWallet.HD
             byte[] m, Span<byte[]> pcmIn, Span<byte[]> pkIn)
         {
             using var pedersen = new Pedersen();
-        
+
             var session = Session(sessionId);
             var transactions = SafeguardService.GetTransactions().ToArray();
             transactions.Shuffle();
-            
+
             for (var k = 0; k < nRows - 1; ++k)
                 for (var i = 0; i < nCols; ++i)
                 {
@@ -785,26 +783,26 @@ namespace BAMWallet.HD
                         var (spend, scan) = Unlock(session.SessionId);
                         var message = Transaction.Message(session.WalletTransaction.Spending, scan);
                         var oneTimeSpendKey = spend.Uncover(scan, new PubKey(session.WalletTransaction.Spending.E));
-        
+
                         sk[0] = oneTimeSpendKey.ToHex().HexToByte();
                         blinds[0] = message.Blind;
-        
+
                         pcmIn[i + k * nCols] = pedersen.Commit(message.Amount, message.Blind);
                         pkIn[i + k * nCols] = oneTimeSpendKey.PubKey.ToBytes();
-        
+
                         fixed (byte* mm = m, pk = pkIn[i + k * nCols])
                         {
                             Libsecp256k1Zkp.Net.Util.MemCpy(&mm[(i + k * nCols) * 33], pk, 33);
                         }
-        
+
                         continue;
                     }
 
                     transactions[i].Vout.Shuffle();
-                    
+
                     pcmIn[i + k * nCols] = transactions[i].Vout[0].C;
                     pkIn[i + k * nCols] = transactions[i].Vout[0].P;
-        
+
                     fixed (byte* mm = m, pk = pkIn[i + k * nCols])
                     {
                         Libsecp256k1Zkp.Net.Util.MemCpy(&mm[(i + k * nCols) * 33], pk, 33);
@@ -926,8 +924,6 @@ namespace BAMWallet.HD
             Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
 
             var session = Session(sessionId).EnforceDbExists();
-            
-            SyncWallet(session.SessionId).GetAwaiter().GetResult();
 
             var balanceSheets = new List<BalanceSheet>();
             var walletTransactions = session.Database.Query<WalletTransaction>().OrderBy(x => x.DateTime).ToList();
@@ -935,7 +931,7 @@ namespace BAMWallet.HD
             {
                 return TaskResult<BalanceSheet[]>.CreateFailure("Unable to find any wallet transactions");
             }
-            
+
             try
             {
                 var (_, scan) = Unlock(session.SessionId);
@@ -955,7 +951,7 @@ namespace BAMWallet.HD
                                 {
                                     received += messagePayment.Amount;
                                     balanceSheets.Add(MoneyBalanceSheet(messagePayment.Date, messagePayment.Memo, 0,
-                                        messagePayment.Amount, 0, received, payment, transaction.TxnId.ByteToHex())); 
+                                        messagePayment.Amount, 0, received, payment, transaction.TxnId.ByteToHex()));
                                 }
                             }
                         }
@@ -978,10 +974,10 @@ namespace BAMWallet.HD
                             balanceSheets.Add(MoneyBalanceSheet(messageCoinstake.Date, messageCoinstake.Memo,
                                 messageCoinstake.Amount, 0, messageCoinbase.Amount, received, change,
                                 transaction.TxnId.ByteToHex()));
-                                
+
                             continue;
                         }
-                            
+
                         var messageChange = Transaction.Message(change.ElementAt(0), scan);
                         received -= messageChange.Paid;
                         balanceSheets.Add(MoneyBalanceSheet(messageChange.Date, messageChange.Memo,
@@ -1194,16 +1190,14 @@ namespace BAMWallet.HD
 
             try
             {
-                await SyncWallet(session.SessionId);
-
                 if (AlreadyReceivedPayment(paymentId, session, out var taskResult)) return taskResult;
-                
+
                 var baseAddress = _client.GetBaseAddress();
                 if (baseAddress == null)
                 {
                     throw new Exception("Cannot get base address");
                 }
-                
+
                 var path = string.Format(_networkSettings.Routing.TransactionId, paymentId);
                 var genericResponse = await _client.GetAsync<Transaction>(baseAddress, path,
                     new CancellationToken());
@@ -1221,7 +1215,7 @@ namespace BAMWallet.HD
                     SetLastError(session, output);
                     return output;
                 }
-                
+
                 var (spend, scan) = Unlock(session.SessionId);
                 var outputs = (from v in genericResponse.Data.Vout
                                let uncover = spend.Uncover(scan, new PubKey(v.E))
@@ -1246,7 +1240,7 @@ namespace BAMWallet.HD
                         Mix = genericResponse.Data.Mix,
                         Rct = genericResponse.Data.Rct,
                         TxnId = genericResponse.Data.TxnId,
-                        Vtime =  genericResponse.Data.Vtime,
+                        Vtime = genericResponse.Data.Vtime,
                         Vout = outputs.ToArray(),
                         Vin = genericResponse.Data.Vin,
                         Ver = genericResponse.Data.Ver
@@ -1365,7 +1359,7 @@ namespace BAMWallet.HD
                         var count = walletTransactions.Length == 0 ? 0 : walletTransactions.Length - 1;
                         var currentRetry = 0;
                         var jitter = new Random();
-                        for (;;)
+                        for (; ; )
                         {
                             _logger.Here().Debug("Syncing wallet");
                             try
@@ -1405,7 +1399,7 @@ namespace BAMWallet.HD
                                     break;
                                 }
 
-                                NotFound:
+                            NotFound:
                                 currentRetry++;
                                 var retryDelay = TimeSpan.FromSeconds(Math.Pow(2, currentRetry)) +
                                                  TimeSpan.FromMilliseconds(jitter.Next(0, 1000));
@@ -1418,7 +1412,7 @@ namespace BAMWallet.HD
                                     await Task.Delay(retryDelay);
                                     continue;
                                 }
-                                
+
                                 var rolledBack = RollBackTransaction(session, walletTransaction.Transaction.Id);
                                 if (!rolledBack.Success)
                                 {

@@ -22,6 +22,7 @@ namespace BAMWallet.HD
         public SessionType SessionType { get; set; }
         public WalletTransaction WalletTransaction { get; set; }
         public LiteRepository Database { get; set; }
+        public bool Syncing { get; set; }
 
         private bool DbExists => File.Exists(Util.WalletPath(Identifier.ToUnSecureString()));
 

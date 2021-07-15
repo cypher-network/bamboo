@@ -42,43 +42,47 @@ namespace CLi.ApplicationLayer.Commands.Wallet
             {
                 var session = _walletService.SessionAddOrUpdate(new Session(identifier, passphrase));
 
-                await Spinner.StartAsync("Looking up history ...", spinner =>
-               {
-                   var request = _walletService.History(session.SessionId);
+                await Spinner.StartAsync("Looking up history ...", async spinner =>
+                {
+                    await _walletService.SyncWallet(session.SessionId);
 
-                   if (!request.Success)
-                   {
-                       _console.ForegroundColor = ConsoleColor.Red;
-                       _console.WriteLine("\nWallet history request failed.");
+                    var request = _walletService.History(session.SessionId);
 
-                       if (request.NonSuccessMessage != null)
-                       {
-                           _console.WriteLine($"{request.NonSuccessMessage}");
-                       }
-                       _console.ForegroundColor = ConsoleColor.White;
-                       return Task.CompletedTask;
-                   }
+                    if (!request.Success)
+                    {
+                        _console.ForegroundColor = ConsoleColor.Red;
+                        _console.WriteLine("\nWallet history request failed.");
 
-                   if (!request.Result.Any())
-                   {
-                       NoTxn();
-                       return Task.CompletedTask;
-                   }
+                        if (request.NonSuccessMessage != null)
+                        {
+                            _console.WriteLine($"{request.NonSuccessMessage}");
+                        }
 
-                   var table = new ConsoleTable("DateTime", "Payment Id", "Memo", "Money In", "Money Out", "Reward", "Balance");
+                        _console.ForegroundColor = ConsoleColor.White;
+                        return Task.CompletedTask;
+                    }
 
-                   foreach (var sheet in request.Result)
-                   {
-                       table.AddRow(sheet.Date, sheet.TxId, sheet.Memo, sheet.MoneyIn, sheet.MoneyOut, sheet.Reward,
-                           sheet.Balance);
-                   }
+                    if (!request.Result.Any())
+                    {
+                        NoTxn();
+                        return Task.CompletedTask;
+                    }
 
-                   table.Configure(o => o.NumberAlignment = Alignment.Right);
+                    var table = new ConsoleTable("DateTime", "Payment Id", "Memo", "Money In", "Money Out", "Reward",
+                        "Balance");
 
-                   _console.WriteLine($"\n{table.ToString()}");
+                    foreach (var sheet in request.Result)
+                    {
+                        table.AddRow(sheet.Date, sheet.TxId, sheet.Memo, sheet.MoneyIn, sheet.MoneyOut, sheet.Reward,
+                            sheet.Balance);
+                    }
 
-                   return Task.CompletedTask;
-               });
+                    table.Configure(o => o.NumberAlignment = Alignment.Right);
+
+                    _console.WriteLine($"\n{table}");
+
+                    return Task.CompletedTask;
+                });
             }
             catch (Exception ex)
             {
