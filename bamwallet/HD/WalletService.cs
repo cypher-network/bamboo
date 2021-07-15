@@ -548,17 +548,17 @@ namespace BAMWallet.HD
 
             var offsets = Offsets(pcmIn, nCols);
 
-            var canMake = GenerateTransaction(session.SessionId, m, nCols, pcmOut, blinds, preimage, pc, ki, ss,
+            var generateTransaction = GenerateTransaction(session.SessionId, m, nCols, pcmOut, blinds, preimage, pc, ki, ss,
                 bulletChange.Result.proof, offsets);
-            if (!canMake.Success)
+            if (!generateTransaction.Success)
             {
                 return TaskResult<WalletTransaction>.CreateFailure(JObject.FromObject(new
                 {
                     success = false,
-                    message = $"Unable to make the transaction. Inner error message {canMake.NonSuccessMessage.message}"
+                    message = $"Unable to make the transaction. Inner error message {generateTransaction.NonSuccessMessage.message}"
                 }));
             }
-            
+
             var saved = Save(session.SessionId, session.WalletTransaction);
             if (!saved.Success)
                 return TaskResult<WalletTransaction>.CreateFailure(JObject.FromObject(new
@@ -669,9 +669,9 @@ namespace BAMWallet.HD
                 {
                     throw new Exception("Unable to generate the transaction time");
                 }
-                
-                tx.TxnId = tx.ToHash();
-                session.WalletTransaction.Transaction = tx;
+
+                generateTransactionTime.Result.TxnId = tx.ToHash();
+                session.WalletTransaction.Transaction = generateTransactionTime.Result;
 
                 SessionAddOrUpdate(session);
             }
@@ -694,7 +694,7 @@ namespace BAMWallet.HD
         /// <param name="transaction"></param>
         /// <param name="sessionId"></param>
         /// <returns></returns>
-        private TaskResult<bool> GenerateTransactionTime(Transaction transaction, Guid sessionId)
+        private TaskResult<Transaction> GenerateTransactionTime(Transaction transaction, Guid sessionId)
         {
             try
             {
@@ -708,7 +708,7 @@ namespace BAMWallet.HD
                 }
 
                 var timer = new Stopwatch();
-                var t = (int) (session.WalletTransaction.Delay * 2.7 * 1000);
+                var t = (int)(session.WalletTransaction.Delay * 2.7 * 1000);
                 timer.Start();
                 var nonce = Cryptography.Sloth.Eval(t, x);
                 timer.Stop();
@@ -717,9 +717,10 @@ namespace BAMWallet.HD
                 if (!success)
                 {
                     {
-                        return TaskResult<bool>.CreateFailure(JObject.FromObject(new
+                        return TaskResult<Transaction>.CreateFailure(JObject.FromObject(new
                         {
-                            success = false, message = "Unable to verify the verified delayed function"
+                            success = false,
+                            message = "Unable to verify the verified delayed function"
                         }));
                     }
                 }
@@ -729,7 +730,7 @@ namespace BAMWallet.HD
                     session.WalletTransaction.Delay++;
                     GenerateTransactionTime(transaction, session.SessionId);
                 }
-            
+
                 var lockTime = Util.GetAdjustedTimeAsUnixTimestamp() & ~timer.Elapsed.Seconds;
                 transaction.Vtime = new Vtime
                 {
@@ -744,14 +745,14 @@ namespace BAMWallet.HD
             catch (Exception ex)
             {
                 _logger.Error(ex.Message);
-                return TaskResult<bool>.CreateFailure(JObject.FromObject(new
+                return TaskResult<Transaction>.CreateFailure(JObject.FromObject(new
                 {
                     success = false,
                     message = ex.Message
                 }));
             }
-            
-            return TaskResult<bool>.CreateSuccess(true);
+
+            return TaskResult<Transaction>.CreateSuccess(transaction);
         }
 
         /// <summary>
