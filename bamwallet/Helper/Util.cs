@@ -81,7 +81,7 @@ namespace BAMWallet.Helper
             input.CopyTo(ms);
             return ms.ToArray();
         }
-        
+
         public static BigInteger Mod(BigInteger a, BigInteger n)
         {
             var result = a % n;
@@ -92,12 +92,12 @@ namespace BAMWallet.Helper
 
             return result;
         }
-        
+
         public static DateTime GetUtcNow()
         {
             return DateTime.UtcNow;
         }
-        
+
         public static DateTime GetAdjustedTime()
         {
             return GetUtcNow().Add(TimeSpan.Zero);

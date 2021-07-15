@@ -186,7 +186,7 @@ namespace BAMWallet.Rpc
             }
             catch (TaskCanceledException)
             {
-                
+
             }
             catch (Exception ex)
             {

@@ -11,7 +11,7 @@ namespace BAMWallet.Cryptography
     {
         private const string Prime256Bit =
             "60464814417085833675395020742168312237934553084050601624605007846337253615407";
-        
+
         /// <summary>
         /// 
         /// </summary>

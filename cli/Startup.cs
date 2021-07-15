@@ -42,7 +42,7 @@ namespace Cli
             services.AddOptions()
                 .Configure<NetworkSettings>(options => Configuration.GetSection("NetworkSettings").Bind(options))
                 .AddSingleton(Log.Logger);
-            
+
             if (ranAsWebServer)
             {
                 services.AddSingleton<IHostedService, SelfHosted>(sp =>
@@ -52,7 +52,7 @@ namespace Cli
                     return selfHosted;
                 });
             }
-            
+
             services
                 .AddSingleton<ISafeguardDownloadingFlagProvider, SafeguardDownloadingFlagProvider>()
                 .AddHostedService<SafeguardService>().AddSingleton<IWalletService, WalletService>()

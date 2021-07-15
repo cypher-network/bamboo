@@ -138,7 +138,7 @@ namespace BAMWallet.Rpc
             await host.RunAsync(token: stoppingToken);
             await host.WaitForShutdownAsync(token: stoppingToken);
         }
-        
+
         /// <summary>
         /// 
         /// </summary>

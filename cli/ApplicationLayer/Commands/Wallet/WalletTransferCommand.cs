@@ -48,7 +48,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
             var amount = Prompt.GetString("Amount:", null, ConsoleColor.Red);
             var memo = Prompt.GetString("Memo:", null, ConsoleColor.Green);
             var delay = Prompt.GetInt("Higher value ≈ faster transaction:", 5, ConsoleColor.Magenta);
-            
+
             if (decimal.TryParse(amount, out var t))
             {
                 await Spinner.StartAsync("Processing payment ...", async spinner =>
