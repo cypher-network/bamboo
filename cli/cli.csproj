@@ -52,19 +52,34 @@
     <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.2.7" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0" />
   </ItemGroup>
+
   <ItemGroup>
     <Folder Include="Helper\" />
+    <Folder Include="Configuration\Templates\" />
   </ItemGroup>
-    <ItemGroup>
+
+  <!-- Publish the configuration templates -->
+  <ItemGroup>
+    <Content Include="Configuration\Templates\appsettings.json">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <None Include="**/*" />
   </ItemGroup>
     <ItemGroup>
       <ProjectReference Include="..\bamwallet\bamwallet.csproj" />
     </ItemGroup>
     <ItemGroup>
+    <!--
     <None Update="appsettings.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
     </None>
+    -->
     <None Update="appsettings.Local.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <DependentUpon>appsettings.json</DependentUpon>

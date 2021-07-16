@@ -12,6 +12,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using BAMWallet.Model;
+using Cli.UI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Serilog;
@@ -35,11 +36,13 @@ namespace Cli
                 if (appsettingsExists)
                 {
                     // Do not return an error; this check is part of the application installation process
-                    Console.WriteLine($"{AppSettingsFile} already exists. Please remove file before running configuration again");
+                    Console.WriteLine(
+                        $"{AppSettingsFile} already exists. Please remove file before running configuration again");
                     return 0;
                 }
 
-                // TODO: Add configuration wizard for wallet
+                var ui = new TerminalUserInterface();
+                var nc = new Configuration.Configuration(ui);
                 return 0;
             }
 
