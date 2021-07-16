@@ -7,6 +7,8 @@
     <LangVersion>8</LangVersion>
     <Platforms>AnyCPU;x64</Platforms>
     <AssemblyVersion>0.0.25.0</AssemblyVersion>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <InvariantGlobalization>true</InvariantGlobalization>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
