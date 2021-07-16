@@ -220,6 +220,10 @@ install_archive() {
   fi
 
   printf "%b  %b Installed to %s\n" "${OVER}" "${TICK}" "${CYPHER_BAMBOO_OPT_PATH}"   
+
+  printf "  %b Running configuration util" "${INFO}"
+  "${CYPHER_BAMBOO_OPT_PATH}${CYPHER_BAMBOO_EXECUTABLE} --configure"
+  printf "%b  %b Run configuration util\n\n" "${OVER}" "${TICK}"
 }
 
 
