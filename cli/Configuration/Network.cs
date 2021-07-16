@@ -53,7 +53,7 @@ namespace Cli.Configuration
 
             var section = new UserInterfaceSection(
                 "Network configuration",
-                "The cypher wallet communicates with a node over an API interface. For a proper wallet/node " + 
+                "The cypher wallet communicates with a node over an API interface. For a proper wallet/node " +
                 "setup, the following components need to be configured:" + Environment.NewLine +
                 Environment.NewLine +
                 "- Your wallet can communicate with a local or remote node" + Environment.NewLine +
@@ -72,11 +72,11 @@ namespace Cli.Configuration
 
             return false;
         }
-        
+
         #endregion
 
         #region environment
-        
+
         private bool StepEnvironment()
         {
             UserInterfaceChoice optionEnvironmentTestnet = new("testnet");
@@ -99,7 +99,7 @@ namespace Cli.Configuration
 
             return false;
         }
-        
+
         #endregion
 
         #region node
@@ -146,7 +146,7 @@ namespace Cli.Configuration
                     optionYes,
                     optionNo
                 });
-            
+
             var choiceSameSystem = _userInterface.Do(section);
 
             if (choiceSameSystem.Equals(optionYes))
@@ -162,7 +162,7 @@ namespace Cli.Configuration
                 Configuration.WalletIPAddressPublic = IPAddress.Parse("0.0.0.0");
                 return StepNodeIPAddress();
             }
-            
+
             return false;
         }
 
@@ -182,7 +182,7 @@ namespace Cli.Configuration
 
             return success;
         }
-        
+
         private bool StepNodePort()
         {
             var section = new TextInput<ushort>(
@@ -198,7 +198,7 @@ namespace Cli.Configuration
                 {
                     return StepWalletPort();
                 }
-                
+
                 return StepWalletIPAddress();
             }
 
@@ -288,7 +288,7 @@ namespace Cli.Configuration
 
             return StepWalletPort();
         }
-        
+
         private bool StepWalletPort()
         {
             var section = new TextInput<ushort>(
@@ -303,7 +303,7 @@ namespace Cli.Configuration
                 {
                     return false;
                 }
-                
+
                 Configuration.WalletPort = port;
             }
 
