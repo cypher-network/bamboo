@@ -1,31 +1,29 @@
-﻿// Bamboo (c) by Tangram 
-// 
+﻿// Bamboo (c) by Tangram
+//
 // Bamboo is licensed under a
 // Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License.
-// 
+//
 // You should have received a copy of the license along with this
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
 
 using System;
 using System.Threading.Tasks;
-
 using Microsoft.Extensions.DependencyInjection;
-
 using McMaster.Extensions.CommandLineUtils;
-
 using NBitcoin;
-
+using BAMWallet.Extensions;
 using BAMWallet.HD;
 
 namespace CLi.ApplicationLayer.Commands.Wallet
 {
-    [CommandDescriptor(new string[] { "mnemonic" }, "Creates a new mnemonic and passphrase")]
+    [CommandDescriptor("mnemonic", "Creates a new mnemonic and passphrase")]
     class WalletCreateMnemonicCommand : Command
     {
         private readonly IConsole _console;
         private readonly IWalletService _walletService;
 
-        public WalletCreateMnemonicCommand(IServiceProvider serviceProvider)
+        public WalletCreateMnemonicCommand(IServiceProvider serviceProvider): base(typeof(WalletCreateMnemonicCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
+            typeof(WalletCreateMnemonicCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description))
         {
             _console = serviceProvider.GetService<IConsole>();
             _walletService = serviceProvider.GetService<IWalletService>();
@@ -57,7 +55,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="lang"></param>
         /// <param name="wCount"></param>

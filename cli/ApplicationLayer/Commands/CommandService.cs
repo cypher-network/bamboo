@@ -1,8 +1,8 @@
-﻿// Bamboo (c) by Tangram 
-// 
+﻿// Bamboo (c) by Tangram
+//
 // Bamboo is licensed under a
 // Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License.
-// 
+//
 // You should have received a copy of the license along with this
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
 
@@ -16,15 +16,23 @@ using McMaster.Extensions.CommandLineUtils;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using CLi.Helper;
+using CLi.ApplicationLayer.Commands.Wallet;
+using CLi.ApplicationLayer.Commands.Vault;
 
 namespace CLi.ApplicationLayer.Commands
 {
     public class CommandService : HostedService, ICommandService
     {
+        private static readonly ICommand[] fAllCommands = {
+
+        };
+        private static readonly ICommand[] fLoggedOutCommands = {
+            //Wallet.WalletCreateCommand
+        };
         private readonly IConsole console;
         private readonly ILogger logger;
         private readonly IServiceProvider serviceProvider;
-        readonly IDictionary<string[], Type> commands;
+        readonly IDictionary<string, ICommand> commands;
         private bool prompt = true;
 
         private Thread _t;
@@ -35,11 +43,23 @@ namespace CLi.ApplicationLayer.Commands
             logger = lgr;
             serviceProvider = provider;
 
-            commands = new Dictionary<string[], Type>(new CommandEqualityComparer());
+            commands = new Dictionary<string, ICommand>();
 
             console.CancelKeyPress += Console_CancelKeyPress;
 
-            RegisterCommands();
+            RegisterCommand(new Login(provider));
+            RegisterCommand(new Logout(provider));
+            RegisterCommand(new ExitCommand(provider));
+            RegisterCommand(new WalletAddressCommand(provider));
+            RegisterCommand(new WalletBalanceCommand(provider));
+            RegisterCommand(new WalletCreateCommand(provider));
+            RegisterCommand(new WalletListCommand(provider));
+            RegisterCommand(new WalletReceivePaymentCommand(provider));
+            RegisterCommand(new WalletReceivePaymentCommand(provider));
+            RegisterCommand(new WalletRestoreCommand(provider));
+            RegisterCommand(new WalletTransferCommand(provider));
+            RegisterCommand(new WalletTxHistoryCommand(provider));
+            RegisterCommand(new WalletVersionCommand(provider));
         }
 
         private void Console_CancelKeyPress(object sender, ConsoleCancelEventArgs e)
@@ -52,65 +72,23 @@ namespace CLi.ApplicationLayer.Commands
             await ExitCleanly();
         }
 
-        public void RegisterCommand<T>(string[] name) where T : ICommand
+        public void RegisterCommand(ICommand command)
         {
-            commands.Add(name, typeof(T));
+            commands.Add(command.Name, command);
         }
 
-        public void RegisterCommand(string[] name, Type t)
+        private ICommand GetCommand(string arg)
         {
-            if (typeof(ICommand).IsAssignableFrom(t))
+            if (commands.ContainsKey(arg))
             {
-                commands.Add(name, t);
-                return;
+                return commands[arg];
             }
-
-            throw new ArgumentException("Command must implement ICommand interface", nameof(t));
+            return null;
         }
 
-        public void RegisterCommands()
+        public async Task Execute(string arg)
         {
-            var commands = Assembly.GetExecutingAssembly().GetTypes().Where(x => x.IsClass
-                                                                               && typeof(Command).IsAssignableFrom(x)
-                                                                               && x.GetCustomAttribute<CommandDescriptorAttribute>() != null
-                                                                               ).OrderBy(x => string.Join(' ', x.GetCustomAttribute<CommandDescriptorAttribute>().Name));
-
-            foreach (var command in commands)
-            {
-                var attribute = command.GetCustomAttribute<CommandDescriptorAttribute>() as CommandDescriptorAttribute;
-
-                RegisterCommand(attribute.Name, command);
-            }
-        }
-
-        private ICommand GetCommand(string[] args)
-        {
-            var cmd = args.Where(x => !string.IsNullOrEmpty(x)).ToArray();
-
-            ICommand command = null;
-
-            if (commands.ContainsKey(cmd))
-            {
-                var commandType = commands[cmd];
-
-                var cstr = commandType.GetConstructor(new Type[] { typeof(IServiceProvider) });
-
-                if (cstr != null)
-                {
-                    command = Activator.CreateInstance(commandType, serviceProvider) as ICommand;
-                }
-                else
-                {
-                    command = Activator.CreateInstance(commandType) as ICommand;
-                }
-            }
-
-            return command;
-        }
-
-        public async Task Execute(string[] args)
-        {
-            var command = GetCommand(args);
+            var command = GetCommand(arg);
 
             if (command == null)
             {
@@ -128,10 +106,7 @@ namespace CLi.ApplicationLayer.Commands
 
             foreach (var cmd in commands)
             {
-                var commandDescriptor = cmd.Value.GetCustomAttribute<CommandDescriptorAttribute>();
-                var name = string.Join(' ', commandDescriptor.Name);
-
-                console.WriteLine($"    {name}".PadRight(25) + $"{commandDescriptor.Description}");
+                console.WriteLine($"    {cmd.Value.Name}".PadRight(25) + $"{cmd.Value.Description}");
             }
         }
 
@@ -147,20 +122,21 @@ namespace CLi.ApplicationLayer.Commands
         {
             await StartAllHostedProviders();
 
-            Thread.Sleep(1500);
+            Thread.Sleep(1500); //St.An. what's that?
 
             ClearCurrentConsoleLine();
 
             while (prompt)
             {
-                var args = Prompt.GetString("bamboo$", promptColor: ConsoleColor.Cyan)?.TrimEnd()?.Split(' ');
+                string arg = Prompt.GetString("bamboo$", promptColor: ConsoleColor.Cyan);
 
-                if (args == null || (args.Length == 1 && string.IsNullOrEmpty(args[0])))
+                if (string.IsNullOrEmpty(arg))
+                {
                     continue;
-
+                }
                 try
                 {
-                    await Execute(args).ConfigureAwait(false);
+                    await Execute(arg).ConfigureAwait(false);
                 }
                 catch (Exception e)
                 {
@@ -250,41 +226,6 @@ namespace CLi.ApplicationLayer.Commands
                 _t = new Thread(async () => { await InteractiveCliLoop(); });
                 _t.Start();
             });
-        }
-    }
-
-    public class CommandEqualityComparer : IEqualityComparer<string[]>
-    {
-        public bool Equals(string[] x, string[] y)
-        {
-            if (x.Length != y.Length)
-            {
-                return false;
-            }
-
-            for (int i = 0; i < x.Length; i++)
-            {
-                if (x[i] != y[i])
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        public int GetHashCode(string[] obj)
-        {
-            int result = 17;
-
-            for (int i = 0; i < obj.Length; i++)
-            {
-                unchecked
-                {
-                    result = result * 23 + obj[i].GetHashCode();
-                }
-            }
-
-            return result;
         }
     }
 }

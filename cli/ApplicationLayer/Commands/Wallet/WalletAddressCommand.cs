@@ -1,32 +1,29 @@
-﻿// Bamboo (c) by Tangram 
-// 
+﻿// Bamboo (c) by Tangram
+//
 // Bamboo is licensed under a
 // Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License.
-// 
+//
 // You should have received a copy of the license along with this
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
 
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-
 using Microsoft.Extensions.DependencyInjection;
-
 using McMaster.Extensions.CommandLineUtils;
-
 using ConsoleTables;
-
 using BAMWallet.HD;
-
+using BAMWallet.Extensions;
 namespace CLi.ApplicationLayer.Commands.Wallet
 {
-    [CommandDescriptor(new string[] { "address" }, "Find out your address")]
+    [CommandDescriptor("address", "Find out your address")]
     class WalletAddressCommand : Command
     {
         private readonly IWalletService _walletService;
         private readonly IConsole _console;
 
-        public WalletAddressCommand(IServiceProvider serviceProvider)
+        public WalletAddressCommand(IServiceProvider serviceProvider): base(typeof(WalletAddressCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
+            typeof(WalletAddressCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description))
         {
             _walletService = serviceProvider.GetService<IWalletService>();
             _console = serviceProvider.GetService<IConsole>();

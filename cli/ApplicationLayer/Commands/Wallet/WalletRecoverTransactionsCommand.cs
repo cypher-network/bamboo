@@ -4,10 +4,10 @@ using BAMWallet.HD;
 using Kurukuru;
 using McMaster.Extensions.CommandLineUtils;
 using Microsoft.Extensions.DependencyInjection;
-
+using BAMWallet.Extensions;
 namespace CLi.ApplicationLayer.Commands.Wallet
 {
-    [CommandDescriptor(new string[] { "recover" }, "Recover wallet transactions")]
+    [CommandDescriptor("recover", "Recover wallet transactions")]
     public class WalletRecoverTransactionsCommand : Command
     {
         private readonly IConsole _console;
@@ -15,7 +15,8 @@ namespace CLi.ApplicationLayer.Commands.Wallet
 
         private Spinner _spinner;
 
-        public WalletRecoverTransactionsCommand(IServiceProvider serviceProvider)
+        public WalletRecoverTransactionsCommand(IServiceProvider serviceProvider): base(typeof(WalletRecoverTransactionsCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
+            typeof(WalletRecoverTransactionsCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description))
         {
             _console = serviceProvider.GetService<IConsole>();
             _walletService = serviceProvider.GetService<IWalletService>();

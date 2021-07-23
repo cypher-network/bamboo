@@ -1,31 +1,26 @@
-﻿// Bamboo (c) by Tangram 
-// 
+﻿// Bamboo (c) by Tangram
+//
 // Bamboo is licensed under a
 // Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License.
-// 
+//
 // You should have received a copy of the license along with this
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
 
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
-
 using Newtonsoft.Json;
-
 using McMaster.Extensions.CommandLineUtils;
-
 using Kurukuru;
-
 using BAMWallet.HD;
 using BAMWallet.Model;
 using BAMWallet.Extensions;
 
 namespace CLi.ApplicationLayer.Commands.Wallet
 {
-    [CommandDescriptor(new string[] { "spend" }, "Spend some coins")]
+    [CommandDescriptor("spend", "Spend some coins")]
     public class WalletTransferCommand : Command
     {
         private readonly IWalletService _walletService;
@@ -33,7 +28,8 @@ namespace CLi.ApplicationLayer.Commands.Wallet
 
         private Spinner _spinner;
 
-        public WalletTransferCommand(IServiceProvider serviceProvider)
+        public WalletTransferCommand(IServiceProvider serviceProvider): base(typeof(WalletTransferCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
+            typeof(WalletTransferCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description))
         {
             _walletService = serviceProvider.GetService<IWalletService>();
             _logger = serviceProvider.GetService<ILogger<WalletTransferCommand>>();

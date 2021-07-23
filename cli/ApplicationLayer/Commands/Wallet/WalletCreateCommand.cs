@@ -1,8 +1,8 @@
-﻿// Bamboo (c) by Tangram 
-// 
+﻿// Bamboo (c) by Tangram
+//
 // Bamboo is licensed under a
 // Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License.
-// 
+//
 // You should have received a copy of the license along with this
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
 
@@ -19,13 +19,14 @@ using BAMWallet.Extensions;
 
 namespace CLi.ApplicationLayer.Commands.Wallet
 {
-    [CommandDescriptor(new string[] { "create" }, "Create new wallet")]
+    [CommandDescriptor("create", "Create new wallet")]
     class WalletCreateCommand : Command
     {
         private readonly IConsole _console;
         private readonly IWalletService _walletService;
 
-        public WalletCreateCommand(IServiceProvider serviceProvider)
+        public WalletCreateCommand(IServiceProvider serviceProvider): base(typeof(WalletCreateCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
+            typeof(WalletCreateCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description))
         {
             _console = serviceProvider.GetService<IConsole>();
             _walletService = serviceProvider.GetService<IWalletService>();

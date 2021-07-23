@@ -1,4 +1,4 @@
-﻿// Bamboo (c) by Tangram
+// Bamboo (c) by Tangram
 //
 // Bamboo is licensed under a
 // Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License.
@@ -12,16 +12,17 @@ using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Threading.Tasks;
 using BAMWallet.Extensions;
+
 namespace CLi.ApplicationLayer.Commands.Wallet
 {
-    [CommandDescriptor("restore", "Restore wallet from mnemonic")]
-    class WalletRestoreCommand : Command
+    [CommandDescriptor( "login" , "Unlocks wallet and enables wallet commands.")]
+    class Login : Command
     {
         private readonly IConsole _console;
         private readonly IWalletService _walletService;
 
-        public WalletRestoreCommand(IServiceProvider serviceProvider): base(typeof(WalletRestoreCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
-            typeof(WalletRestoreCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description))
+        public Login(IServiceProvider serviceProvider) : base(typeof(Login).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
+            typeof(Login).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description))
         {
             _console = serviceProvider.GetService<IConsole>();
             _walletService = serviceProvider.GetService<IWalletService>();
