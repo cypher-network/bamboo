@@ -18,10 +18,10 @@ namespace CLi.ApplicationLayer.Commands.Vault
     {
         ICommandService commandService;
 
-        public ExitCommand(IServiceProvider provider): base(typeof(ExitCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
+        public ExitCommand(ICommandService service): base(typeof(ExitCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
             typeof(ExitCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description))
         {
-            commandService = provider.GetService<ICommandService>();
+            commandService = service;
         }
 
         public override async Task Execute()

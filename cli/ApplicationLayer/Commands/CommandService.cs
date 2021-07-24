@@ -49,13 +49,13 @@ namespace CLi.ApplicationLayer.Commands
 
             RegisterCommand(new Login(provider));
             RegisterCommand(new Logout(provider));
-            RegisterCommand(new ExitCommand(provider));
+            RegisterCommand(new ExitCommand(this));
             RegisterCommand(new WalletAddressCommand(provider));
             RegisterCommand(new WalletBalanceCommand(provider));
             RegisterCommand(new WalletCreateCommand(provider));
             RegisterCommand(new WalletListCommand(provider));
             RegisterCommand(new WalletReceivePaymentCommand(provider));
-            RegisterCommand(new WalletReceivePaymentCommand(provider));
+            RegisterCommand(new WalletRecoverTransactionsCommand(provider));
             RegisterCommand(new WalletRestoreCommand(provider));
             RegisterCommand(new WalletTransferCommand(provider));
             RegisterCommand(new WalletTxHistoryCommand(provider));
