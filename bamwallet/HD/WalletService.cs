@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Net;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using BAMWallet.Extensions;
 using Newtonsoft.Json.Linq;
@@ -24,6 +25,7 @@ using BAMWallet.Model;
 using BAMWallet.Rpc;
 using BAMWallet.Services;
 using Libsecp256k1Zkp.Net;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Options;
 using Serilog;
 
@@ -103,6 +105,7 @@ namespace BAMWallet.HD
 
             return mSession;
         }
+
 
         /// <summary>
         /// 
@@ -939,6 +942,9 @@ namespace BAMWallet.HD
 
                 foreach (var transaction in walletTransactions.Select(x => x.Transaction))
                 {
+                    var isLocked = isTransactionLocked(new LockTime(Utils.UnixTimeToDateTime(transaction.Vtime.L)),
+                        transaction.Vtime.S);
+
                     var payment = transaction.Vout.Where(z => z.T is CoinType.Payment).ToArray();
                     if (payment.Any())
                     {
@@ -950,8 +956,16 @@ namespace BAMWallet.HD
                                 if (messagePayment.Amount != 0)
                                 {
                                     received += messagePayment.Amount;
-                                    balanceSheets.Add(MoneyBalanceSheet(messagePayment.Date, messagePayment.Memo, 0,
-                                        messagePayment.Amount, 0, received, payment, transaction.TxnId.ByteToHex()));
+                                    balanceSheets.Add(MoneyBalanceSheet(
+                                        messagePayment.Date,
+                                        messagePayment.Memo,
+                                        0,
+                                        messagePayment.Amount,
+                                        0,
+                                        received,
+                                        payment,
+                                        transaction.TxnId.ByteToHex(),
+                                        isLocked));
                                 }
                             }
                         }
@@ -971,17 +985,32 @@ namespace BAMWallet.HD
                             var messageCoinbase = Transaction.Message(change.ElementAt(0), scan);
                             var messageCoinstake = Transaction.Message(change.ElementAt(1), scan);
                             received -= messageCoinstake.Amount;
-                            balanceSheets.Add(MoneyBalanceSheet(messageCoinstake.Date, messageCoinstake.Memo,
-                                messageCoinstake.Amount, 0, messageCoinbase.Amount, received, change,
-                                transaction.TxnId.ByteToHex()));
+                            balanceSheets.Add(MoneyBalanceSheet(
+                                messageCoinstake.Date,
+                                messageCoinstake.Memo,
+                                messageCoinstake.Amount,
+                                0,
+                                messageCoinbase.Amount,
+                                received,
+                                change,
+                                transaction.TxnId.ByteToHex(),
+                                isLocked));
 
                             continue;
                         }
 
                         var messageChange = Transaction.Message(change.ElementAt(0), scan);
                         received -= messageChange.Paid;
-                        balanceSheets.Add(MoneyBalanceSheet(messageChange.Date, messageChange.Memo,
-                            messageChange.Paid, 0, 0, received, change, transaction.TxnId.ByteToHex()));
+                        balanceSheets.Add(MoneyBalanceSheet(
+                            messageChange.Date,
+                            messageChange.Memo,
+                            messageChange.Paid,
+                            0,
+                            0,
+                            received,
+                            change,
+                            transaction.TxnId.ByteToHex(),
+                            isLocked));
                     }
                     catch (Exception)
                     {
@@ -998,6 +1027,22 @@ namespace BAMWallet.HD
             return TaskResult<BalanceSheet[]>.CreateSuccess(balanceSheets.OrderBy(x => x.Date).ToArray());
         }
 
+        private bool isTransactionLocked(LockTime target, string script)
+        {
+            Guard.Argument(target, nameof(target)).NotDefault();
+            Guard.Argument(script, nameof(script)).NotNull().NotEmpty().NotWhiteSpace();
+            var sc1 = new Script(Op.GetPushOp(target.Value), OpcodeType.OP_CHECKLOCKTIMEVERIFY);
+            var sc2 = new Script(script);
+            if (!sc1.ToString().Equals(sc2.ToString())) return true;
+            var tx = NBitcoin.Network.Main.CreateTransaction();
+            tx.Outputs.Add(new TxOut { ScriptPubKey = new Script(script) });
+            var spending = NBitcoin.Network.Main.CreateTransaction();
+            spending.LockTime = new LockTime(DateTimeOffset.UtcNow);
+            spending.Inputs.Add(new TxIn(tx.Outputs.AsCoins().First().Outpoint, new Script()));
+            spending.Inputs[0].Sequence = 1;
+            return !spending.Inputs.AsIndexedInputs().First().VerifyScript(tx.Outputs[0]);
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -1011,7 +1056,7 @@ namespace BAMWallet.HD
         /// <param name="txId"></param>
         /// <returns></returns>
         private static BalanceSheet MoneyBalanceSheet(DateTime dateTime, string memo, ulong sent, ulong received,
-            ulong reward, ulong balance, Vout[] outputs, string txId)
+            ulong reward, ulong balance, Vout[] outputs, string txId, bool isLocked)
         {
             var balanceSheet = new BalanceSheet
             {
@@ -1019,7 +1064,8 @@ namespace BAMWallet.HD
                 Memo = memo,
                 Balance = balance.DivWithNaT().ToString("F9"),
                 Outputs = outputs,
-                TxId = txId
+                TxId = txId,
+                IsLocked = isLocked
             };
             if (sent != 0)
             {
@@ -1339,105 +1385,62 @@ namespace BAMWallet.HD
             }
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="sessionId"></param>
-        /// <returns></returns>
-        public async Task SyncWallet(Guid sessionId, int n = 3)
+
+        public async Task SyncWallet(Guid sessionId, int maxNumberOfTransactions = 3)
         {
             Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
+            Guard.Argument(maxNumberOfTransactions, nameof(maxNumberOfTransactions)).NotNegative();
+
             var session = Session(sessionId).EnforceDbExists();
-            var walletTransactions = session.Database.Query<WalletTransaction>().ToList().OrderBy(d => d.DateTime)
-                .TakeLast(n).ToArray();
-            if (walletTransactions.Any())
+            var walletTransactions = session.Database.Query<WalletTransaction>()
+                .ToList()
+                .OrderBy(d => d.DateTime)
+                .TakeLast(maxNumberOfTransactions)
+                .ToArray();
+
+            await SyncTransactions(session, walletTransactions);
+        }
+
+
+        private async Task SyncTransactions(Session session, IEnumerable<WalletTransaction> transactions)
+        {
+            foreach (var transaction in transactions.Select(walletTransaction => walletTransaction.Transaction))
             {
-                await Task.Factory.StartNew(async () =>
+                if (!await TransactionExists(transaction))
                 {
-                    foreach (var (walletTransaction, index) in walletTransactions.Select((value, i) => (value, i)))
+                    var rolledBack = RollBackTransaction(session, transaction.Id);
+                    if (!rolledBack.Success)
                     {
-                        var count = walletTransactions.Length == 0 ? 0 : walletTransactions.Length - 1;
-                        var currentRetry = 0;
-                        var jitter = new Random();
-                        for (; ; )
-                        {
-                            _logger.Here().Debug("Syncing wallet");
-                            try
-                            {
-                                var baseAddress = _client.GetBaseAddress();
-                                if (baseAddress == null)
-                                {
-                                    throw new Exception("Cannot get base address");
-                                }
+                        _logger.Here().Error(rolledBack.Exception.Message);
 
-                                var path = string.Format(_networkSettings.Routing.TransactionId,
-                                    walletTransaction.Transaction.TxnId.ByteToHex());
-                                var genericResponse =
-                                    await _client.GetAsync<Transaction>(baseAddress, path, new CancellationToken());
-                                if (genericResponse.Data != null && genericResponse.HttpStatusCode == HttpStatusCode.OK)
-                                {
-                                    if (index == count)
-                                    {
-                                        _resetEvent.Set();
-                                    }
-
-                                    break;
-                                }
-
-                                if (genericResponse.HttpStatusCode is HttpStatusCode.NotFound)
-                                {
-                                    goto NotFound;
-                                }
-
-                                if (genericResponse.HttpStatusCode is HttpStatusCode.ServiceUnavailable)
-                                {
-                                    if (index == count)
-                                    {
-                                        _resetEvent.Set();
-                                    }
-
-                                    break;
-                                }
-
-                            NotFound:
-                                currentRetry++;
-                                var retryDelay = TimeSpan.FromSeconds(Math.Pow(2, currentRetry)) +
-                                                 TimeSpan.FromMilliseconds(jitter.Next(0, 1000));
-
-                                _logger.Here().Debug("Retrying {@CurrentRetry} {@RetryDelay}", currentRetry,
-                                    retryDelay);
-
-                                if (retryDelay.Minutes * 60 + retryDelay.Seconds < 60)
-                                {
-                                    await Task.Delay(retryDelay);
-                                    continue;
-                                }
-
-                                var rolledBack = RollBackTransaction(session, walletTransaction.Transaction.Id);
-                                if (!rolledBack.Success)
-                                {
-                                    _logger.Here().Error(rolledBack.Exception.Message);
-                                }
-
-                                if (index == count)
-                                {
-                                    _resetEvent.Set();
-                                }
-
-                                break;
-                            }
-                            catch (Exception ex)
-                            {
-                                _logger.Here().Error(ex, "Error syncing wallet");
-                                _resetEvent.Set();
-                                break;
-                            }
-                        }
+                        // Continue syncing rest of the wallet but return false
                     }
-                });
-                _resetEvent.WaitOne();
+                }
             }
         }
+
+        private async Task<bool> TransactionExists(Transaction transaction)
+        {
+            return
+                await TransactionExistsInEndpoint(transaction, _networkSettings.Routing.TransactionId) ||
+                await TransactionExistsInEndpoint(transaction, _networkSettings.Routing.MempoolTransactionId);
+        }
+
+        private async Task<bool> TransactionExistsInEndpoint(Transaction transaction, string endpoint)
+        {
+            var baseAddress = _client.GetBaseAddress();
+
+            var endpointPath = string.Format(endpoint, transaction.TxnId.ByteToHex());
+            var restResponse = await _client.GetAsync<Transaction>(baseAddress, endpointPath, new CancellationToken());
+
+            if (restResponse.HttpStatusCode == HttpStatusCode.OK && restResponse.Data != null)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
 
         /// <summary>
         /// 

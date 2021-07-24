@@ -15,6 +15,7 @@ namespace BAMWallet.Model
     {
         public string Transaction { get; set; }
         public string TransactionId { get; set; }
+        public string MempoolTransactionId { get; set; }
         public string SafeguardTransactions { get; set; }
         public string Blocks { get; set; }
         public string BlockHeight { get; set; }

@@ -69,12 +69,19 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                     }
 
                     var table = new ConsoleTable("DateTime", "Payment Id", "Memo", "Money In", "Money Out", "Reward",
-                        "Balance");
+                        "Balance", "Locked");
 
                     foreach (var sheet in request.Result)
                     {
-                        table.AddRow(sheet.Date, sheet.TxId, sheet.Memo, sheet.MoneyIn, sheet.MoneyOut, sheet.Reward,
-                            sheet.Balance);
+                        table.AddRow(
+                            sheet.Date,
+                            sheet.TxId,
+                            sheet.Memo,
+                            sheet.MoneyIn,
+                            sheet.MoneyOut,
+                            sheet.Reward,
+                            sheet.Balance,
+                            sheet.IsLocked.ToString());
                     }
 
                     table.Configure(o => o.NumberAlignment = Alignment.Right);
