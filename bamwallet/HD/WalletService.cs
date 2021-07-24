@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Net;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using BAMWallet.Extensions;
 using Newtonsoft.Json.Linq;
@@ -330,7 +331,19 @@ namespace BAMWallet.HD
                 var amount = session.WalletTransaction.Payment.DivWithNaT();
                 var balances = AddBalances(session.SessionId);
 
-                foreach (var balance in balances.OrderByDescending(x => x.Total))
+                var freeBalances = new List<Balance>();
+
+                if (balances.FirstOrDefault()?.Commitment.L == 0)
+                {
+                    freeBalances.Add(balances.First());
+                }
+
+                freeBalances.AddRange(
+                    balances
+                        .Where(balance => balance.Commitment.IsLockedOrInvalid() == false)
+                        .OrderByDescending(x => x.Total));
+
+                foreach (var balance in freeBalances)
                 {
                     var t = balance.Total.DivWithNaT();
                     var count = (int)(amount / t);
@@ -351,6 +364,11 @@ namespace BAMWallet.HD
                         for (var k = 0; k < count; k++)
                             multiBalance.Add(balance.Total.DivWithNaT());
                     amount %= t;
+                }
+
+                if (!divisions.Any())
+                {
+                    return TaskResult<bool>.CreateFailure(new Exception("No free commitments available. Please retry after commitments unlock."));
                 }
 
                 var useAmount = divisions.Min(x => x.Total);
@@ -940,8 +958,7 @@ namespace BAMWallet.HD
 
                 foreach (var transaction in walletTransactions.Select(x => x.Transaction))
                 {
-                    var isLocked = isTransactionLocked(new LockTime(Utils.UnixTimeToDateTime(transaction.Vtime.L)),
-                        transaction.Vtime.S);
+                    bool isLocked = transaction.IsLockedOrInvalid();
 
                     var payment = transaction.Vout.Where(z => z.T is CoinType.Payment).ToArray();
                     if (payment.Any())
@@ -962,8 +979,7 @@ namespace BAMWallet.HD
                                         0,
                                         received,
                                         payment,
-                                        transaction.TxnId.ByteToHex(),
-                                        isLocked));
+                                        transaction.TxnId.ByteToHex()));
                                 }
                             }
                         }
@@ -1025,21 +1041,6 @@ namespace BAMWallet.HD
             return TaskResult<BalanceSheet[]>.CreateSuccess(balanceSheets.OrderBy(x => x.Date).ToArray());
         }
 
-        private bool isTransactionLocked(LockTime target, string script)
-        {
-            Guard.Argument(target, nameof(target)).NotDefault();
-            Guard.Argument(script, nameof(script)).NotNull().NotEmpty().NotWhiteSpace();
-            var sc1 = new Script(Op.GetPushOp(target.Value), OpcodeType.OP_CHECKLOCKTIMEVERIFY);
-            var sc2 = new Script(script);
-            if (!sc1.ToString().Equals(sc2.ToString())) return true;
-            var tx = NBitcoin.Network.Main.CreateTransaction();
-            tx.Outputs.Add(new TxOut { ScriptPubKey = new Script(script) });
-            var spending = NBitcoin.Network.Main.CreateTransaction();
-            spending.LockTime = new LockTime(DateTimeOffset.UtcNow);
-            spending.Inputs.Add(new TxIn(tx.Outputs.AsCoins().First().Outpoint, new Script()));
-            spending.Inputs[0].Sequence = 1;
-            return !spending.Inputs.AsIndexedInputs().First().VerifyScript(tx.Outputs[0]);
-        }
 
         /// <summary>
         /// 
@@ -1054,11 +1055,11 @@ namespace BAMWallet.HD
         /// <param name="txId"></param>
         /// <returns></returns>
         private static BalanceSheet MoneyBalanceSheet(DateTime dateTime, string memo, ulong sent, ulong received,
-            ulong reward, ulong balance, Vout[] outputs, string txId, bool isLocked)
+            ulong reward, ulong balance, Vout[] outputs, string txId, bool? isLocked = null)
         {
             var balanceSheet = new BalanceSheet
             {
-                Date = dateTime.ToShortDateString(),
+                Date = dateTime.ToString("yyyy-MM-dd HH:mm"),
                 Memo = memo,
                 Balance = balance.DivWithNaT().ToString("F9"),
                 Outputs = outputs,
@@ -1404,7 +1405,7 @@ namespace BAMWallet.HD
         {
             foreach (var transaction in transactions.Select(walletTransaction => walletTransaction.Transaction))
             {
-                if (await TransactionExists(transaction) == false)
+                if (await TransactionDoesNotExist(transaction))
                 {
                     var rolledBack = RollBackTransaction(session, transaction.Id);
                     if (!rolledBack.Success)
@@ -1416,26 +1417,35 @@ namespace BAMWallet.HD
             }
         }
 
-        private async Task<bool> TransactionExists(Transaction transaction)
+        private async Task<bool> TransactionDoesNotExist(Transaction transaction)
         {
             return
-                await TransactionExistsInEndpoint(transaction, _networkSettings.Routing.TransactionId) ||
-                await TransactionExistsInEndpoint(transaction, _networkSettings.Routing.MempoolTransactionId);
+                await TransactionDoesNotExistInEndpoint(transaction, _networkSettings.Routing.TransactionId) &&
+                await TransactionDoesNotExistInEndpoint(transaction, _networkSettings.Routing.MempoolTransactionId);
         }
 
-        private async Task<bool> TransactionExistsInEndpoint(Transaction transaction, string endpoint)
+        // TODO: Make this more intuitive. The naming is really weird. We only need to know with certainty when a
+        // transaction does not exist. Any uncertainty returns false, absolute certainty returns true.
+        private async Task<bool> TransactionDoesNotExistInEndpoint(Transaction transaction, string endpoint)
         {
             var baseAddress = _client.GetBaseAddress();
-
-            var endpointPath = string.Format(endpoint, transaction.TxnId.ByteToHex());
-            var restResponse = await _client.GetAsync<Transaction>(baseAddress, endpointPath, new CancellationToken());
-
-            if (restResponse.HttpStatusCode == HttpStatusCode.OK && restResponse.Data != null)
+            if (baseAddress == null)
             {
-                return true;
+                return false;
             }
 
-            return false;
+            GenericResponse<Transaction> transactionQueryResponse;
+
+            var endpointPath = string.Format(endpoint, transaction.TxnId.ByteToHex());
+            transactionQueryResponse = await _client.GetAsync<Transaction>(baseAddress, endpointPath, new CancellationToken());
+
+            if (transactionQueryResponse.HttpStatusCode == HttpStatusCode.OK ||
+                transactionQueryResponse.HttpStatusCode == HttpStatusCode.ServiceUnavailable)
+            {
+                return false;
+            }
+
+            return true;
         }
 
 

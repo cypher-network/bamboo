@@ -2,6 +2,7 @@
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
 using System;
+using System.Linq;
 using BAMWallet.Extensions;
 using BAMWallet.Helper;
 using Blake3;
@@ -184,6 +185,16 @@ namespace BAMWallet.Model
                 Date = DateTime.UtcNow,
                 Paid = paid
             });
+        }
+
+        public bool IsLockedOrInvalid()
+        {
+            if (Vout.Length < 2)
+            {
+                return true;
+            }
+
+            return Vout[1].IsLockedOrInvalid();
         }
     }
 }
