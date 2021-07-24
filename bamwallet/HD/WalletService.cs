@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Net;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using BAMWallet.Extensions;
 using Newtonsoft.Json.Linq;
@@ -25,7 +24,6 @@ using BAMWallet.Model;
 using BAMWallet.Rpc;
 using BAMWallet.Services;
 using Libsecp256k1Zkp.Net;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Options;
 using Serilog;
 
@@ -1406,14 +1404,13 @@ namespace BAMWallet.HD
         {
             foreach (var transaction in transactions.Select(walletTransaction => walletTransaction.Transaction))
             {
-                if (!await TransactionExists(transaction))
+                if (await TransactionExists(transaction) == false)
                 {
                     var rolledBack = RollBackTransaction(session, transaction.Id);
                     if (!rolledBack.Success)
                     {
                         _logger.Here().Error(rolledBack.Exception.Message);
-
-                        // Continue syncing rest of the wallet but return false
+                        // Continue syncing rest of the wallet
                     }
                 }
             }
