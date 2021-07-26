@@ -1,4 +1,4 @@
-// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0. 
+// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0.
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
 using System;
@@ -24,7 +24,13 @@ namespace BAMWallet.HD
         public LiteRepository Database { get; set; }
         public bool Syncing { get; set; }
 
-        private bool DbExists => File.Exists(Util.WalletPath(Identifier.ToUnSecureString()));
+        public bool IsValid
+        {
+            get
+            {
+                return File.Exists(Util.WalletPath(Identifier.ToUnSecureString()));
+            }
+        }
 
         public Session(SecureString identifier, SecureString passphrase)
         {
@@ -34,18 +40,8 @@ namespace BAMWallet.HD
             Database = Util.LiteRepositoryFactory(identifier, passphrase);
         }
 
-        public Session EnforceDbExists()
-        {
-            if (!DbExists)
-            {
-                throw new FileNotFoundException("Unable to find wallet file with given identifier");
-            }
-
-            return this;
-        }
-
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="x"></param>
         /// <param name="y"></param>
@@ -56,7 +52,7 @@ namespace BAMWallet.HD
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="session"></param>
         /// <returns></returns>

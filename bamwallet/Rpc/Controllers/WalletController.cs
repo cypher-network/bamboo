@@ -1,7 +1,6 @@
-﻿// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0. 
+﻿// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0.
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
-using System;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,7 +12,7 @@ using BAMWallet.Model;
 using Dawn;
 using MessagePack;
 using Microsoft.AspNetCore.Http;
-using Transaction = BAMWallet.Model.Transaction;
+using CLi.ApplicationLayer.Commands;
 
 namespace BAMWallet.Rpc.Controllers
 {
@@ -28,7 +27,7 @@ namespace BAMWallet.Rpc.Controllers
             _walletService = walletService;
         }
 
-        [HttpPost("address", Name = "Addresses")]
+        [HttpPost("address", Name = "Address")]
         public IActionResult Addresses([FromBody] Credentials credentials)
         {
             Guard.Argument(credentials, nameof(credentials)).NotNull();
@@ -135,7 +134,7 @@ namespace BAMWallet.Rpc.Controllers
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
@@ -201,6 +200,7 @@ namespace BAMWallet.Rpc.Controllers
             Guard.Argument(spend.Passphrase, nameof(spend.Passphrase)).NotNull().NotEmpty().NotWhiteSpace();
             Guard.Argument(spend.Address, nameof(spend.Address)).NotNull().NotEmpty().NotWhiteSpace();
             Guard.Argument(spend.Amount, nameof(spend.Amount)).Positive();
+
 
             var session = _walletService.SessionAddOrUpdate(new Session(spend.Identifier.ToSecureString(),
                 spend.Passphrase.ToSecureString())

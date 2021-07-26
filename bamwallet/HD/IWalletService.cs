@@ -1,4 +1,4 @@
-﻿// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0. 
+﻿// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0.
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
 using System;
@@ -16,34 +16,28 @@ namespace BAMWallet.HD
 {
     public interface IWalletService
     {
-        void AddKeySet(Guid sessionId);
         KeySet CreateKeySet(KeyPath keyPath, byte[] secretKey, byte[] chainCode);
         string CreateWallet(SecureString mnemonic, SecureString passphrase);
         SecureString NewId(int bytes = 32);
         Task<string[]> CreateMnemonic(Language language, WordCount wordCount);
-        TaskResult<bool> CalculateChange(Guid sessionId);
+        TaskResult<bool> CalculateChange();
         TaskResult<IEnumerable<string>> WalletList();
-        TaskResult<BalanceSheet[]> History(Guid sessionId);
-        TaskResult<IEnumerable<string>> Addresses(Guid sessionId);
-        IEnumerable<KeySet> KeySets(Guid sessionId);
-        KeySet LastKeySet(Guid sessionId);
-        KeySet KeySet(Guid sessionId);
+        TaskResult<BalanceSheet[]> History();
+        TaskResult<string> Address();
+        KeySet KeySet();
         (PubKey, StealthPayment) StealthPayment(string address);
-        int Count(Guid sessionId);
-        KeySet NextKeySet(Guid sessionId);
-        (Key, Key) Unlock(Guid sessionId);
-        Session Session(Guid sessionId);
+        int Count();
+        (Key, Key) Unlock();
         Client HttpClient();
-        Session SessionAddOrUpdate(Session session);
-        TaskResult<bool> Save<T>(Guid sessionId, T data);
-        Task<TaskResult<bool>> Send(Guid sessionId);
-        Task<TaskResult<WalletTransaction>> ReceivePayment(Guid sessionId, string paymentId);
+        TaskResult<bool> Save<T>(T data);
+        Task<TaskResult<bool>> Send();
+        Task<TaskResult<WalletTransaction>> ReceivePayment(string paymentId);
         TaskResult<WalletTransaction> CreateTransaction(Guid sessionId);
         PubKey ScanPublicKey(string address);
         Transaction GetTransaction(Guid sessionId);
-        byte[] GetKeyImage(Guid sessionId, Vout output);
-        TaskResult<bool> RollBackTransaction(Session session, Guid id);
-        Task SyncWallet(Guid sessionId, int n = 3);
-        Task<TaskResult<bool>> RecoverTransactions(Guid sessionId, int start);
+        byte[] GetKeyImage(Vout output);
+        TaskResult<bool> RollBackTransaction(Guid sessionId);
+        Task SyncWallet(int n = 3);
+        Task<TaskResult<bool>> RecoverTransactions(int start);
     }
 }

@@ -9,7 +9,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using McMaster.Extensions.CommandLineUtils;
@@ -23,43 +22,59 @@ namespace CLi.ApplicationLayer.Commands
 {
     public class CommandService : HostedService, ICommandService
     {
-        private static readonly ICommand[] fAllCommands = {
-
+        enum State {
+            LoggedIn,
+            Loggedout
         };
-        private static readonly ICommand[] fLoggedOutCommands = {
-            //Wallet.WalletCreateCommand
-        };
-        private readonly IConsole console;
-        private readonly ILogger logger;
-        private readonly IServiceProvider serviceProvider;
-        readonly IDictionary<string, ICommand> commands;
-        private bool prompt = true;
-
+        private readonly IConsole _console;
+        private readonly ILogger _logger;
+        private readonly IServiceProvider _serviceProvider;
+        readonly IDictionary<string, ICommand> _commands;
+        private bool _hasExited;
         private Thread _t;
+        private State _commandServiceState;
 
         public CommandService(IConsole cnsl, IServiceProvider provider, ILogger<CommandService> lgr)
         {
-            console = cnsl;
-            logger = lgr;
-            serviceProvider = provider;
+            _serviceProvider = provider;
+            _console = cnsl;
+            _logger = lgr;
+            _commands = new Dictionary<string, ICommand>();
+            _console.CancelKeyPress += Console_CancelKeyPress;
+            _commandServiceState = State.Loggedout;
+            _hasExited = false;
+            RegisterLoggedOutCommands();
+        }
 
-            commands = new Dictionary<string, ICommand>();
-
-            console.CancelKeyPress += Console_CancelKeyPress;
-
-            RegisterCommand(new Login(provider));
-            RegisterCommand(new Logout(provider));
+        private void RegisterLoggedOutCommands()
+        {
+            _commands.Clear();
+            RegisterCommand(new Login(_serviceProvider));
+            RegisterCommand(new WalletCreateCommand(_serviceProvider));
+            RegisterCommand(new WalletCreateMnemonicCommand(_serviceProvider));
+            RegisterCommand(new WalletListCommand(_serviceProvider));
+            RegisterCommand(new WalletRestoreCommand(_serviceProvider));
+            RegisterCommand(new WalletVersionCommand(_serviceProvider));
             RegisterCommand(new ExitCommand(this));
-            RegisterCommand(new WalletAddressCommand(provider));
-            RegisterCommand(new WalletBalanceCommand(provider));
-            RegisterCommand(new WalletCreateCommand(provider));
-            RegisterCommand(new WalletListCommand(provider));
-            RegisterCommand(new WalletReceivePaymentCommand(provider));
-            RegisterCommand(new WalletRecoverTransactionsCommand(provider));
-            RegisterCommand(new WalletRestoreCommand(provider));
-            RegisterCommand(new WalletTransferCommand(provider));
-            RegisterCommand(new WalletTxHistoryCommand(provider));
-            RegisterCommand(new WalletVersionCommand(provider));
+        }
+
+        private void RegisterLoggedInCommand()
+        {
+            _commands.Clear();
+            RegisterCommand(new Logout(_serviceProvider));
+            RegisterCommand(new WalletCreateCommand(_serviceProvider));
+            RegisterCommand(new WalletCreateMnemonicCommand(_serviceProvider));
+            RegisterCommand(new WalletListCommand(_serviceProvider));
+            RegisterCommand(new WalletRestoreCommand(_serviceProvider));
+            RegisterCommand(new WalletVersionCommand(_serviceProvider));
+            RegisterCommand(new WalletAddressCommand(_serviceProvider));
+            RegisterCommand(new WalletBalanceCommand(_serviceProvider));
+            RegisterCommand(new ExitCommand(this));
+            RegisterCommand(new WalletReceivePaymentCommand(_serviceProvider));
+            RegisterCommand(new WalletRecoverTransactionsCommand(_serviceProvider));
+            RegisterCommand(new WalletTransferCommand(_serviceProvider));
+            RegisterCommand(new WalletTxHistoryCommand(_serviceProvider));
+            RegisterCommand(new ExitCommand(this));
         }
 
         private void Console_CancelKeyPress(object sender, ConsoleCancelEventArgs e)
@@ -74,14 +89,14 @@ namespace CLi.ApplicationLayer.Commands
 
         public void RegisterCommand(ICommand command)
         {
-            commands.Add(command.Name, command);
+            _commands.Add(command.Name, command);
         }
 
         private ICommand GetCommand(string arg)
         {
-            if (commands.ContainsKey(arg))
+            if (_commands.ContainsKey(arg))
             {
-                return commands[arg];
+                return _commands[arg];
             }
             return null;
         }
@@ -101,12 +116,12 @@ namespace CLi.ApplicationLayer.Commands
 
         private void PrintHelp()
         {
-            console.WriteLine();
-            console.WriteLine("  Commands");
+            _console.WriteLine();
+            _console.WriteLine("  Commands");
 
-            foreach (var cmd in commands)
+            foreach (var cmd in _commands)
             {
-                console.WriteLine($"    {cmd.Value.Name}".PadRight(25) + $"{cmd.Value.Description}");
+                _console.WriteLine($"    {cmd.Value.Name}".PadRight(25) + $"{cmd.Value.Description}");
             }
         }
 
@@ -126,9 +141,9 @@ namespace CLi.ApplicationLayer.Commands
 
             ClearCurrentConsoleLine();
 
-            while (prompt)
+            while (!_hasExited)
             {
-                string arg = Prompt.GetString("bamboo$", promptColor: ConsoleColor.Cyan);
+                string arg = Prompt.GetString("bamboo$", promptColor: ConsoleColor.Cyan).Trim();
 
                 if (string.IsNullOrEmpty(arg))
                 {
@@ -140,7 +155,7 @@ namespace CLi.ApplicationLayer.Commands
                 }
                 catch (Exception e)
                 {
-                    Logger.LogException(console, logger, e);
+                    Logger.LogException(_console, _logger, e);
                 }
             }
 
@@ -149,9 +164,9 @@ namespace CLi.ApplicationLayer.Commands
 
         private async Task ExitCleanly()
         {
-            prompt = false;
+            _hasExited = true;
 
-            console.WriteLine("Exiting...");
+            _console.WriteLine("Exiting...");
 
             await StopAllHostedProviders();
 
@@ -195,7 +210,7 @@ namespace CLi.ApplicationLayer.Commands
 
             foreach (var hostedProvider in hostedProviders)
             {
-                var serviceInstance = serviceProvider.GetService(hostedProvider) as IHostedService;
+                var serviceInstance = _serviceProvider.GetService(hostedProvider) as IHostedService;
 
                 if (serviceInstance != null)
                 {
@@ -210,7 +225,7 @@ namespace CLi.ApplicationLayer.Commands
 
             foreach (var hostedProvider in hostedProviders)
             {
-                var serviceInstance = serviceProvider.GetService(hostedProvider) as IHostedService;
+                var serviceInstance = _serviceProvider.GetService(hostedProvider) as IHostedService;
 
                 if (serviceInstance != null)
                 {

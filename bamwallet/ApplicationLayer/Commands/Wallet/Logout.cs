@@ -15,14 +15,14 @@ using BAMWallet.Extensions;
 
 namespace CLi.ApplicationLayer.Commands.Wallet
 {
-    [CommandDescriptor( "login" , "Unlocks wallet and enables wallet commands.")]
-    class Login : Command
+    [CommandDescriptor("logout", "Logs out and locks wallet.")]
+    class Logout : Command
     {
         private readonly IConsole _console;
         private readonly IWalletService _walletService;
 
-        public Login(IServiceProvider serviceProvider) : base(typeof(Login).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
-            typeof(Login).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description))
+        public Logout(IServiceProvider serviceProvider) : base(typeof(Logout).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
+            typeof(Logout).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description))
         {
             _console = serviceProvider.GetService<IConsole>();
             _walletService = serviceProvider.GetService<IWalletService>();
@@ -30,7 +30,6 @@ namespace CLi.ApplicationLayer.Commands.Wallet
 
         public override Task Execute()
         {
-            Shared.CreateWalletFromKnownMnemonic(_console, _walletService);
             return Task.CompletedTask;
         }
     }
