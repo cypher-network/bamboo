@@ -38,13 +38,13 @@ namespace CLi.ApplicationLayer.Commands
         protected void Login()
         {
             _timeout.Stop();
-            LoginStateChanged?.Invoke(this, new LogInStateChanged(LogInStateChanged.LoginEvent.LoggedIn, LogInStateChanged.LoginEvent.Loggedout));
+            LoginStateChanged?.Invoke(this, new LogInStateChanged(LogInStateChanged.LoginEvent.LoggedIn, LogInStateChanged.LoginEvent.LoggedOut));
             _timeout.Start();
             _timeout.Enabled = true;
         }
         protected void Logout()
         {
-            LoginStateChanged?.Invoke(this, new LogInStateChanged(LogInStateChanged.LoginEvent.Loggedout, LogInStateChanged.LoginEvent.LoggedIn));
+            LoginStateChanged?.Invoke(this, new LogInStateChanged(LogInStateChanged.LoginEvent.LoggedOut, LogInStateChanged.LoginEvent.LoggedIn));
             _timeout.Stop();
             _timeout.Enabled = false;
         }

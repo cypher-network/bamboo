@@ -24,7 +24,7 @@ namespace CLi.ApplicationLayer.Commands
     {
         enum State {
             LoggedIn,
-            Loggedout
+            LoggedOut
         };
         private readonly IConsole _console;
         private readonly ILogger _logger;
@@ -41,20 +41,26 @@ namespace CLi.ApplicationLayer.Commands
             _logger = lgr;
             _commands = new Dictionary<string, ICommand>();
             _console.CancelKeyPress += Console_CancelKeyPress;
-            _commandServiceState = State.Loggedout;
+            _commandServiceState = State.LoggedOut;
             _hasExited = false;
             RegisterLoggedOutCommands();
             Command.LoginStateChanged += (o, e) =>
             {
-                if(e.LoginStateChangedFrom == Events.LogInStateChanged.LoginEvent.Loggedout)
+                if(e.LoginStateChangedFrom == Events.LogInStateChanged.LoginEvent.LoggedOut)
                 {
-                    _commandServiceState = State.LoggedIn;
-                    RegisterLoggedInCommands();
+                    if(_commandServiceState != State.LoggedIn)
+                    {
+                        _commandServiceState = State.LoggedIn;
+                        RegisterLoggedInCommands();
+                    }
                 }
                 else
                 {
-                    _commandServiceState = State.Loggedout;
+                    if(_commandServiceState != State.LoggedOut)
+                    {
+                    _commandServiceState = State.LoggedOut;
                     RegisterLoggedOutCommands();
+                    }
                 }
             };
         }

@@ -1,17 +1,6 @@
 // BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0.
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
-using System;
-using System.IO;
-using System.Linq;
-using System.Collections.Generic;
-using System.Security;
-using System.Threading.Tasks;
-using System.Collections.Concurrent;
-using System.Diagnostics;
-using System.Net;
-using System.Runtime.CompilerServices;
-using System.Threading;
 using BAMWallet.Extensions;
 using BAMWallet.Helper;
 using BAMWallet.Model;
@@ -41,8 +30,6 @@ namespace BAMWallet.HD
 {
     public class WalletService : IWalletService
     {
-        private static readonly AutoResetEvent _resetEvent = new(false);
-
         private const string HdPath = "m/44'/847177'/0'/0/";
 
         private readonly ISafeguardDownloadingFlagProvider _safeguardDownloadingFlagProvider;
@@ -60,85 +47,6 @@ namespace BAMWallet.HD
         }
 
         public Client HttpClient() => _client;
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="sessionId"></param>
-        /// <returns></returns>
-        public Session Session(Guid sessionId) => Sessions.GetValueOrDefault(sessionId);
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="session"></param>
-        /// <returns></returns>
-        public Session SessionAddOrUpdate(Session session)
-        {
-            Guard.Argument(session, nameof(session)).NotNull();
-
-            var mSession = Sessions.AddOrUpdate(session.SessionId, session, (key, existingVal) =>
-            {
-                if (session != existingVal)
-                    throw new ArgumentException("Duplicate sessions are not allowed: {0}.",
-                        session.SessionId.ToString());
-
-                try
-                {
-                    existingVal.Syncing = session.Syncing;
-                    existingVal.WalletTransaction.Balance = session.WalletTransaction.Balance;
-                    existingVal.WalletTransaction.Change = session.WalletTransaction.Change;
-                    existingVal.WalletTransaction.DateTime = session.WalletTransaction.DateTime;
-                    existingVal.WalletTransaction.Reward = session.WalletTransaction.Reward;
-                    existingVal.WalletTransaction.Id = session.SessionId;
-                    existingVal.WalletTransaction.Memo = session.WalletTransaction.Memo;
-                    existingVal.WalletTransaction.Payment = session.WalletTransaction.Payment;
-                    existingVal.WalletTransaction.RecipientAddress = session.WalletTransaction.RecipientAddress;
-                    existingVal.WalletTransaction.SenderAddress = session.WalletTransaction.SenderAddress;
-                    existingVal.WalletTransaction.Spent = session.WalletTransaction.Spent;
-                    existingVal.WalletTransaction.Transaction = session.WalletTransaction.Transaction;
-                    existingVal.WalletTransaction.WalletType = session.WalletTransaction.WalletType;
-                }
-                catch (Exception)
-                {
-                    // ignored
-                }
-
-                return existingVal;
-            });
-
-            return mSession;
-        }
-
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="sessionId"></param>
-        public void AddKeySet(Guid sessionId)
-        {
-            Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
-
-            try
-            {
-                var session = Session(sessionId);
-                var next = LastKeySet(session.SessionId);
-                var keyPath = new KeyPath(next.KeyPath);
-                var index = keyPath.Indexes[3] + 1;
-                var keySet = CreateKeySet(new KeyPath($"m/44'/847177'/{index}'/0/0"), next.RootKey.HexToByte(),
-                    next.ChainCode.HexToByte());
-                session.Database.Insert(keySet);
-                next.ChainCode.ZeroString();
-                next.RootKey.ZeroString();
-                keySet.RootKey.ZeroString();
-                keySet.ChainCode.ZeroString();
-            }
-            catch (Exception ex)
-            {
-                _logger.Here().Error(ex, "Error adding key set");
-                throw new Exception(ex.Message);
-            }
-        }
 
         /// <summary>
         ///
@@ -1277,12 +1185,10 @@ namespace BAMWallet.HD
         }
 
 
-        public async Task SyncWallet(Guid sessionId, int maxNumberOfTransactions = 3)
+        public async Task SyncWallet(Session session, int maxNumberOfTransactions = 3)
         {
-            Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
             Guard.Argument(maxNumberOfTransactions, nameof(maxNumberOfTransactions)).NotNegative();
 
-            var session = Session(sessionId).EnforceDbExists();
             var walletTransactions = session.Database.Query<WalletTransaction>()
                 .ToList()
                 .OrderBy(d => d.DateTime)
