@@ -52,9 +52,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
             }
 
             var table = new ConsoleTable("Address");
-
-            foreach (var address in request.Result)
-                table.AddRow(address);
+            table.AddRow(request.Result);
 
             _console.WriteLine($"\n{table}");
 

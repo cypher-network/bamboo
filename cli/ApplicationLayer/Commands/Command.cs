@@ -27,9 +27,9 @@ namespace CLi.ApplicationLayer.Commands
         {
             Name = name;
             Description = description;
-            ActiveSession = null;
             if (!_isInitialized)
             {
+                ActiveSession = null;
                 _timeout.Elapsed += OnTimeout;
                 _isInitialized = true;
             }
