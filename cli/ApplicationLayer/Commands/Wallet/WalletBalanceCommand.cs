@@ -35,8 +35,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
         {
             try
             {
-                using var identifier = Prompt.GetPasswordAsSecureString("Identifier:", ConsoleColor.Yellow);
-                using var passphrase = Prompt.GetPasswordAsSecureString("Passphrase:", ConsoleColor.Yellow);
+                Login();
                 await Spinner.StartAsync("Checking balance ...", spinner =>
                 {
                     _spinner = spinner;

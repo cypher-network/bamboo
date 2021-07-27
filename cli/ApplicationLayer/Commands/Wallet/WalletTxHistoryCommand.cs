@@ -32,9 +32,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
 
         public override async Task Execute()
         {
-            using var identifier = Prompt.GetPasswordAsSecureString("Identifier:", ConsoleColor.Yellow);
-            using var passphrase = Prompt.GetPasswordAsSecureString("Passphrase:", ConsoleColor.Yellow);
-
+            Login();
             try
             {
                 var session = ActiveSession;

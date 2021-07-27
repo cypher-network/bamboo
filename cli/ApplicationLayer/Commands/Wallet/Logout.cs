@@ -11,11 +11,10 @@ using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Threading.Tasks;
 using BAMWallet.Extensions;
-
 namespace CLi.ApplicationLayer.Commands.Wallet
 {
     [CommandDescriptor("logout", "Logs out and locks wallet.")]
-    class Logout : LoginBase
+    class Logout : Command
     {
         private readonly IConsole _console;
 

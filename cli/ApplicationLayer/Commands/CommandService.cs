@@ -44,7 +44,7 @@ namespace CLi.ApplicationLayer.Commands
             _commandServiceState = State.Loggedout;
             _hasExited = false;
             RegisterLoggedOutCommands();
-            LoginBase.LoginStateChanged += (o, e) =>
+            Command.LoginStateChanged += (o, e) =>
             {
                 if(e.LoginStateChangedFrom == Events.LogInStateChanged.LoginEvent.Loggedout)
                 {

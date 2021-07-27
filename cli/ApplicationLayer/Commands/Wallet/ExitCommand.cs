@@ -26,6 +26,7 @@ namespace CLi.ApplicationLayer.Commands.Vault
 
         public override async Task Execute()
         {
+            Logout();
             await commandService.Exit();
         }
     }

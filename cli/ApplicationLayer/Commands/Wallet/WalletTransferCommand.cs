@@ -37,9 +37,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
 
         public override async Task Execute()
         {
-            using var identifier = Prompt.GetPasswordAsSecureString("Identifier:", ConsoleColor.Yellow);
-            using var passphrase = Prompt.GetPasswordAsSecureString("Passphrase:", ConsoleColor.Yellow);
-
+            Login();
             var address = Prompt.GetString("Address:", null, ConsoleColor.Red);
             var amount = Prompt.GetString("Amount:", null, ConsoleColor.Red);
             var memo = Prompt.GetString("Memo:", null, ConsoleColor.Green);

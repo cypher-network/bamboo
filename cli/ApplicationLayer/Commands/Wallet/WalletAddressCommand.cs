@@ -31,8 +31,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
 
         public override Task Execute()
         {
-            using var identifier = Prompt.GetPasswordAsSecureString("Identifier:", ConsoleColor.Yellow);
-            using var passphrase = Prompt.GetPasswordAsSecureString("Passphrase:", ConsoleColor.Yellow);
+            Login();
             var session = ActiveSession;
 
             var request = _walletService.Address(session);
