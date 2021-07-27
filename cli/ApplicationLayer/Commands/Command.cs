@@ -47,6 +47,7 @@ namespace CLi.ApplicationLayer.Commands
             LoginStateChanged?.Invoke(this, new LogInStateChanged(LogInStateChanged.LoginEvent.LoggedOut, LogInStateChanged.LoginEvent.LoggedIn));
             _timeout.Stop();
             _timeout.Enabled = false;
+            ActiveSession = null;
         }
 
         public string Name { get; set; }
