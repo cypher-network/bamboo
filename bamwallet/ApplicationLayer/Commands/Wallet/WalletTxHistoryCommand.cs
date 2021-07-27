@@ -37,13 +37,13 @@ namespace CLi.ApplicationLayer.Commands.Wallet
 
             try
             {
-                var session = _walletService.SessionAddOrUpdate(new Session(identifier, passphrase));
+                var session = ActiveSession;
 
                 await Spinner.StartAsync("Looking up history ...", async spinner =>
                 {
-                    await _walletService.SyncWallet(session.SessionId);
+                    await _walletService.SyncWallet(session);
 
-                    var request = _walletService.History(session.SessionId);
+                    var request = _walletService.History(session);
 
                     if (!request.Success)
                     {

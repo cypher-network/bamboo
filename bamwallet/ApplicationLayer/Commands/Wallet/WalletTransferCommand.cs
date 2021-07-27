@@ -53,20 +53,19 @@ namespace CLi.ApplicationLayer.Commands.Wallet
 
                     try
                     {
-                        var session = _walletService.SessionAddOrUpdate(new Session(identifier, passphrase)
-                        {
-                            SessionType = SessionType.Coin,
-                            WalletTransaction = new WalletTransaction
-                            {
-                                Memo = memo,
-                                Payment = t.ConvertToUInt64(),
-                                RecipientAddress = address,
-                                WalletType = WalletType.Send,
-                                Delay = delay
-                            }
-                        });
+                        var session = ActiveSession;
 
-                        _walletService.CreateTransaction(session.SessionId);
+                        session.SessionType = SessionType.Coin;
+                        session.WalletTransaction = new WalletTransaction
+                        {
+                            Memo = memo,
+                            Payment = t.ConvertToUInt64(),
+                            RecipientAddress = address,
+                            WalletType = WalletType.Send,
+                            Delay = delay
+                        };
+
+                        _walletService.CreateTransaction(session, session.SessionId);
 
                         if (session.LastError != null)
                         {
@@ -74,7 +73,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                             return;
                         }
 
-                        await _walletService.Send(session.SessionId);
+                        await _walletService.Send(session);
 
                         if (session.LastError != null)
                         {
@@ -82,10 +81,10 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                             return;
                         }
 
-                        var balance = _walletService.History(session.SessionId);
+                        var balance = _walletService.History(session);
                         var message = $"Available Balance: {balance.Result.Last().Balance}";
 
-                        var walletTx = _walletService.GetTransaction(session.SessionId);
+                        var walletTx = _walletService.GetTransaction(session);
                         if (walletTx != null)
                         {
                             message += $"\nPaymentID: {walletTx?.TxnId.ByteToHex()}";

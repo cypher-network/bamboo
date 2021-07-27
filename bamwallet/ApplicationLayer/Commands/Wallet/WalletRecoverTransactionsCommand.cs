@@ -29,9 +29,9 @@ namespace CLi.ApplicationLayer.Commands.Wallet
             await Spinner.StartAsync("Recovering transactions ...", async spinner =>
             {
                 _spinner = spinner;
-                var session = _walletService.SessionAddOrUpdate(new Session(identifier, passphrase));
+                var session = ActiveSession;
 
-                await _walletService.RecoverTransactions(session.SessionId, 0);
+                await _walletService.RecoverTransactions(session, 0);
 
                 return Task.CompletedTask;
             }, Patterns.Pong);

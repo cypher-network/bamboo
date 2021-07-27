@@ -40,8 +40,8 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                 await Spinner.StartAsync("Checking balance ...", spinner =>
                 {
                     _spinner = spinner;
-                    var session = _walletService.SessionAddOrUpdate(new Session(identifier, passphrase));
-                    var balance = _walletService.History(session.SessionId);
+                    var session = ActiveSession;
+                    var balance = _walletService.History(session);
                     if (balance.Success)
                     {
                         _console.ForegroundColor = ConsoleColor.Green;

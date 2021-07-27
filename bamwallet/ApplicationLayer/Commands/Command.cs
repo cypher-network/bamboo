@@ -18,7 +18,7 @@ namespace CLi.ApplicationLayer.Commands
             Description = description;
             ActiveSession = null;
         }
-        public static Session ActiveSession { get; protected set;}
+        protected static Session ActiveSession { get; set;}
         public string Name { get; set; }
         public string Description { get; set; }
         public abstract Task Execute();

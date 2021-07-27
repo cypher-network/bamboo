@@ -33,9 +33,9 @@ namespace CLi.ApplicationLayer.Commands.Wallet
         {
             using var identifier = Prompt.GetPasswordAsSecureString("Identifier:", ConsoleColor.Yellow);
             using var passphrase = Prompt.GetPasswordAsSecureString("Passphrase:", ConsoleColor.Yellow);
-            var session = _walletService.SessionAddOrUpdate(new Session(identifier, passphrase));
+            var session = ActiveSession;
 
-            var request = _walletService.Addresses(session.SessionId);
+            var request = _walletService.Address(session);
             if (!request.Success)
             {
                 _console.ForegroundColor = ConsoleColor.Red;

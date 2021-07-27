@@ -47,15 +47,15 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                     this.spinner = spinner;
                     try
                     {
-                        var session = _walletService.SessionAddOrUpdate(new Session(identifier, passphrase));
-                        await _walletService.ReceivePayment(session.SessionId, paymentId);
+                        var session = ActiveSession;
+                        await _walletService.ReceivePayment(session, paymentId);
                         if (session.LastError != null)
                         {
                             spinner.Fail(JsonConvert.SerializeObject(session.LastError.GetValue("message")));
                             return;
                         }
 
-                        var balance = _walletService.History(session.SessionId).Result.Last();
+                        var balance = _walletService.History(session).Result.Last();
                         spinner.Succeed(
                             $"Memo: {balance.Memo}  Received: {balance.MoneyIn}  Available Balance: {balance.Balance}");
                     }
