@@ -16,12 +16,10 @@ namespace CLi.ApplicationLayer.Commands.Wallet
     [CommandDescriptor("logout", "Logs out and locks wallet.")]
     class Logout : Command
     {
-        private readonly IConsole _console;
 
         public Logout(IServiceProvider serviceProvider) : base(typeof(Logout).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
-            typeof(Logout).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description))
+            typeof(Logout).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description), serviceProvider.GetService<IConsole>())
         {
-            _console = serviceProvider.GetService<IConsole>();
         }
 
         public override Task Execute()

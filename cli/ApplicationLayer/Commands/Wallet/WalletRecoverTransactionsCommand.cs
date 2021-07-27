@@ -10,15 +10,13 @@ namespace CLi.ApplicationLayer.Commands.Wallet
     [CommandDescriptor("recover", "Recover wallet transactions")]
     public class WalletRecoverTransactionsCommand : Command
     {
-        private readonly IConsole _console;
         private readonly IWalletService _walletService;
 
         private Spinner _spinner;
 
         public WalletRecoverTransactionsCommand(IServiceProvider serviceProvider) : base(typeof(WalletRecoverTransactionsCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
-            typeof(WalletRecoverTransactionsCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description))
+            typeof(WalletRecoverTransactionsCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description), serviceProvider.GetService<IConsole>())
         {
-            _console = serviceProvider.GetService<IConsole>();
             _walletService = serviceProvider.GetService<IWalletService>();
         }
 

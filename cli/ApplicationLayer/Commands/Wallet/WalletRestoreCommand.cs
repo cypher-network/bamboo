@@ -18,13 +18,11 @@ namespace CLi.ApplicationLayer.Commands.Wallet
     [CommandDescriptor("restore", "Restore wallet from mnemonic")]
     class WalletRestoreCommand : Command
     {
-        private readonly IConsole _console;
         private readonly IWalletService _walletService;
 
         public WalletRestoreCommand(IServiceProvider serviceProvider) : base(typeof(WalletRestoreCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
-            typeof(WalletRestoreCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description))
+            typeof(WalletRestoreCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description), serviceProvider.GetService<IConsole>())
         {
-            _console = serviceProvider.GetService<IConsole>();
             _walletService = serviceProvider.GetService<IWalletService>();
         }
 

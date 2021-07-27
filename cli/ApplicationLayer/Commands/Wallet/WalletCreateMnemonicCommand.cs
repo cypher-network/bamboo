@@ -19,13 +19,11 @@ namespace CLi.ApplicationLayer.Commands.Wallet
     [CommandDescriptor("mnemonic", "Creates a new mnemonic and passphrase")]
     class WalletCreateMnemonicCommand : Command
     {
-        private readonly IConsole _console;
         private readonly IWalletService _walletService;
 
         public WalletCreateMnemonicCommand(IServiceProvider serviceProvider) : base(typeof(WalletCreateMnemonicCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
-            typeof(WalletCreateMnemonicCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description))
+            typeof(WalletCreateMnemonicCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description), serviceProvider.GetService<IConsole>())
         {
-            _console = serviceProvider.GetService<IConsole>();
             _walletService = serviceProvider.GetService<IWalletService>();
         }
 

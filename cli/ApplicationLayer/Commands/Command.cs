@@ -11,20 +11,24 @@ using System.Threading.Tasks;
 using System.Timers;
 using CLi.ApplicationLayer.Events;
 using BAMWallet.HD;
+using McMaster.Extensions.CommandLineUtils;
 namespace CLi.ApplicationLayer.Commands
 {
     public abstract class Command : ICommand
     {
+        protected readonly IConsole _console;
         private static bool _isInitialized = false;
         private static readonly double TIMEOUT = 60000 * 30;
         private Timer _timeout = new Timer(TIMEOUT);
         private void OnTimeout(object source, ElapsedEventArgs e)
         {
+            _console.WriteLine("You have been logged out of the wallet due to inactivity. Please login again to use the wallet.");
             Logout();
         }
 
-        protected Command(string name, string description)
+        protected Command(string name, string description, IConsole console)
         {
+            _console = console;
             Name = name;
             Description = description;
             if (!_isInitialized)

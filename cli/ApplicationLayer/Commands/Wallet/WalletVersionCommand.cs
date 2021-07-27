@@ -16,12 +16,9 @@ namespace CLi.ApplicationLayer.Commands.Wallet
     [CommandDescriptor("version", "Running version")]
     public class WalletVersionCommand : Command
     {
-        private readonly IConsole _console;
-
         public WalletVersionCommand(IServiceProvider serviceProvider) : base(typeof(WalletVersionCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
-            typeof(WalletVersionCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description))
+            typeof(WalletVersionCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description), serviceProvider.GetService<IConsole>())
         {
-            _console = serviceProvider.GetService<IConsole>();
         }
 
         public override Task Execute()

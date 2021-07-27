@@ -29,7 +29,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
         private Spinner _spinner;
 
         public WalletTransferCommand(IServiceProvider serviceProvider) : base(typeof(WalletTransferCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
-            typeof(WalletTransferCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description))
+            typeof(WalletTransferCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description), serviceProvider.GetService<IConsole>())
         {
             _walletService = serviceProvider.GetService<IWalletService>();
             _logger = serviceProvider.GetService<ILogger<WalletTransferCommand>>();

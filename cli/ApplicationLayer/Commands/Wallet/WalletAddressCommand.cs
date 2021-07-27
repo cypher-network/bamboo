@@ -20,13 +20,10 @@ namespace CLi.ApplicationLayer.Commands.Wallet
     class WalletAddressCommand : Command
     {
         private readonly IWalletService _walletService;
-        private readonly IConsole _console;
-
         public WalletAddressCommand(IServiceProvider serviceProvider) : base(typeof(WalletAddressCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
-            typeof(WalletAddressCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description))
+            typeof(WalletAddressCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description), serviceProvider.GetService<IConsole>())
         {
             _walletService = serviceProvider.GetService<IWalletService>();
-            _console = serviceProvider.GetService<IConsole>();
         }
 
         public override Task Execute()

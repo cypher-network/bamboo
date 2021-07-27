@@ -20,13 +20,11 @@ namespace CLi.ApplicationLayer.Commands.Wallet
     [CommandDescriptor("history", "Show my transactions")]
     public class WalletTxHistoryCommand : Command
     {
-        private readonly IConsole _console;
         private readonly IWalletService _walletService;
 
         public WalletTxHistoryCommand(IServiceProvider serviceProvider) : base(typeof(WalletTxHistoryCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
-            typeof(WalletTxHistoryCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description))
+            typeof(WalletTxHistoryCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description), serviceProvider.GetService<IConsole>())
         {
-            _console = serviceProvider.GetService<IConsole>();
             _walletService = serviceProvider.GetService<IWalletService>();
         }
 

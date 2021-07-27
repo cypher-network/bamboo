@@ -20,15 +20,12 @@ namespace CLi.ApplicationLayer.Commands.Wallet
     public class WalletBalanceCommand : Command
     {
         private readonly IWalletService _walletService;
-        private readonly IConsole _console;
-
         private Spinner _spinner;
 
         public WalletBalanceCommand(IServiceProvider serviceProvider) : base(typeof(WalletBalanceCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
-            typeof(WalletBalanceCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description))
+            typeof(WalletBalanceCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description), serviceProvider.GetService<IConsole>())
         {
             _walletService = serviceProvider.GetService<IWalletService>();
-            _console = serviceProvider.GetService<IConsole>();
         }
 
         public override async Task Execute()

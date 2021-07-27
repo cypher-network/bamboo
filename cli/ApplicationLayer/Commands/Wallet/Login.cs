@@ -18,12 +18,9 @@ namespace CLi.ApplicationLayer.Commands.Wallet
     [CommandDescriptor("login", "Unlocks wallet and enables wallet commands.")]
     class Login : Command
     {
-        private readonly IConsole _console;
-
         public Login(IServiceProvider serviceProvider) : base(typeof(Login).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
-            typeof(Login).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description))
+            typeof(Login).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description), serviceProvider.GetService<IConsole>())
         {
-            _console = serviceProvider.GetService<IConsole>();
         }
 
         public override Task Execute()

@@ -22,13 +22,11 @@ namespace CLi.ApplicationLayer.Commands.Wallet
     [CommandDescriptor("create", "Create new wallet")]
     class WalletCreateCommand : Command
     {
-        private readonly IConsole _console;
         private readonly IWalletService _walletService;
 
         public WalletCreateCommand(IServiceProvider serviceProvider) : base(typeof(WalletCreateCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
-            typeof(WalletCreateCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description))
+            typeof(WalletCreateCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description), serviceProvider.GetService<IConsole>())
         {
-            _console = serviceProvider.GetService<IConsole>();
             _walletService = serviceProvider.GetService<IWalletService>();
         }
 
