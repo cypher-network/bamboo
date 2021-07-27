@@ -6,7 +6,6 @@
 // You should have received a copy of the license along with this
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
 
-using CLi.ApplicationLayer.Events;
 using McMaster.Extensions.CommandLineUtils;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -16,10 +15,9 @@ using BAMWallet.Extensions;
 namespace CLi.ApplicationLayer.Commands.Wallet
 {
     [CommandDescriptor( "login" , "Unlocks wallet and enables wallet commands.")]
-    class Login : Command
+    class Login : LoginBase
     {
         private readonly IConsole _console;
-        public event EventHandler<LogInStateChanged> LoginStateChanged;
 
         public Login(IServiceProvider serviceProvider) : base(typeof(Login).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
             typeof(Login).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description))
@@ -30,6 +28,8 @@ namespace CLi.ApplicationLayer.Commands.Wallet
         public override Task Execute()
         {
             //check if wallet exists, if it does, save session, login and inform command service
+
+            Login();
             return Task.CompletedTask;
         }
     }

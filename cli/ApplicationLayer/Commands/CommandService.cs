@@ -44,6 +44,19 @@ namespace CLi.ApplicationLayer.Commands
             _commandServiceState = State.Loggedout;
             _hasExited = false;
             RegisterLoggedOutCommands();
+            LoginBase.LoginStateChanged += (o, e) =>
+            {
+                if(e.LoginStateChangedFrom == Events.LogInStateChanged.LoginEvent.Loggedout)
+                {
+                    _commandServiceState = State.LoggedIn;
+                    RegisterLoggedInCommands();
+                }
+                else
+                {
+                    _commandServiceState = State.Loggedout;
+                    RegisterLoggedOutCommands();
+                }
+            };
         }
 
         private void RegisterLoggedOutCommands()
@@ -58,7 +71,7 @@ namespace CLi.ApplicationLayer.Commands
             RegisterCommand(new ExitCommand(this));
         }
 
-        private void RegisterLoggedInCommand()
+        private void RegisterLoggedInCommands()
         {
             _commands.Clear();
             RegisterCommand(new Logout(_serviceProvider));
@@ -69,7 +82,6 @@ namespace CLi.ApplicationLayer.Commands
             RegisterCommand(new WalletVersionCommand(_serviceProvider));
             RegisterCommand(new WalletAddressCommand(_serviceProvider));
             RegisterCommand(new WalletBalanceCommand(_serviceProvider));
-            RegisterCommand(new ExitCommand(this));
             RegisterCommand(new WalletReceivePaymentCommand(_serviceProvider));
             RegisterCommand(new WalletRecoverTransactionsCommand(_serviceProvider));
             RegisterCommand(new WalletTransferCommand(_serviceProvider));

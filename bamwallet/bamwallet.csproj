@@ -31,7 +31,6 @@
     <LangVersion>9.0</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Folder Include="ApplicationLayer\"/>
     <Folder Include="HD\" />
     <Folder Include="Helper\" />
     <Folder Include="Rpc\" />
@@ -39,9 +38,6 @@
     <Folder Include="Services\" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Kurukuru" Version="1.2.0" />
-    <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="3.1.0" />
-    <PackageReference Include="ConsoleTables" Version="2.4.2" />
     <PackageReference Include="Blake3" Version="0.3.0" />
     <PackageReference Include="MessagePack" Version="2.2.85" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="5.0.0" />
