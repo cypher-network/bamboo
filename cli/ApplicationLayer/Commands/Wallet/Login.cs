@@ -15,7 +15,7 @@ using BAMWallet.HD;
 
 namespace CLi.ApplicationLayer.Commands.Wallet
 {
-    [CommandDescriptor( "login" , "Unlocks wallet and enables wallet commands.")]
+    [CommandDescriptor("login", "Unlocks wallet and enables wallet commands.")]
     class Login : Command
     {
         private readonly IConsole _console;

@@ -16,7 +16,7 @@ namespace CLi.ApplicationLayer.Commands
     public abstract class Command : ICommand
     {
         private static bool _isInitialized = false;
-        private static readonly double TIMEOUT = 60000*30;
+        private static readonly double TIMEOUT = 60000 * 30;
         private Timer _timeout = new Timer(TIMEOUT);
         private void OnTimeout(object source, ElapsedEventArgs e)
         {
@@ -28,13 +28,13 @@ namespace CLi.ApplicationLayer.Commands
             Name = name;
             Description = description;
             ActiveSession = null;
-            if(!_isInitialized)
+            if (!_isInitialized)
             {
                 _timeout.Elapsed += OnTimeout;
                 _isInitialized = true;
             }
         }
-        protected static Session ActiveSession { get; set;}
+        protected static Session ActiveSession { get; set; }
         protected void Login()
         {
             _timeout.Stop();

@@ -27,7 +27,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
 
         private Spinner spinner;
 
-        public WalletReceivePaymentCommand(IServiceProvider serviceProvider): base(typeof(WalletReceivePaymentCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
+        public WalletReceivePaymentCommand(IServiceProvider serviceProvider) : base(typeof(WalletReceivePaymentCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
             typeof(WalletReceivePaymentCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description))
         {
             _walletService = serviceProvider.GetService<IWalletService>();

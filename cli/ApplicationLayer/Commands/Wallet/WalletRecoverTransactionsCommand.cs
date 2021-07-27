@@ -15,7 +15,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
 
         private Spinner _spinner;
 
-        public WalletRecoverTransactionsCommand(IServiceProvider serviceProvider): base(typeof(WalletRecoverTransactionsCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
+        public WalletRecoverTransactionsCommand(IServiceProvider serviceProvider) : base(typeof(WalletRecoverTransactionsCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
             typeof(WalletRecoverTransactionsCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description))
         {
             _console = serviceProvider.GetService<IConsole>();

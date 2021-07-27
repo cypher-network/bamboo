@@ -18,7 +18,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
     {
         private readonly IConsole _console;
 
-        public WalletVersionCommand(IServiceProvider serviceProvider): base(typeof(WalletVersionCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
+        public WalletVersionCommand(IServiceProvider serviceProvider) : base(typeof(WalletVersionCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
             typeof(WalletVersionCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description))
         {
             _console = serviceProvider.GetService<IConsole>();

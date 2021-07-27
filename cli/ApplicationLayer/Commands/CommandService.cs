@@ -22,7 +22,8 @@ namespace CLi.ApplicationLayer.Commands
 {
     public class CommandService : HostedService, ICommandService
     {
-        enum State {
+        enum State
+        {
             LoggedIn,
             LoggedOut
         };
@@ -46,9 +47,9 @@ namespace CLi.ApplicationLayer.Commands
             RegisterLoggedOutCommands();
             Command.LoginStateChanged += (o, e) =>
             {
-                if(e.LoginStateChangedFrom == Events.LogInStateChanged.LoginEvent.LoggedOut)
+                if (e.LoginStateChangedFrom == Events.LogInStateChanged.LoginEvent.LoggedOut)
                 {
-                    if(_commandServiceState != State.LoggedIn)
+                    if (_commandServiceState != State.LoggedIn)
                     {
                         _commandServiceState = State.LoggedIn;
                         RegisterLoggedInCommands();
@@ -56,10 +57,10 @@ namespace CLi.ApplicationLayer.Commands
                 }
                 else
                 {
-                    if(_commandServiceState != State.LoggedOut)
+                    if (_commandServiceState != State.LoggedOut)
                     {
-                    _commandServiceState = State.LoggedOut;
-                    RegisterLoggedOutCommands();
+                        _commandServiceState = State.LoggedOut;
+                        RegisterLoggedOutCommands();
                     }
                 }
             };

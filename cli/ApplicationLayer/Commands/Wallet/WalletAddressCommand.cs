@@ -22,7 +22,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
         private readonly IWalletService _walletService;
         private readonly IConsole _console;
 
-        public WalletAddressCommand(IServiceProvider serviceProvider): base(typeof(WalletAddressCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
+        public WalletAddressCommand(IServiceProvider serviceProvider) : base(typeof(WalletAddressCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
             typeof(WalletAddressCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description))
         {
             _walletService = serviceProvider.GetService<IWalletService>();
