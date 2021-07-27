@@ -75,7 +75,7 @@ namespace CLi.ApplicationLayer.Commands
             RegisterCommand(new WalletListCommand(_serviceProvider));
             RegisterCommand(new WalletRestoreCommand(_serviceProvider));
             RegisterCommand(new WalletVersionCommand(_serviceProvider));
-            RegisterCommand(new ExitCommand(this));
+            RegisterCommand(new ExitCommand(this, _serviceProvider));
         }
 
         private void RegisterLoggedInCommands()
@@ -93,7 +93,7 @@ namespace CLi.ApplicationLayer.Commands
             RegisterCommand(new WalletRecoverTransactionsCommand(_serviceProvider));
             RegisterCommand(new WalletTransferCommand(_serviceProvider));
             RegisterCommand(new WalletTxHistoryCommand(_serviceProvider));
-            RegisterCommand(new ExitCommand(this));
+            RegisterCommand(new ExitCommand(this, _serviceProvider));
         }
 
         private void Console_CancelKeyPress(object sender, ConsoleCancelEventArgs e)
