@@ -63,7 +63,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                             Delay = delay
                         };
 
-                        _walletService.CreateTransaction(session, session.SessionId);
+                        _walletService.CreateTransaction(session);
 
                         if (session.LastError != null)
                         {

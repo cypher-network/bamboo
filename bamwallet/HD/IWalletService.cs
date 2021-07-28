@@ -32,7 +32,7 @@ namespace BAMWallet.HD
         TaskResult<bool> Save<T>(Session session, T data);
         Task<TaskResult<bool>> Send(Session session);
         Task<TaskResult<WalletTransaction>> ReceivePayment(Session session, string paymentId);
-        TaskResult<WalletTransaction> CreateTransaction(Session session, Guid sessionId);
+        TaskResult<WalletTransaction> CreateTransaction(Session session);
         PubKey ScanPublicKey(string address);
         Transaction GetTransaction(Session session);
         byte[] GetKeyImage(Session session, Vout output);

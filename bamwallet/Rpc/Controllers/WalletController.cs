@@ -150,7 +150,7 @@ namespace BAMWallet.Rpc.Controllers
             };
 
 
-            var walletTransaction = _walletService.CreateTransaction(session, session.SessionId);
+            var walletTransaction = _walletService.CreateTransaction(session);
             if (!walletTransaction.Success) return new StatusCodeResult(StatusCodes.Status404NotFound);
 
             var transaction = _walletService.GetTransaction(session);
@@ -204,7 +204,7 @@ namespace BAMWallet.Rpc.Controllers
                 WalletType = WalletType.Send
             };
 
-            var createPayment = _walletService.CreateTransaction(session, session.SessionId);
+            var createPayment = _walletService.CreateTransaction(session);
             if (!createPayment.Success)
                 return new BadRequestObjectResult(createPayment.NonSuccessMessage);
 
