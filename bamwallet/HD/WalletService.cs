@@ -346,9 +346,9 @@ namespace BAMWallet.HD
         /// </summary>
         /// <param name="sessionId"></param>
         /// <returns></returns>
-        public TaskResult<WalletTransaction> CreateTransaction(Session session, Guid sessionId)
+        public TaskResult<WalletTransaction> CreateTransaction(Session session)
         {
-            Guard.Argument(sessionId, nameof(sessionId)).NotDefault();
+            Guard.Argument(session.SessionId, nameof(session.SessionId)).NotDefault();
 
             while (_safeguardDownloadingFlagProvider.IsDownloading)
             {
