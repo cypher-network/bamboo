@@ -18,11 +18,14 @@ namespace CLi.ApplicationLayer.Commands
     {
         protected readonly IConsole _console;
         private static bool _isInitialized = false;
-        private static readonly double TIMEOUT = 60000 * 30;
+        private static readonly double TIMEOUT = 10000;// * 60 * 15;
         private Timer _timeout = new Timer(TIMEOUT);
         private void OnTimeout(object source, ElapsedEventArgs e)
         {
             _console.WriteLine("You have been logged out of the wallet due to inactivity. Please login again to use the wallet.");
+            _console.ForegroundColor = ConsoleColor.Cyan;
+            _console.Write("bamboo$ ");
+            _console.ForegroundColor = ConsoleColor.White;
             Logout();
         }
 
