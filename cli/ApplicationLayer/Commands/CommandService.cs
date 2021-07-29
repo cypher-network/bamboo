@@ -183,7 +183,7 @@ namespace CLi.ApplicationLayer.Commands
                     }
                     else
                     {
-                        _console.WriteLine("Command: {0} not found. Here is the list of available commands?", args[0]);
+                        _console.WriteLine("Command: {0} not found. Here is the list of available commands:", args[0]);
                         PrintHelp();
                     }
                     continue;
