@@ -169,15 +169,15 @@ namespace CLi.ApplicationLayer.Commands
                 {
                     continue;
                 }
-                if(args[0] == "--help" || args[0] == "?" || args[0] == "/?" || args[0] == "help")
+                if (args[0] == "--help" || args[0] == "?" || args[0] == "/?" || args[0] == "help")
                 {
                     PrintHelp();
                     continue;
                 }
-                if(!_commands.ContainsKey(args[0]))
+                if (!_commands.ContainsKey(args[0]))
                 {
                     var bestMatch = Process.ExtractOne(args[0], _commands.Keys, cutoff: 60);
-                    if(null != bestMatch)
+                    if (null != bestMatch)
                     {
                         _console.WriteLine("Command: {0} not found. Did you mean {1}?", args[0], bestMatch.Value);
                     }
