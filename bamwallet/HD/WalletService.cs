@@ -77,21 +77,21 @@ namespace BAMWallet.HD
         /// <summary>
         ///
         /// </summary>
-        /// <param name="mnemonic"></param>
+        /// <param name="seed"></param>
         /// <param name="passphrase"></param>
         /// <returns></returns>
-        public string CreateWallet(SecureString mnemonic, SecureString passphrase)
+        public string CreateWallet(SecureString seed, SecureString passphrase)
         {
-            Guard.Argument(mnemonic, nameof(mnemonic)).NotNull();
+            Guard.Argument(seed, nameof(seed)).NotNull();
             Guard.Argument(passphrase, nameof(passphrase)).NotNull();
 
             var walletId = NewId(16);
 
             walletId.MakeReadOnly();
-            mnemonic.MakeReadOnly();
+            seed.MakeReadOnly();
             passphrase.MakeReadOnly();
 
-            CreateHdRootKey(mnemonic, passphrase, out var hdRoot);
+            CreateHdRootKey(seed, passphrase, out var hdRoot);
 
             var keySet = CreateKeySet(new KeyPath($"{HdPath}0"), hdRoot.PrivateKey.ToHex().HexToByte(),
                 hdRoot.ChainCode);
@@ -133,10 +133,10 @@ namespace BAMWallet.HD
         }
 
         /// <summary>
-        /// BIP39 mnemonic.
+        /// BIP39 seed.
         /// </summary>
         /// <returns></returns>
-        public async Task<string[]> CreateMnemonic(Language language, WordCount wordCount)
+        public async Task<string[]> CreateSeed(Language language, WordCount wordCount)
         {
             var wordList = await Wordlist.LoadWordList(language);
             var mnemo = new Mnemonic(wordList, wordCount);
@@ -800,17 +800,17 @@ namespace BAMWallet.HD
         /// <summary>
         ///
         /// </summary>
-        /// <param name="mnemonic"></param>
+        /// <param name="seed"></param>
         /// <param name="passphrase"></param>
         /// <param name="concatenateMnemonic"></param>
         /// <param name="hdRoot"></param>
-        private static void CreateHdRootKey(SecureString mnemonic, SecureString passphrase,
+        private static void CreateHdRootKey(SecureString seed, SecureString passphrase,
             out ExtKey hdRoot)
         {
-            Guard.Argument(mnemonic, nameof(mnemonic)).NotNull();
+            Guard.Argument(seed, nameof(seed)).NotNull();
             Guard.Argument(passphrase, nameof(passphrase)).NotNull();
 
-            string concatenateMnemonic = string.Join(" ", mnemonic.ToUnSecureString());
+            string concatenateMnemonic = string.Join(" ", seed.ToUnSecureString());
             hdRoot = new Mnemonic(concatenateMnemonic).DeriveExtKey(passphrase.ToUnSecureString());
             concatenateMnemonic.ZeroString();
         }

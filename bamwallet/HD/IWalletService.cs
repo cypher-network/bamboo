@@ -17,9 +17,9 @@ namespace BAMWallet.HD
     public interface IWalletService
     {
         KeySet CreateKeySet(KeyPath keyPath, byte[] secretKey, byte[] chainCode);
-        string CreateWallet(SecureString mnemonic, SecureString passphrase);
+        string CreateWallet(SecureString seed, SecureString passphrase);
         SecureString NewId(int bytes = 32);
-        Task<string[]> CreateMnemonic(Language language, WordCount wordCount);
+        Task<string[]> CreateSeed(Language language, WordCount wordCount);
         TaskResult<bool> CalculateChange(Session session);
         TaskResult<IEnumerable<string>> WalletList();
         TaskResult<BalanceSheet[]> History(Session session);

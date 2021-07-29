@@ -34,8 +34,8 @@ namespace CLi.ApplicationLayer.Commands.Wallet
         {
             try
             {
-                var mnemonicDefault = await _walletService.CreateMnemonic(NBitcoin.Language.English, NBitcoin.WordCount.TwentyFour);
-                var passphraseDefault = await _walletService.CreateMnemonic(NBitcoin.Language.English, NBitcoin.WordCount.Twelve);
+                var mnemonicDefault = await _walletService.CreateSeed(NBitcoin.Language.English, NBitcoin.WordCount.TwentyFour);
+                var passphraseDefault = await _walletService.CreateSeed(NBitcoin.Language.English, NBitcoin.WordCount.Twelve);
                 var joinMmnemonic = string.Join(" ", mnemonicDefault);
                 var joinPassphrase = string.Join(" ", passphraseDefault);
                 var id = _walletService.CreateWallet(joinMmnemonic.ToSecureString(), joinPassphrase.ToSecureString());

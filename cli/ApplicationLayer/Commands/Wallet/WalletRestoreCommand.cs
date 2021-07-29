@@ -15,7 +15,7 @@ using BAMWallet.Extensions;
 using BAMWallet.Helper;
 namespace CLi.ApplicationLayer.Commands.Wallet
 {
-    [CommandDescriptor("restore", "Restore wallet from mnemonic")]
+    [CommandDescriptor("restore", "Restore wallet from seed")]
     class WalletRestoreCommand : Command
     {
         private readonly IWalletService _walletService;
@@ -28,10 +28,10 @@ namespace CLi.ApplicationLayer.Commands.Wallet
 
         public override Task Execute()
         {
-            using var mnemonic = Prompt.GetPasswordAsSecureString("Mnemonic:", ConsoleColor.Yellow);
+            using var seed = Prompt.GetPasswordAsSecureString("Mnemonic:", ConsoleColor.Yellow);
             using var passphrase = Prompt.GetPasswordAsSecureString("Passphrase:", ConsoleColor.Yellow);
 
-            var id = _walletService.CreateWallet(mnemonic, passphrase);
+            var id = _walletService.CreateWallet(seed, passphrase);
             var path = Util.WalletPath(id);
 
             _console.WriteLine($"Wallet ID: {id}");

@@ -57,11 +57,11 @@ namespace BAMWallet.Rpc.Controllers
         }
 
         [HttpGet("create", Name = "Create")]
-        public async Task<IActionResult> Create(string mnemonic = null, string passphrase = null)
+        public async Task<IActionResult> Create(string seed = null, string passphrase = null)
         {
-            string[] mnemonicDefault = await _walletService.CreateMnemonic(Language.English, WordCount.TwentyFour);
-            string[] passphraseDefault = await _walletService.CreateMnemonic(Language.English, WordCount.Twelve);
-            string joinMmnemonic = string.Join(" ", mnemonic ?? string.Join(' ', mnemonicDefault));
+            string[] mnemonicDefault = await _walletService.CreateSeed(Language.English, WordCount.TwentyFour);
+            string[] passphraseDefault = await _walletService.CreateSeed(Language.English, WordCount.Twelve);
+            string joinMmnemonic = string.Join(" ", seed ?? string.Join(' ', mnemonicDefault));
             string joinPassphrase = string.Join(" ", passphrase ?? string.Join(' ', passphraseDefault));
             string id = _walletService.CreateWallet(joinMmnemonic.ToSecureString(), joinPassphrase.ToSecureString());
             var session = new Session(id.ToSecureString(), joinPassphrase.ToSecureString());
@@ -77,23 +77,23 @@ namespace BAMWallet.Rpc.Controllers
             {
                 path = Util.WalletPath(id),
                 identifier = id,
-                mnemonic = joinMmnemonic,
+                seed = joinMmnemonic,
                 passphrase = joinPassphrase,
                 address = request.Result
             });
         }
 
-        [HttpGet("mnemonic", Name = "CreateMnemonic")]
-        public async Task<IActionResult> CreateMnemonic(Language language = Language.English,
+        [HttpGet("seed", Name = "CreateSeed")]
+        public async Task<IActionResult> CreateSeed(Language language = Language.English,
             WordCount mnemonicWordCount = WordCount.TwentyFour,
             WordCount passphraseWordCount = WordCount.Twelve)
         {
-            var mnemonic = await _walletService.CreateMnemonic(language, mnemonicWordCount);
-            var passphrase = await _walletService.CreateMnemonic(language, passphraseWordCount);
+            var seed = await _walletService.CreateSeed(language, mnemonicWordCount);
+            var passphrase = await _walletService.CreateSeed(language, passphraseWordCount);
 
             return new ObjectResult(new
             {
-                mnemonic,
+                seed,
                 passphrase
             });
         }

@@ -16,7 +16,7 @@ using BAMWallet.HD;
 
 namespace CLi.ApplicationLayer.Commands.Wallet
 {
-    [CommandDescriptor("mnemonic", "Creates a new mnemonic and passphrase")]
+    [CommandDescriptor("seed", "Creates a new seed and passphrase")]
     class WalletCreateMnemonicCommand : Command
     {
         private readonly IWalletService _walletService;
@@ -35,7 +35,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
 
             Options(out Language lang, out WordCount wCount, 3);
 
-            var mnemonic = await _walletService.CreateMnemonic(lang, wCount);
+            var seed = await _walletService.CreateSeed(lang, wCount);
 
             _console.ForegroundColor = ConsoleColor.Magenta;
 
@@ -44,9 +44,9 @@ namespace CLi.ApplicationLayer.Commands.Wallet
 
             Options(out lang, out wCount, 1);
 
-            var passphrase = await _walletService.CreateMnemonic(lang, wCount);
+            var passphrase = await _walletService.CreateSeed(lang, wCount);
 
-            _console.WriteLine("Seed phrase: " + string.Join(" ", mnemonic));
+            _console.WriteLine("Seed phrase: " + string.Join(" ", seed));
             _console.WriteLine("Passphrase:  " + string.Join(" ", passphrase));
 
             _console.ForegroundColor = ConsoleColor.White;
