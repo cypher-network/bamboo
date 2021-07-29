@@ -26,8 +26,8 @@ namespace CLi.ApplicationLayer.Commands.Wallet
         public override Task Execute()
         {
             //check if wallet exists, if it does, save session, login and inform command service
-            using var identifier = Prompt.GetPasswordAsSecureString("Identifier:", ConsoleColor.Yellow);
-            using var passphrase = Prompt.GetPasswordAsSecureString("Passphrase:", ConsoleColor.Yellow);
+            var identifier = Prompt.GetPasswordAsSecureString("Identifier:", ConsoleColor.Yellow);
+            var passphrase = Prompt.GetPasswordAsSecureString("Passphrase:", ConsoleColor.Yellow);
             Session session = new Session(identifier, passphrase); //will throw if wallet doesn't exist
             Command.ActiveSession = session;
             Login();

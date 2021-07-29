@@ -184,7 +184,10 @@ namespace BAMWallet.HD
         /// <returns>The one and only KeySet</returns>
         public KeySet KeySet(Session session)
         {
-            return session.Database.Query<KeySet>().First();
+            session.WalletTransaction ??= new WalletTransaction();
+            var ks = session.Database.Query<KeySet>().First();
+            session.WalletTransaction.SenderAddress = ks.StealthAddress;
+            return ks;
         }
 
         /// <summary>
@@ -1253,9 +1256,10 @@ namespace BAMWallet.HD
         /// <param name="sessionId"></param>
         /// <param name="start"></param>
         /// <returns></returns>
-        public async Task<TaskResult<bool>> RecoverTransactions(Session session, int start)
+        public async Task<TaskResult<bool>> RecoverTransactions(Session s, int start)
         {
             Guard.Argument(start, nameof(start)).NotNegative();
+            var session = s;
             try
             {
                 using (var db = Util.LiteRepositoryFactory(session.Identifier, session.Passphrase))
@@ -1388,6 +1392,7 @@ namespace BAMWallet.HD
             try
             {
                 session.Database.Insert(data);
+                session.SessionId = Guid.NewGuid();
             }
             catch (Exception ex)
             {
