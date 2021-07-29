@@ -18,7 +18,7 @@ namespace CLi.ApplicationLayer.Commands
     {
         protected readonly IConsole _console;
         private static bool _isInitialized = false;
-        private static readonly double TIMEOUT = 10000;// * 60 * 15;
+        private static readonly double TIMEOUT = 1000 * 60 * 30;
         private Timer _timeout = new Timer(TIMEOUT);
         private void OnTimeout(object source, ElapsedEventArgs e)
         {
