@@ -38,6 +38,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="FuzzySharp" Version="1.0.0"/>
     <PackageReference Include="Kurukuru" Version="1.2.0" />
     <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="3.1.0" />
     <PackageReference Include="ConsoleTables" Version="2.4.2" />

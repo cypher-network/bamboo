@@ -17,6 +17,7 @@ using Microsoft.Extensions.Logging;
 using CLi.Helper;
 using CLi.ApplicationLayer.Commands.Wallet;
 using CLi.ApplicationLayer.Commands.Vault;
+using FuzzySharp;
 
 namespace CLi.ApplicationLayer.Commands
 {
@@ -162,15 +163,34 @@ namespace CLi.ApplicationLayer.Commands
 
             while (!_hasExited)
             {
-                string arg = Prompt.GetString("bamboo$", promptColor: ConsoleColor.Cyan).Trim();
+                var args = Prompt.GetString("bamboo$", promptColor: ConsoleColor.Cyan)?.TrimEnd()?.Split(' ');
 
-                if (string.IsNullOrEmpty(arg))
+                if ((args == null) || (args.Length == 1 && string.IsNullOrEmpty(args[0])) || (args.Length > 1))
                 {
+                    continue;
+                }
+                if(args[0] == "--help" || args[0] == "?" || args[0] == "/?" || args[0] == "help")
+                {
+                    PrintHelp();
+                    continue;
+                }
+                if(!_commands.ContainsKey(args[0]))
+                {
+                    var bestMatch = Process.ExtractOne(args[0], _commands.Keys, cutoff: 60);
+                    if(null != bestMatch)
+                    {
+                        _console.WriteLine("Command: {0} not found. Did you mean {1}?", args[0], bestMatch.Value);
+                    }
+                    else
+                    {
+                        _console.WriteLine("Command: {0} not found. Here is the list of available commands?", args[0]);
+                        PrintHelp();
+                    }
                     continue;
                 }
                 try
                 {
-                    await Execute(arg).ConfigureAwait(false);
+                    await Execute(args[0]).ConfigureAwait(false);
                 }
                 catch (Exception e)
                 {
