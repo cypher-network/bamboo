@@ -7,7 +7,8 @@ namespace CLi.ApplicationLayer.Events
         public enum LoginEvent
         {
             LoggedIn,
-            LoggedOut
+            LoggedOut,
+            Init
         };
         public LoginEvent LoginStateChangedTo { get; }
         public LoginEvent LoginStateChangedFrom { get; }

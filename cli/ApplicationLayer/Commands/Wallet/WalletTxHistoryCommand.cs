@@ -15,6 +15,7 @@ using ConsoleTables;
 using BAMWallet.HD;
 using Kurukuru;
 using BAMWallet.Extensions;
+using BAMWallet.Helper;
 namespace CLi.ApplicationLayer.Commands.Wallet
 {
     [CommandDescriptor("history", "Show my transactions")]
@@ -30,7 +31,8 @@ namespace CLi.ApplicationLayer.Commands.Wallet
 
         public override async Task Execute()
         {
-            Login();
+            this.Login();
+            using var KeepLoginState = new RAIIGuard(Command.FreezeTimer, Command.UnfreezeTimer);
             try
             {
                 var session = ActiveSession;

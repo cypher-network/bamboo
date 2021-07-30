@@ -1392,7 +1392,7 @@ namespace BAMWallet.HD
             try
             {
                 session.Database.Insert(data);
-                if(updateGuid)
+                if (updateGuid)
                 {
                     session.SessionId = Guid.NewGuid();
                 }

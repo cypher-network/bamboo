@@ -17,6 +17,7 @@ using Kurukuru;
 using BAMWallet.HD;
 using BAMWallet.Model;
 using BAMWallet.Extensions;
+using BAMWallet.Helper;
 
 namespace CLi.ApplicationLayer.Commands.Wallet
 {
@@ -37,7 +38,8 @@ namespace CLi.ApplicationLayer.Commands.Wallet
 
         public override async Task Execute()
         {
-            Login();
+            this.Login();
+            using var KeepLoginState = new RAIIGuard(Command.FreezeTimer, Command.UnfreezeTimer);
             var address = Prompt.GetString("Address:", null, ConsoleColor.Red);
             var amount = Prompt.GetString("Amount:", null, ConsoleColor.Red);
             var memo = Prompt.GetString("Memo:", null, ConsoleColor.Green);

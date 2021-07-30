@@ -19,7 +19,8 @@ namespace CLi.ApplicationLayer.Commands
         protected readonly IConsole _console;
         private static bool _isInitialized = false;
         private static readonly double TIMEOUT = 1000 * 60 * 30;
-        private Timer _timeout = new Timer(TIMEOUT);
+        private static Timer _timeout = new Timer(TIMEOUT);
+        private static LogInStateChanged.LoginEvent _loginState = LogInStateChanged.LoginEvent.Init;
         private void OnTimeout(object source, ElapsedEventArgs e)
         {
             _console.WriteLine("You have been logged out of the wallet due to inactivity. Please login again to use the wallet.");
@@ -27,6 +28,14 @@ namespace CLi.ApplicationLayer.Commands
             _console.Write("bamboo$ ");
             _console.ForegroundColor = ConsoleColor.White;
             Logout();
+        }
+
+        private void ReinitializeLogoutTimer()
+        {
+            _timeout.Elapsed -= OnTimeout;
+            _timeout.Stop();
+            _timeout = new Timer(TIMEOUT);
+            _timeout.Elapsed += OnTimeout;
         }
 
         protected Command(string name, string description, IConsole console)
@@ -37,23 +46,41 @@ namespace CLi.ApplicationLayer.Commands
             if (!_isInitialized)
             {
                 ActiveSession = null;
-                _timeout.Elapsed += OnTimeout;
                 _isInitialized = true;
             }
+            ReinitializeLogoutTimer();
         }
         protected static Session ActiveSession { get; set; }
         protected void Login()
         {
-            _timeout.Stop();
-            LoginStateChanged?.Invoke(this, new LogInStateChanged(LogInStateChanged.LoginEvent.LoggedIn, LogInStateChanged.LoginEvent.LoggedOut));
+            ReinitializeLogoutTimer();
+            if (_loginState != LogInStateChanged.LoginEvent.LoggedIn)
+            {
+                LoginStateChanged?.Invoke(this, new LogInStateChanged(LogInStateChanged.LoginEvent.LoggedIn, LogInStateChanged.LoginEvent.LoggedOut));
+                _loginState = LogInStateChanged.LoginEvent.LoggedIn;
+            }
             _timeout.Start();
-            _timeout.Enabled = true;
+
         }
+
+        public static void FreezeTimer()
+        {
+            _timeout.Stop();
+        }
+
+        public static void UnfreezeTimer()
+        {
+            _timeout.Start();
+        }
+
         protected void Logout()
         {
-            LoginStateChanged?.Invoke(this, new LogInStateChanged(LogInStateChanged.LoginEvent.LoggedOut, LogInStateChanged.LoginEvent.LoggedIn));
+            if (_loginState != LogInStateChanged.LoginEvent.LoggedOut)
+            {
+                LoginStateChanged?.Invoke(this, new LogInStateChanged(LogInStateChanged.LoginEvent.LoggedOut, LogInStateChanged.LoginEvent.LoggedIn));
+                _loginState = LogInStateChanged.LoginEvent.LoggedOut;
+            }
             _timeout.Stop();
-            _timeout.Enabled = false;
             ActiveSession = null;
         }
 

@@ -14,6 +14,7 @@ using McMaster.Extensions.CommandLineUtils;
 using BAMWallet.Extensions;
 using BAMWallet.HD;
 using Kurukuru;
+using BAMWallet.Helper;
 namespace CLi.ApplicationLayer.Commands.Wallet
 {
     [CommandDescriptor("balance", "Get your wallet balance")]
@@ -30,9 +31,10 @@ namespace CLi.ApplicationLayer.Commands.Wallet
 
         public override async Task Execute()
         {
+            this.Login();
+            using var KeepLoginState = new RAIIGuard(Command.FreezeTimer, Command.UnfreezeTimer);
             try
             {
-                Login();
                 await Spinner.StartAsync("Checking balance ...", spinner =>
                 {
                     _spinner = spinner;

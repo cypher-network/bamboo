@@ -14,6 +14,8 @@ using McMaster.Extensions.CommandLineUtils;
 using ConsoleTables;
 using BAMWallet.HD;
 using BAMWallet.Extensions;
+using BAMWallet.Helper;
+
 namespace CLi.ApplicationLayer.Commands.Wallet
 {
     [CommandDescriptor("address", "Find out your address")]
@@ -28,7 +30,8 @@ namespace CLi.ApplicationLayer.Commands.Wallet
 
         public override Task Execute()
         {
-            Login();
+            this.Login();
+            using var KeepLoginState = new RAIIGuard(Command.FreezeTimer, Command.UnfreezeTimer);
             var session = ActiveSession;
 
             var request = _walletService.Address(session);

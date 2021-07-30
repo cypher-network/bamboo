@@ -5,6 +5,7 @@ using Kurukuru;
 using McMaster.Extensions.CommandLineUtils;
 using Microsoft.Extensions.DependencyInjection;
 using BAMWallet.Extensions;
+using BAMWallet.Helper;
 namespace CLi.ApplicationLayer.Commands.Wallet
 {
     [CommandDescriptor("recover", "Recover wallet transactions")]
@@ -22,7 +23,8 @@ namespace CLi.ApplicationLayer.Commands.Wallet
 
         public override async Task Execute()
         {
-            Login();
+            this.Login();
+            using var KeepLoginState = new RAIIGuard(Command.FreezeTimer, Command.UnfreezeTimer);
             await Spinner.StartAsync("Recovering transactions ...", async spinner =>
             {
                 _spinner = spinner;
