@@ -466,7 +466,7 @@ namespace BAMWallet.HD
                 }));
             }
 
-            var saved = Save(session, session.WalletTransaction);
+            var saved = Save(session, session.WalletTransaction, false);
             if (!saved.Success)
                 return TaskResult<WalletTransaction>.CreateFailure(JObject.FromObject(new
                 {
@@ -1385,14 +1385,17 @@ namespace BAMWallet.HD
         /// <param name="sessionId"></param>
         /// <param name="data"></param>
         /// <returns></returns>
-        public TaskResult<bool> Save<T>(Session session, T data)
+        public TaskResult<bool> Save<T>(Session session, T data, bool updateGuid = true)
         {
             Guard.Argument(data, nameof(data)).NotEqual(default);
 
             try
             {
                 session.Database.Insert(data);
-                session.SessionId = Guid.NewGuid();
+                if(updateGuid)
+                {
+                    session.SessionId = Guid.NewGuid();
+                }
             }
             catch (Exception ex)
             {

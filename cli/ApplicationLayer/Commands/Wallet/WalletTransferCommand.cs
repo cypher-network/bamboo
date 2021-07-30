@@ -87,11 +87,12 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                         {
                             message += $"\nPaymentID: {walletTx?.TxnId.ByteToHex()}";
                         }
-
+                        ActiveSession.SessionId = Guid.NewGuid();
                         spinner.Succeed(message);
                     }
                     catch (Exception ex)
                     {
+                        ActiveSession.SessionId = Guid.NewGuid();
                         _logger.LogError(ex.StackTrace);
                         throw;
                     }

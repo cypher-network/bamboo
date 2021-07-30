@@ -29,7 +29,7 @@ namespace BAMWallet.HD
         int Count(Session session);
         (Key, Key) Unlock(Session session);
         Client HttpClient();
-        TaskResult<bool> Save<T>(Session session, T data);
+        TaskResult<bool> Save<T>(Session session, T data, bool updateGuid = false);
         Task<TaskResult<bool>> Send(Session session);
         Task<TaskResult<WalletTransaction>> ReceivePayment(Session session, string paymentId);
         TaskResult<WalletTransaction> CreateTransaction(Session session);
