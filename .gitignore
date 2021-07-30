@@ -44,3 +44,6 @@ bld/
 
 Properties/PublishProfiles/
 *.Local.json
+
+.fake
+.ionide

@@ -6,24 +6,25 @@
 // You should have received a copy of the license along with this
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
 
-using System;
-using System.Threading.Tasks;
 using McMaster.Extensions.CommandLineUtils;
 using Microsoft.Extensions.DependencyInjection;
+using System;
+using System.Threading.Tasks;
 using BAMWallet.Extensions;
 namespace CLi.ApplicationLayer.Commands.Wallet
 {
-    [CommandDescriptor("version", "Running version")]
-    public class WalletVersionCommand : Command
+    [CommandDescriptor("logout", "Logs out and locks wallet.")]
+    class Logout : Command
     {
-        public WalletVersionCommand(IServiceProvider serviceProvider) : base(typeof(WalletVersionCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
-            typeof(WalletVersionCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description), serviceProvider.GetService<IConsole>())
+
+        public Logout(IServiceProvider serviceProvider) : base(typeof(Logout).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
+            typeof(Logout).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description), serviceProvider.GetService<IConsole>())
         {
         }
 
         public override Task Execute()
         {
-            _console.WriteLine($"{BAMWallet.Helper.Util.GetAssemblyVersion()}");
+            Logout();
             return Task.CompletedTask;
         }
     }

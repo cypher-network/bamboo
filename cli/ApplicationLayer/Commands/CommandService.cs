@@ -1,45 +1,100 @@
-﻿// Bamboo (c) by Tangram 
-// 
+﻿// Bamboo (c) by Tangram
+//
 // Bamboo is licensed under a
 // Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License.
-// 
+//
 // You should have received a copy of the license along with this
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using McMaster.Extensions.CommandLineUtils;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using CLi.Helper;
+using CLi.ApplicationLayer.Commands.Wallet;
+using CLi.ApplicationLayer.Commands.Vault;
+using FuzzySharp;
 
 namespace CLi.ApplicationLayer.Commands
 {
     public class CommandService : HostedService, ICommandService
     {
-        private readonly IConsole console;
-        private readonly ILogger logger;
-        private readonly IServiceProvider serviceProvider;
-        readonly IDictionary<string[], Type> commands;
-        private bool prompt = true;
-
+        enum State
+        {
+            LoggedIn,
+            LoggedOut
+        };
+        private readonly IConsole _console;
+        private readonly ILogger _logger;
+        private readonly IServiceProvider _serviceProvider;
+        readonly IDictionary<string, ICommand> _commands;
+        private bool _hasExited;
         private Thread _t;
+        private State _commandServiceState;
 
         public CommandService(IConsole cnsl, IServiceProvider provider, ILogger<CommandService> lgr)
         {
-            console = cnsl;
-            logger = lgr;
-            serviceProvider = provider;
+            _serviceProvider = provider;
+            _console = cnsl;
+            _logger = lgr;
+            _commands = new Dictionary<string, ICommand>();
+            _console.CancelKeyPress += Console_CancelKeyPress;
+            _commandServiceState = State.LoggedOut;
+            _hasExited = false;
+            RegisterLoggedOutCommands();
+            Command.LoginStateChanged += (o, e) =>
+            {
+                if (e.LoginStateChangedFrom == Events.LogInStateChanged.LoginEvent.LoggedOut)
+                {
+                    if (_commandServiceState != State.LoggedIn)
+                    {
+                        _commandServiceState = State.LoggedIn;
+                        RegisterLoggedInCommands();
+                    }
+                }
+                else
+                {
+                    if (_commandServiceState != State.LoggedOut)
+                    {
+                        _commandServiceState = State.LoggedOut;
+                        RegisterLoggedOutCommands();
+                    }
+                }
+            };
+        }
 
-            commands = new Dictionary<string[], Type>(new CommandEqualityComparer());
+        private void RegisterLoggedOutCommands()
+        {
+            _commands.Clear();
+            RegisterCommand(new Login(_serviceProvider));
+            RegisterCommand(new WalletCreateCommand(_serviceProvider));
+            RegisterCommand(new WalletCreateMnemonicCommand(_serviceProvider));
+            RegisterCommand(new WalletListCommand(_serviceProvider));
+            RegisterCommand(new WalletRestoreCommand(_serviceProvider));
+            RegisterCommand(new WalletVersionCommand(_serviceProvider));
+            RegisterCommand(new ExitCommand(this, _serviceProvider));
+        }
 
-            console.CancelKeyPress += Console_CancelKeyPress;
-
-            RegisterCommands();
+        private void RegisterLoggedInCommands()
+        {
+            _commands.Clear();
+            RegisterCommand(new Logout(_serviceProvider));
+            RegisterCommand(new WalletCreateCommand(_serviceProvider));
+            RegisterCommand(new WalletCreateMnemonicCommand(_serviceProvider));
+            RegisterCommand(new WalletListCommand(_serviceProvider));
+            RegisterCommand(new WalletRestoreCommand(_serviceProvider));
+            RegisterCommand(new WalletVersionCommand(_serviceProvider));
+            RegisterCommand(new WalletAddressCommand(_serviceProvider));
+            RegisterCommand(new WalletBalanceCommand(_serviceProvider));
+            RegisterCommand(new WalletReceivePaymentCommand(_serviceProvider));
+            RegisterCommand(new WalletRecoverTransactionsCommand(_serviceProvider));
+            RegisterCommand(new WalletTransferCommand(_serviceProvider));
+            RegisterCommand(new WalletTxHistoryCommand(_serviceProvider));
+            RegisterCommand(new ExitCommand(this, _serviceProvider));
         }
 
         private void Console_CancelKeyPress(object sender, ConsoleCancelEventArgs e)
@@ -52,65 +107,23 @@ namespace CLi.ApplicationLayer.Commands
             await ExitCleanly();
         }
 
-        public void RegisterCommand<T>(string[] name) where T : ICommand
+        public void RegisterCommand(ICommand command)
         {
-            commands.Add(name, typeof(T));
+            _commands.Add(command.Name, command);
         }
 
-        public void RegisterCommand(string[] name, Type t)
+        private ICommand GetCommand(string arg)
         {
-            if (typeof(ICommand).IsAssignableFrom(t))
+            if (_commands.ContainsKey(arg))
             {
-                commands.Add(name, t);
-                return;
+                return _commands[arg];
             }
-
-            throw new ArgumentException("Command must implement ICommand interface", nameof(t));
+            return null;
         }
 
-        public void RegisterCommands()
+        public async Task Execute(string arg)
         {
-            var commands = Assembly.GetExecutingAssembly().GetTypes().Where(x => x.IsClass
-                                                                               && typeof(Command).IsAssignableFrom(x)
-                                                                               && x.GetCustomAttribute<CommandDescriptorAttribute>() != null
-                                                                               ).OrderBy(x => string.Join(' ', x.GetCustomAttribute<CommandDescriptorAttribute>().Name));
-
-            foreach (var command in commands)
-            {
-                var attribute = command.GetCustomAttribute<CommandDescriptorAttribute>() as CommandDescriptorAttribute;
-
-                RegisterCommand(attribute.Name, command);
-            }
-        }
-
-        private ICommand GetCommand(string[] args)
-        {
-            var cmd = args.Where(x => !string.IsNullOrEmpty(x)).ToArray();
-
-            ICommand command = null;
-
-            if (commands.ContainsKey(cmd))
-            {
-                var commandType = commands[cmd];
-
-                var cstr = commandType.GetConstructor(new Type[] { typeof(IServiceProvider) });
-
-                if (cstr != null)
-                {
-                    command = Activator.CreateInstance(commandType, serviceProvider) as ICommand;
-                }
-                else
-                {
-                    command = Activator.CreateInstance(commandType) as ICommand;
-                }
-            }
-
-            return command;
-        }
-
-        public async Task Execute(string[] args)
-        {
-            var command = GetCommand(args);
+            var command = GetCommand(arg);
 
             if (command == null)
             {
@@ -123,15 +136,12 @@ namespace CLi.ApplicationLayer.Commands
 
         private void PrintHelp()
         {
-            console.WriteLine();
-            console.WriteLine("  Commands");
+            _console.WriteLine();
+            _console.WriteLine("  Commands");
 
-            foreach (var cmd in commands)
+            foreach (var cmd in _commands)
             {
-                var commandDescriptor = cmd.Value.GetCustomAttribute<CommandDescriptorAttribute>();
-                var name = string.Join(' ', commandDescriptor.Name);
-
-                console.WriteLine($"    {name}".PadRight(25) + $"{commandDescriptor.Description}");
+                _console.WriteLine($"    {cmd.Value.Name}".PadRight(25) + $"{cmd.Value.Description}");
             }
         }
 
@@ -147,24 +157,44 @@ namespace CLi.ApplicationLayer.Commands
         {
             await StartAllHostedProviders();
 
-            Thread.Sleep(1500);
+            Thread.Sleep(1500); //St.An. what's that?
 
             ClearCurrentConsoleLine();
 
-            while (prompt)
+            while (!_hasExited)
             {
                 var args = Prompt.GetString("bamboo$", promptColor: ConsoleColor.Cyan)?.TrimEnd()?.Split(' ');
 
-                if (args == null || (args.Length == 1 && string.IsNullOrEmpty(args[0])))
+                if ((args == null) || (args.Length == 1 && string.IsNullOrEmpty(args[0])) || (args.Length > 1))
+                {
                     continue;
-
+                }
+                if (args[0] == "--help" || args[0] == "?" || args[0] == "/?" || args[0] == "help")
+                {
+                    PrintHelp();
+                    continue;
+                }
+                if (!_commands.ContainsKey(args[0]))
+                {
+                    var bestMatch = Process.ExtractOne(args[0], _commands.Keys, cutoff: 60);
+                    if (null != bestMatch)
+                    {
+                        _console.WriteLine("Command: {0} not found. Did you mean {1}?", args[0], bestMatch.Value);
+                    }
+                    else
+                    {
+                        _console.WriteLine("Command: {0} not found. Here is the list of available commands:", args[0]);
+                        PrintHelp();
+                    }
+                    continue;
+                }
                 try
                 {
-                    await Execute(args).ConfigureAwait(false);
+                    await Execute(args[0]).ConfigureAwait(false);
                 }
                 catch (Exception e)
                 {
-                    Logger.LogException(console, logger, e);
+                    Logger.LogException(_console, _logger, e);
                 }
             }
 
@@ -173,9 +203,9 @@ namespace CLi.ApplicationLayer.Commands
 
         private async Task ExitCleanly()
         {
-            prompt = false;
+            _hasExited = true;
 
-            console.WriteLine("Exiting...");
+            _console.WriteLine("Exiting...");
 
             await StopAllHostedProviders();
 
@@ -219,7 +249,7 @@ namespace CLi.ApplicationLayer.Commands
 
             foreach (var hostedProvider in hostedProviders)
             {
-                var serviceInstance = serviceProvider.GetService(hostedProvider) as IHostedService;
+                var serviceInstance = _serviceProvider.GetService(hostedProvider) as IHostedService;
 
                 if (serviceInstance != null)
                 {
@@ -234,7 +264,7 @@ namespace CLi.ApplicationLayer.Commands
 
             foreach (var hostedProvider in hostedProviders)
             {
-                var serviceInstance = serviceProvider.GetService(hostedProvider) as IHostedService;
+                var serviceInstance = _serviceProvider.GetService(hostedProvider) as IHostedService;
 
                 if (serviceInstance != null)
                 {
@@ -250,41 +280,6 @@ namespace CLi.ApplicationLayer.Commands
                 _t = new Thread(async () => { await InteractiveCliLoop(); });
                 _t.Start();
             });
-        }
-    }
-
-    public class CommandEqualityComparer : IEqualityComparer<string[]>
-    {
-        public bool Equals(string[] x, string[] y)
-        {
-            if (x.Length != y.Length)
-            {
-                return false;
-            }
-
-            for (int i = 0; i < x.Length; i++)
-            {
-                if (x[i] != y[i])
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        public int GetHashCode(string[] obj)
-        {
-            int result = 17;
-
-            for (int i = 0; i < obj.Length; i++)
-            {
-                unchecked
-                {
-                    result = result * 23 + obj[i].GetHashCode();
-                }
-            }
-
-            return result;
         }
     }
 }

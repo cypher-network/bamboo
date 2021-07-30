@@ -1,8 +1,8 @@
-﻿// Bamboo (c) by Tangram 
-// 
+﻿// Bamboo (c) by Tangram
+//
 // Bamboo is licensed under a
 // Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License.
-// 
+//
 // You should have received a copy of the license along with this
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
 
@@ -12,20 +12,15 @@ using System.Threading.Tasks;
 
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
-
 using Newtonsoft.Json;
-
 using Kurukuru;
-
 using McMaster.Extensions.CommandLineUtils;
-
 using BAMWallet.HD;
-using BAMWallet.Model;
 using BAMWallet.Extensions;
-
+using BAMWallet.Helper;
 namespace CLi.ApplicationLayer.Commands.Wallet
 {
-    [CommandDescriptor(new string[] { "receive" }, "Receive a payment")]
+    [CommandDescriptor("receive", "Receive a payment")]
     public class WalletReceivePaymentCommand : Command
     {
         private readonly IWalletService _walletService;
@@ -33,7 +28,8 @@ namespace CLi.ApplicationLayer.Commands.Wallet
 
         private Spinner spinner;
 
-        public WalletReceivePaymentCommand(IServiceProvider serviceProvider)
+        public WalletReceivePaymentCommand(IServiceProvider serviceProvider) : base(typeof(WalletReceivePaymentCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
+            typeof(WalletReceivePaymentCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description), serviceProvider.GetService<IConsole>())
         {
             _walletService = serviceProvider.GetService<IWalletService>();
             _logger = serviceProvider.GetService<ILogger<WalletReceivePaymentCommand>>();
@@ -41,9 +37,8 @@ namespace CLi.ApplicationLayer.Commands.Wallet
 
         public override async Task Execute()
         {
-            using var identifier = Prompt.GetPasswordAsSecureString("Identifier:", ConsoleColor.Yellow);
-            using var passphrase = Prompt.GetPasswordAsSecureString("Passphrase:", ConsoleColor.Yellow);
-
+            this.Login();
+            using var KeepLoginState = new RAIIGuard(Command.FreezeTimer, Command.UnfreezeTimer);
             var paymentId = Prompt.GetString("PAYMENTID:", null, ConsoleColor.Green);
             if (!string.IsNullOrEmpty(paymentId))
             {
@@ -52,15 +47,15 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                     this.spinner = spinner;
                     try
                     {
-                        var session = _walletService.SessionAddOrUpdate(new Session(identifier, passphrase));
-                        await _walletService.ReceivePayment(session.SessionId, paymentId);
+                        var session = ActiveSession;
+                        await _walletService.ReceivePayment(session, paymentId);
                         if (session.LastError != null)
                         {
                             spinner.Fail(JsonConvert.SerializeObject(session.LastError.GetValue("message")));
                             return;
                         }
 
-                        var balance = _walletService.History(session.SessionId).Result.Last();
+                        var balance = _walletService.History(session).Result.Last();
                         spinner.Succeed(
                             $"Memo: {balance.Memo}  Received: {balance.MoneyIn}  Available Balance: {balance.Balance}");
                     }

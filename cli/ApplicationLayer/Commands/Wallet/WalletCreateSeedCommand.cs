@@ -1,33 +1,29 @@
-﻿// Bamboo (c) by Tangram 
-// 
+﻿// Bamboo (c) by Tangram
+//
 // Bamboo is licensed under a
 // Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License.
-// 
+//
 // You should have received a copy of the license along with this
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
 
 using System;
 using System.Threading.Tasks;
-
 using Microsoft.Extensions.DependencyInjection;
-
 using McMaster.Extensions.CommandLineUtils;
-
 using NBitcoin;
-
+using BAMWallet.Extensions;
 using BAMWallet.HD;
 
 namespace CLi.ApplicationLayer.Commands.Wallet
 {
-    [CommandDescriptor(new string[] { "mnemonic" }, "Creates a new mnemonic and passphrase")]
+    [CommandDescriptor("seed", "Creates a new seed and passphrase")]
     class WalletCreateMnemonicCommand : Command
     {
-        private readonly IConsole _console;
         private readonly IWalletService _walletService;
 
-        public WalletCreateMnemonicCommand(IServiceProvider serviceProvider)
+        public WalletCreateMnemonicCommand(IServiceProvider serviceProvider) : base(typeof(WalletCreateMnemonicCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
+            typeof(WalletCreateMnemonicCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description), serviceProvider.GetService<IConsole>())
         {
-            _console = serviceProvider.GetService<IConsole>();
             _walletService = serviceProvider.GetService<IWalletService>();
         }
 
@@ -39,7 +35,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
 
             Options(out Language lang, out WordCount wCount, 3);
 
-            var mnemonic = await _walletService.CreateMnemonic(lang, wCount);
+            var seed = await _walletService.CreateSeed(lang, wCount);
 
             _console.ForegroundColor = ConsoleColor.Magenta;
 
@@ -48,16 +44,16 @@ namespace CLi.ApplicationLayer.Commands.Wallet
 
             Options(out lang, out wCount, 1);
 
-            var passphrase = await _walletService.CreateMnemonic(lang, wCount);
+            var passphrase = await _walletService.CreateSeed(lang, wCount);
 
-            _console.WriteLine("Seed phrase: " + string.Join(" ", mnemonic));
+            _console.WriteLine("Seed phrase: " + string.Join(" ", seed));
             _console.WriteLine("Passphrase:  " + string.Join(" ", passphrase));
 
             _console.ForegroundColor = ConsoleColor.White;
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="lang"></param>
         /// <param name="wCount"></param>

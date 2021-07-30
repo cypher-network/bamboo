@@ -1,52 +1,47 @@
-﻿// Bamboo (c) by Tangram 
-// 
+﻿// Bamboo (c) by Tangram
+//
 // Bamboo is licensed under a
 // Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License.
-// 
+//
 // You should have received a copy of the license along with this
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
 
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-
 using Microsoft.Extensions.DependencyInjection;
-
 using McMaster.Extensions.CommandLineUtils;
-
 using ConsoleTables;
-
 using BAMWallet.HD;
 using Kurukuru;
-
+using BAMWallet.Extensions;
+using BAMWallet.Helper;
 namespace CLi.ApplicationLayer.Commands.Wallet
 {
-    [CommandDescriptor(new string[] { "history" }, "Show my transactions")]
+    [CommandDescriptor("history", "Show my transactions")]
     public class WalletTxHistoryCommand : Command
     {
-        private readonly IConsole _console;
         private readonly IWalletService _walletService;
 
-        public WalletTxHistoryCommand(IServiceProvider serviceProvider)
+        public WalletTxHistoryCommand(IServiceProvider serviceProvider) : base(typeof(WalletTxHistoryCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
+            typeof(WalletTxHistoryCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description), serviceProvider.GetService<IConsole>())
         {
-            _console = serviceProvider.GetService<IConsole>();
             _walletService = serviceProvider.GetService<IWalletService>();
         }
 
         public override async Task Execute()
         {
-            using var identifier = Prompt.GetPasswordAsSecureString("Identifier:", ConsoleColor.Yellow);
-            using var passphrase = Prompt.GetPasswordAsSecureString("Passphrase:", ConsoleColor.Yellow);
-
+            this.Login();
+            using var KeepLoginState = new RAIIGuard(Command.FreezeTimer, Command.UnfreezeTimer);
             try
             {
-                var session = _walletService.SessionAddOrUpdate(new Session(identifier, passphrase));
+                var session = ActiveSession;
 
                 await Spinner.StartAsync("Looking up history ...", async spinner =>
                 {
-                    await _walletService.SyncWallet(session.SessionId);
+                    await _walletService.SyncWallet(session);
 
-                    var request = _walletService.History(session.SessionId);
+                    var request = _walletService.History(session);
 
                     if (!request.Success)
                     {

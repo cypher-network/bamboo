@@ -1,37 +1,32 @@
-﻿// Bamboo (c) by Tangram 
-// 
+﻿// Bamboo (c) by Tangram
+//
 // Bamboo is licensed under a
 // Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License.
-// 
+//
 // You should have received a copy of the license along with this
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
 
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-
+using BAMWallet.Extensions;
+using McMaster.Extensions.CommandLineUtils;
 namespace CLi.ApplicationLayer.Commands.Vault
 {
-    [CommandDescriptor(new string[] { "exit" }, "Exit the wallet")]
+    [CommandDescriptor("exit", "Exit the wallet")]
     public class ExitCommand : Command
     {
         ICommandService commandService;
 
-        public ExitCommand(IServiceProvider provider)
+        public ExitCommand(ICommandService service, IServiceProvider serviceProvider) : base(typeof(ExitCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
+            typeof(ExitCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description), serviceProvider.GetService<IConsole>())
         {
-            commandService = provider.GetService<ICommandService>();
-        }
-
-        public Task<bool> asdasd()
-        {
-            return Task.FromResult(true);
+            commandService = service;
         }
 
         public override async Task Execute()
         {
+            Logout();
             await commandService.Exit();
         }
     }
