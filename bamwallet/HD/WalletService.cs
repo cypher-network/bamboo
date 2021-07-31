@@ -466,7 +466,7 @@ namespace BAMWallet.HD
                 }));
             }
 
-            var saved = Save(session, session.WalletTransaction, false);
+            var saved = Save(session, session.WalletTransaction, true);
             if (!saved.Success)
                 return TaskResult<WalletTransaction>.CreateFailure(JObject.FromObject(new
                 {
@@ -834,11 +834,11 @@ namespace BAMWallet.HD
                 var (_, scan) = Unlock(session);
                 ulong received = 0;
 
-                foreach (var transaction in walletTransactions.Select(x => x.Transaction))
+                foreach (var transaction in walletTransactions)
                 {
-                    bool isLocked = transaction.IsLockedOrInvalid();
+                    bool isLocked = transaction.Transaction.IsLockedOrInvalid();
 
-                    var payment = transaction.Vout.Where(z => z.T is CoinType.Payment).ToArray();
+                    var payment = transaction.Transaction.Vout.Where(z => z.T is CoinType.Payment).ToArray();
                     if (payment.Any())
                     {
                         try
@@ -857,7 +857,8 @@ namespace BAMWallet.HD
                                         0,
                                         received,
                                         payment,
-                                        transaction.TxnId.ByteToHex()));
+                                        transaction.Transaction.TxnId.ByteToHex(),
+                                        transaction.IsVerified));
                                 }
                             }
                         }
@@ -867,7 +868,7 @@ namespace BAMWallet.HD
                         }
                     }
 
-                    var change = transaction.Vout
+                    var change = transaction.Transaction.Vout
                         .Where(z => z.T is CoinType.Change or CoinType.Coinstake or CoinType.Coinbase).ToArray();
                     if (!change.Any()) continue;
                     try
@@ -885,7 +886,8 @@ namespace BAMWallet.HD
                                 messageCoinbase.Amount,
                                 received,
                                 change,
-                                transaction.TxnId.ByteToHex(),
+                                transaction.Transaction.TxnId.ByteToHex(),
+                                transaction.IsVerified,
                                 isLocked));
 
                             continue;
@@ -901,7 +903,8 @@ namespace BAMWallet.HD
                             0,
                             received,
                             change,
-                            transaction.TxnId.ByteToHex(),
+                            transaction.Transaction.TxnId.ByteToHex(),
+                            transaction.IsVerified,
                             isLocked));
                     }
                     catch (Exception)
@@ -933,7 +936,7 @@ namespace BAMWallet.HD
         /// <param name="txId"></param>
         /// <returns></returns>
         private static BalanceSheet MoneyBalanceSheet(DateTime dateTime, string memo, ulong sent, ulong received,
-            ulong reward, ulong balance, Vout[] outputs, string txId, bool? isLocked = null)
+            ulong reward, ulong balance, Vout[] outputs, string txId, bool isVerified, bool? isLocked = null)
         {
             var balanceSheet = new BalanceSheet
             {
@@ -942,6 +945,7 @@ namespace BAMWallet.HD
                 Balance = balance.DivWithNaT().ToString("F9"),
                 Outputs = outputs,
                 TxId = txId,
+                IsVerified = isVerified,
                 IsLocked = isLocked
             };
             if (sent != 0)
@@ -1100,7 +1104,8 @@ namespace BAMWallet.HD
                         Vin = genericResponse.Data.Vin,
                         Ver = genericResponse.Data.Ver
                     },
-                    WalletType = WalletType.Receive
+                    WalletType = WalletType.Receive,
+                    IsVerified = true
                 };
 
                 var saved = Save(session, session.WalletTransaction);
@@ -1204,7 +1209,9 @@ namespace BAMWallet.HD
 
         private async Task SyncTransactions(Session session, IEnumerable<WalletTransaction> transactions)
         {
-            foreach (var transaction in transactions.Select(walletTransaction => walletTransaction.Transaction))
+            var walletTransactions = transactions.ToList();
+            
+            foreach (var transaction in walletTransactions.Select(walletTransaction => walletTransaction.Transaction))
             {
                 if (await TransactionDoesNotExist(transaction))
                 {
@@ -1215,6 +1222,20 @@ namespace BAMWallet.HD
                         // Continue syncing rest of the wallet
                     }
                 }
+            }
+            
+            foreach (var transaction in walletTransactions.Where(walletTransaction => walletTransaction.IsVerified))
+            {
+                if (await TransactionExistsInEndpoint(transaction, _networkSettings.Routing.TransactionId))
+                {
+                    transaction.IsVerified = true;
+                    var saved = Update(session, session.WalletTransaction);
+                    if (!saved.Result)
+                    {
+                        _logger.Error("Transaction is verified but cannot update transaction {@TxId}", transaction.Transaction.TxnId.HexToByte());
+                    }
+                }
+
             }
         }
 
@@ -1235,10 +1256,8 @@ namespace BAMWallet.HD
                 return false;
             }
 
-            GenericResponse<Transaction> transactionQueryResponse;
-
             var endpointPath = string.Format(endpoint, transaction.TxnId.ByteToHex());
-            transactionQueryResponse = await _client.GetAsync<Transaction>(baseAddress, endpointPath, new CancellationToken());
+            var transactionQueryResponse = await _client.GetAsync<Transaction>(baseAddress, endpointPath, new CancellationToken());
 
             if (transactionQueryResponse.HttpStatusCode == HttpStatusCode.OK ||
                 transactionQueryResponse.HttpStatusCode == HttpStatusCode.ServiceUnavailable)
@@ -1247,6 +1266,27 @@ namespace BAMWallet.HD
             }
 
             return true;
+        }
+        
+        
+        private async Task<bool> TransactionExistsInEndpoint(WalletTransaction transaction, string endpoint)
+        {
+            var baseAddress = _client.GetBaseAddress();
+            if (baseAddress == null)
+            {
+                return false;
+            }
+
+            var endpointPath = string.Format(endpoint, transaction.Transaction.TxnId.ByteToHex());
+            var transactionQueryResponse = await _client.GetAsync<Transaction>(baseAddress, endpointPath, new CancellationToken());
+
+            if (transactionQueryResponse.HttpStatusCode == HttpStatusCode.OK &&
+                transactionQueryResponse.Data != null)
+            {
+                return true;
+            }
+
+            return false;
         }
 
 
@@ -1331,7 +1371,8 @@ namespace BAMWallet.HD
                                     Ver = transaction.Ver
                                 },
                                 WalletType = WalletType.Restore,
-                                Delay = 5
+                                Delay = 5,
+                                IsVerified = true
                             };
                             var saved = Save(session, session.WalletTransaction);
                             if (!saved.Success)
@@ -1406,6 +1447,25 @@ namespace BAMWallet.HD
             return TaskResult<bool>.CreateSuccess(true);
         }
 
+        
+        public TaskResult<bool> Update<T>(Session session, T data)
+        {
+            Guard.Argument(data, nameof(data)).NotEqual(default);
+
+            try
+            {
+                session.Database.Update(data);
+            }
+            catch (Exception ex)
+            {
+                _logger.Here().Error(ex, "Error updating");
+                return TaskResult<bool>.CreateFailure(ex);
+            }
+
+            return TaskResult<bool>.CreateSuccess(true);
+        }
+
+        
         /// <summary>
         ///
         /// </summary>

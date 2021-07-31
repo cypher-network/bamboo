@@ -23,5 +23,6 @@ namespace BAMWallet.Model
         public Transaction Transaction { get; set; }
         public WalletType WalletType { get; set; }
         public int Delay { get; set; }
+        public bool IsVerified { get; set; }
     }
 }

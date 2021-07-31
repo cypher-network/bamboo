@@ -62,7 +62,8 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                             Payment = t.ConvertToUInt64(),
                             RecipientAddress = address,
                             WalletType = WalletType.Send,
-                            Delay = delay
+                            Delay = delay,
+                            IsVerified = false
                         };
 
                         _walletService.CreateTransaction(session);

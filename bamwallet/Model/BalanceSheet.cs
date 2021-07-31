@@ -14,6 +14,7 @@ namespace BAMWallet.Model
         public string Balance { get; set; }
         public Vout[] Outputs { get; set; }
         public string TxId { get; set; }
+        public bool IsVerified { get; set; }
         public bool? IsLocked { get; set; }
     }
 }

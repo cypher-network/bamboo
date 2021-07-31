@@ -63,8 +63,16 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                         return Task.CompletedTask;
                     }
 
-                    var table = new ConsoleTable("DateTime", "Payment Id", "Memo", "Money In", "Money Out", "Reward",
-                        "Balance", "Locked");
+                    var table = new ConsoleTable(
+                        "DateTime",
+                        "Payment Id",
+                        "Memo",
+                        "Money In",
+                        "Money Out",
+                        "Reward",
+                        "Balance",
+                        "Verified",
+                        "Locked");
 
                     foreach (var sheet in request.Result)
                     {
@@ -76,6 +84,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                             sheet.MoneyOut,
                             sheet.Reward,
                             sheet.Balance,
+                            sheet.IsVerified.ToString(),
                             sheet.IsLocked.ToString());
                     }
 

@@ -24,6 +24,7 @@ namespace BAMWallet.Model
         [Key(5)] public Vout[] Vout { get; set; }
         [Key(6)] public RCT[] Rct { get; set; }
         [Key(7)] public Vtime Vtime { get; set; }
+
         /// <summary>
         /// 
         /// </summary>
