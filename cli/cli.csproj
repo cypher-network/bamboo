@@ -38,7 +38,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="FuzzySharp" Version="1.0.0"/>
+    <PackageReference Include="FuzzySharp" Version="1.0.0" />
     <PackageReference Include="Kurukuru" Version="1.2.0" />
     <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="3.1.0" />
     <PackageReference Include="ConsoleTables" Version="2.4.2" />
@@ -55,7 +55,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="ApplicationLayer\"/>
+    <Folder Include="ApplicationLayer\" />
     <Folder Include="Helper\" />
     <Folder Include="Configuration\Templates\" />
   </ItemGroup>
@@ -63,7 +63,7 @@
   <!-- Publish the configuration templates -->
   <ItemGroup>
     <Content Include="Configuration\Templates\appsettings.json">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <CopyToPublishDirectory>Always</CopyToPublishDirectory>
     </Content>
   </ItemGroup>
@@ -75,7 +75,7 @@
       <ProjectReference Include="..\bamwallet\bamwallet.csproj" />
     </ItemGroup>
     <ItemGroup>
-    <None Update="appsettings.Local.json">
+    <None Update="appsettings.Development.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <DependentUpon>appsettings.json</DependentUpon>
     </None>
