@@ -76,10 +76,9 @@
     </ItemGroup>
     <ItemGroup>
     <None Include="appsettings.Development.json">
-	          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-			        <CopyToPublishDirectory>Never</CopyToPublishDirectory>
-					    </None>
-
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+    </None>
     <None Update="Runners\bamboo.cmd">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
