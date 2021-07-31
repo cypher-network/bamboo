@@ -466,7 +466,7 @@ namespace BAMWallet.HD
                 }));
             }
 
-            var saved = Save(session, session.WalletTransaction, true);
+            var saved = Save(session, session.WalletTransaction, false);
             if (!saved.Success)
                 return TaskResult<WalletTransaction>.CreateFailure(JObject.FromObject(new
                 {
@@ -1210,7 +1210,7 @@ namespace BAMWallet.HD
         private async Task SyncTransactions(Session session, IEnumerable<WalletTransaction> transactions)
         {
             var walletTransactions = transactions.ToList();
-            
+
             foreach (var transaction in walletTransactions.Select(walletTransaction => walletTransaction.Transaction))
             {
                 if (await TransactionDoesNotExist(transaction))
@@ -1223,7 +1223,7 @@ namespace BAMWallet.HD
                     }
                 }
             }
-            
+
             foreach (var transaction in walletTransactions.Where(walletTransaction => walletTransaction.IsVerified))
             {
                 if (await TransactionExistsInEndpoint(transaction, _networkSettings.Routing.TransactionId))
@@ -1267,8 +1267,8 @@ namespace BAMWallet.HD
 
             return true;
         }
-        
-        
+
+
         private async Task<bool> TransactionExistsInEndpoint(WalletTransaction transaction, string endpoint)
         {
             var baseAddress = _client.GetBaseAddress();
@@ -1447,7 +1447,7 @@ namespace BAMWallet.HD
             return TaskResult<bool>.CreateSuccess(true);
         }
 
-        
+
         public TaskResult<bool> Update<T>(Session session, T data)
         {
             Guard.Argument(data, nameof(data)).NotEqual(default);
@@ -1465,7 +1465,7 @@ namespace BAMWallet.HD
             return TaskResult<bool>.CreateSuccess(true);
         }
 
-        
+
         /// <summary>
         ///
         /// </summary>

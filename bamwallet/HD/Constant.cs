@@ -7,15 +7,15 @@ namespace BAMWallet.HD
     {
         public const string Mainnet = "mainnet";
         public const string Testnet = "testnet";
-        
+
         public const int NanoTan = 1000_000_000;
-        
+
         public const string AppSettingsFile = "appsettings.json";
         public const string AppSettingsFileDev = "appsettings.Development.json";
-        
+
         public const string ConfigSectionNameLog = "Log";
         public const string ConfigSectionNameConfigVersion = "ConfigVersion";
-        
+
         public const int MinimumConfigVersion = 1;
     }
 }
