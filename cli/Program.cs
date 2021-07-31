@@ -65,7 +65,7 @@ namespace Cli
                 await Console.Error.WriteLineAsync($"Configuration file outdated. Please delete appsettings.json and create a new one running 'clibamwallet --configure'");
                 return 1;
             }
-            
+
             if (config.GetSection(Constant.ConfigSectionNameLog) != null)
             {
                 Log.Logger = new LoggerConfiguration()

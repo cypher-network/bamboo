@@ -249,9 +249,7 @@ namespace CLi.ApplicationLayer.Commands
 
             foreach (var hostedProvider in hostedProviders)
             {
-                var serviceInstance = _serviceProvider.GetService(hostedProvider) as IHostedService;
-
-                if (serviceInstance != null)
+                if (_serviceProvider.GetService(hostedProvider) is IHostedService serviceInstance)
                 {
                     await serviceInstance.StartAsync(new CancellationToken());
                 }
