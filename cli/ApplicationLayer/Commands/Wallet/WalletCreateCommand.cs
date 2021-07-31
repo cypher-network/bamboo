@@ -34,10 +34,10 @@ namespace CLi.ApplicationLayer.Commands.Wallet
         {
             try
             {
-                var mnemonicDefault = await _walletService.CreateSeed(NBitcoin.Language.English, NBitcoin.WordCount.TwentyFour);
-                var passphraseDefault = await _walletService.CreateSeed(NBitcoin.Language.English, NBitcoin.WordCount.Twelve);
-                var joinMmnemonic = string.Join(" ", mnemonicDefault);
-                var joinPassphrase = string.Join(" ", passphraseDefault);
+                var seedDefault = await _walletService.CreateSeed(NBitcoin.Language.English, NBitcoin.WordCount.TwentyFour);
+                var passPhraseDefault = await _walletService.CreateSeed(NBitcoin.Language.English, NBitcoin.WordCount.Twelve);
+                var joinMmnemonic = string.Join(" ", seedDefault);
+                var joinPassphrase = string.Join(" ", passPhraseDefault);
                 var id = _walletService.CreateWallet(joinMmnemonic.ToSecureString(), joinPassphrase.ToSecureString());
                 var path = Util.WalletPath(id);
 
@@ -57,7 +57,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
 
                 _console.WriteLine();
 
-                _console.WriteLine("Seed phrase:");
+                _console.WriteLine("Seed:");
                 _console.ForegroundColor = ConsoleColor.Green;
                 _console.WriteLine($"{joinMmnemonic}");
                 _console.ForegroundColor = ConsoleColor.White;

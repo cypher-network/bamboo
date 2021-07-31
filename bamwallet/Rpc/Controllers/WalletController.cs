@@ -59,10 +59,10 @@ namespace BAMWallet.Rpc.Controllers
         [HttpGet("create", Name = "Create")]
         public async Task<IActionResult> Create(string seed = null, string passphrase = null)
         {
-            string[] mnemonicDefault = await _walletService.CreateSeed(Language.English, WordCount.TwentyFour);
-            string[] passphraseDefault = await _walletService.CreateSeed(Language.English, WordCount.Twelve);
-            string joinMmnemonic = string.Join(" ", seed ?? string.Join(' ', mnemonicDefault));
-            string joinPassphrase = string.Join(" ", passphrase ?? string.Join(' ', passphraseDefault));
+            string[] seedDefault = await _walletService.CreateSeed(Language.English, WordCount.TwentyFour);
+            string[] passPhraseDefault = await _walletService.CreateSeed(Language.English, WordCount.Twelve);
+            string joinMmnemonic = string.Join(" ", seed ?? string.Join(' ', seedDefault));
+            string joinPassphrase = string.Join(" ", passphrase ?? string.Join(' ', passPhraseDefault));
             string id = _walletService.CreateWallet(joinMmnemonic.ToSecureString(), joinPassphrase.ToSecureString());
             var session = new Session(id.ToSecureString(), joinPassphrase.ToSecureString());
 

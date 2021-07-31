@@ -28,7 +28,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
 
         public override Task Execute()
         {
-            using var seed = Prompt.GetPasswordAsSecureString("Mnemonic:", ConsoleColor.Yellow);
+            using var seed = Prompt.GetPasswordAsSecureString("Seed:", ConsoleColor.Yellow);
             using var passphrase = Prompt.GetPasswordAsSecureString("Passphrase:", ConsoleColor.Yellow);
 
             var id = _walletService.CreateWallet(seed, passphrase);
