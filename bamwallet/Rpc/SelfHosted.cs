@@ -152,7 +152,7 @@ namespace BAMWallet.Rpc
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>()
-                        .UseUrls(_networkSettings.Advertise);
+                        .UseUrls(_networkSettings.WebserverEndpoint);
                 });
     }
 }
