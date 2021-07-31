@@ -1224,7 +1224,7 @@ namespace BAMWallet.HD
                 }
             }
 
-            foreach (var transaction in walletTransactions.Where(walletTransaction => walletTransaction.IsVerified))
+            foreach (var transaction in walletTransactions.Where(walletTransaction => !walletTransaction.IsVerified))
             {
                 if (await TransactionExistsInEndpoint(transaction, _networkSettings.Routing.TransactionId))
                 {
