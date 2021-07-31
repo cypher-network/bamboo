@@ -26,7 +26,9 @@ namespace Cli
         public static async Task<int> Main(string[] args)
         {
             var basePath = AppDomain.CurrentDomain.BaseDirectory;
-            var appsettingsExists = File.Exists(Path.Combine(basePath, AppSettingsFile));
+            var appsettingsExists =
+                File.Exists(Path.Combine(basePath, AppSettingsFile)) ||
+                File.Exists(Path.Combine(basePath, AppSettingsFileDev));
 
             if (args.FirstOrDefault(arg => arg == "--configure") != null)
             {
@@ -51,8 +53,8 @@ namespace Cli
 
             var config = new ConfigurationBuilder()
                 .SetBasePath(basePath)
-                .AddJsonFile(AppSettingsFile, false)
-                .AddJsonFile(AppSettingsFileDev, true)
+                .AddJsonFile(AppSettingsFile, true)
+                .AddJsonFile(AppSettingsFileDev, false)
                 .AddCommandLine(args)
                 .Build();
 
@@ -96,10 +98,10 @@ namespace Cli
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    var listening = configuration["NetworkSettings:Listening"];
+                    var walletEndpoint = configuration["NetworkSettings:WalletEndpoint"];
                     webBuilder
                         .UseStartup<Startup>()
-                        .UseUrls(listening)
+                        .UseUrls(walletEndpoint)
                         .UseSerilog();
                 });
     }
