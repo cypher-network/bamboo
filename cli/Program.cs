@@ -10,6 +10,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using BAMWallet.HD;
 using Cli.UI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
@@ -20,15 +21,14 @@ namespace Cli
 {
     public static class Program
     {
-        public const string AppSettingsFile = "appsettings.json";
-        private const string AppSettingsFileDev = "appsettings.Development.json";
+        private const int MinimumConfigVersion = 1;
 
         public static async Task<int> Main(string[] args)
         {
             var basePath = AppDomain.CurrentDomain.BaseDirectory;
             var appsettingsExists =
-                File.Exists(Path.Combine(basePath, AppSettingsFile)) ||
-                File.Exists(Path.Combine(basePath, AppSettingsFileDev));
+                File.Exists(Path.Combine(basePath, Constant.AppSettingsFile)) ||
+                File.Exists(Path.Combine(basePath, Constant.AppSettingsFileDev));
 
             if (args.FirstOrDefault(arg => arg == "--configure") != null)
             {
@@ -36,7 +36,7 @@ namespace Cli
                 {
                     // Do not return an error; this check is part of the application installation process
                     Console.WriteLine(
-                        $"{AppSettingsFile} already exists. Please remove file before running configuration again");
+                        $"{Constant.AppSettingsFile} already exists. Please remove file before running configuration again");
                     return 0;
                 }
 
@@ -47,27 +47,34 @@ namespace Cli
 
             if (!appsettingsExists)
             {
-                await Console.Error.WriteLineAsync($"{AppSettingsFile} not found. Please create one running 'clibamwallet --configure'");
+                await Console.Error.WriteLineAsync($"{Constant.AppSettingsFile} not found. Please create one running 'clibamwallet --configure'");
                 return 1;
             }
 
             var config = new ConfigurationBuilder()
                 .SetBasePath(basePath)
-                .AddJsonFile(AppSettingsFile, true)
-                .AddJsonFile(AppSettingsFileDev, false)
+                .AddJsonFile(Constant.AppSettingsFile, true)
+                .AddJsonFile(Constant.AppSettingsFileDev, false)
                 .AddCommandLine(args)
                 .Build();
 
-            const string logSectionName = "Log";
-            if (config.GetSection(logSectionName) != null)
+            var configVersion = config.GetSection(Constant.ConfigSectionNameConfigVersion);
+            if (!int.TryParse(configVersion.Value, out var configVersionNumber) ||
+                configVersionNumber < Constant.MinimumConfigVersion)
+            {
+                await Console.Error.WriteLineAsync($"Configuration file outdated. Please delete appsettings.json and create a new one running 'clibamwallet --configure'");
+                return 1;
+            }
+            
+            if (config.GetSection(Constant.ConfigSectionNameLog) != null)
             {
                 Log.Logger = new LoggerConfiguration()
-                    .ReadFrom.Configuration(config, logSectionName)
+                    .ReadFrom.Configuration(config, Constant.ConfigSectionNameLog)
                     .CreateLogger();
             }
             else
             {
-                throw new Exception(string.Format($"No \"{@logSectionName}\" section found in appsettings.json", logSectionName));
+                throw new Exception(string.Format($"No \"{Constant.ConfigSectionNameLog}\" section found in appsettings.json", Constant.ConfigSectionNameLog));
             }
 
             try

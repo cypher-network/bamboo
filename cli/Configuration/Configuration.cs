@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using BAMWallet.HD;
 using Cli.UI;
 
 namespace Cli.Configuration
@@ -27,14 +28,14 @@ namespace Cli.Configuration
             Console.WriteLine("Node API port     : " + networkConfiguration.Configuration.NodePort);
             Console.WriteLine();
 
-            var configTemplate = File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Configuration", "Templates", Program.AppSettingsFile));
+            var configTemplate = File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Configuration", "Templates", Constant.AppSettingsFile));
             var config = configTemplate
                 .Replace("<ENVIRONMENT>", networkConfiguration.Configuration.Environment)
                 .Replace("<WALLET_ENDPOINT_BIND>", $"http://{networkConfiguration.Configuration.WalletIPAddress}:{networkConfiguration.Configuration.WalletPort.ToString()}")
                 .Replace("<WALLET_ENDPOINT_PUBLIC>", $"http://{networkConfiguration.Configuration.WalletIPAddressPublic}:{networkConfiguration.Configuration.WalletPort.ToString()}")
                 .Replace("<NODE_ENDPOINT>", $"http://{networkConfiguration.Configuration.NodeIPAddress}:{networkConfiguration.Configuration.NodePort}");
 
-            var configFileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Program.AppSettingsFile);
+            var configFileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Constant.AppSettingsFile);
             File.WriteAllText(configFileName, config);
 
             Console.WriteLine($"Configuration written to {configFileName}");
