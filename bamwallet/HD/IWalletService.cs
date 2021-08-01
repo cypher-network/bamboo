@@ -13,7 +13,7 @@ namespace BAMWallet.HD
 {
     public interface IWalletService
     {
-        bool IsCommandExecutionInProgress {get;}
+        bool IsCommandExecutionInProgress { get; }
         string CreateWallet(SecureString seed, SecureString passphrase);
         Task<string[]> CreateSeed(Language language, WordCount wordCount);
         TaskResult<IEnumerable<string>> WalletList();

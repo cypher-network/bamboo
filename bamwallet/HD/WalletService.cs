@@ -1397,7 +1397,7 @@ namespace BAMWallet.HD
         public async Task SyncWallet(Session session)
         {
             Guard.Argument(session, nameof(session)).NotNull();
-            var walletTransactions = session.Database.Query<WalletTransaction>().Where( x => x.IsVerified)
+            var walletTransactions = session.Database.Query<WalletTransaction>().Where(x => x.IsVerified)
                 .ToList()
                 .OrderBy(d => d.DateTime)
                 .ToArray();
