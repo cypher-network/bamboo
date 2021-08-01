@@ -20,6 +20,13 @@ namespace BAMWallet.Rpc.Controllers
     {
         private readonly IWalletService _walletService;
 
+        private TaskResult<BalanceSheet[]> GetHistory(Credentials credentials)
+        {
+            Guard.Argument(credentials, nameof(credentials)).NotNull();
+            var session = new Session(credentials.Identifier.ToSecureString(), credentials.Passphrase.ToSecureString());
+            return _walletService.History(session);
+        }
+
         public WalletController(IWalletService walletService)
         {
             _walletService = walletService;
@@ -34,10 +41,14 @@ namespace BAMWallet.Rpc.Controllers
 
             var request = _walletService.Address(session);
             if (!request.Success)
+            {
                 return new BadRequestObjectResult(request.NonSuccessMessage);
+            }
 
-            if (request.Result.Any() != true)
+            if (!request.Result.Any())
+            {
                 return new NotFoundResult();
+            }
 
             return new OkObjectResult(request.Result);
         }
@@ -45,15 +56,12 @@ namespace BAMWallet.Rpc.Controllers
         [HttpPost("balance", Name = "Balance")]
         public IActionResult Balance([FromBody] Credentials credentials)
         {
-            Guard.Argument(credentials, nameof(credentials)).NotNull();
-
-            var session = new Session(credentials.Identifier.ToSecureString(), credentials.Passphrase.ToSecureString());
-
-            var total = _walletService.History(session);
-            if (!total.Success)
-                return new BadRequestObjectResult(total.NonSuccessMessage);
-
-            return new OkObjectResult($"{total.Result.Last()}");
+            var history = GetHistory(credentials);
+            if (!history.Success)
+            {
+                return new BadRequestObjectResult(history.NonSuccessMessage);
+            }
+            return new OkObjectResult($"{history.Result.Last()}");
         }
 
         [HttpGet("create", Name = "Create")]
@@ -116,15 +124,12 @@ namespace BAMWallet.Rpc.Controllers
         [HttpPost("history", Name = "History")]
         public IActionResult History([FromBody] Credentials credentials)
         {
-            Guard.Argument(credentials, nameof(credentials)).NotNull();
-
-            var session = new Session(credentials.Identifier.ToSecureString(), credentials.Passphrase.ToSecureString());
-
-            var request = _walletService.History(session);
-            if (!request.Success)
-                return new BadRequestObjectResult(request.NonSuccessMessage);
-
-            return new OkObjectResult(request.Result);
+            var history = GetHistory(credentials);
+            if (!history.Success)
+            {
+                return new BadRequestObjectResult(history.NonSuccessMessage);
+            }
+            return new OkObjectResult(history.Result);
         }
 
         /// <summary>
