@@ -16,7 +16,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
     [CommandDescriptor("sync", "syncs wallet with chain")]
     public class SyncCommand : Command
     {
-        private static readonly double SYNC_INTERVAL = 1000 * 60 * 1;
+        private static readonly double SYNC_INTERVAL = 1000 * 60 * 5;
         private IWalletService _walletService;
         private static readonly Timer _syncTimer = new Timer(SYNC_INTERVAL);
         public static bool IsSynchronizing { get; private set; }
