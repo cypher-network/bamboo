@@ -36,6 +36,10 @@ namespace CLi.ApplicationLayer.Commands.Wallet
         {
             if (Command.ActiveSession != null)
             {
+                _console.WriteLine("Syncing wallet with chain ...");
+                _console.ForegroundColor = ConsoleColor.Cyan;
+                _console.Write("bamboo$ ");
+                _console.ForegroundColor = ConsoleColor.White;
                 await _walletService.SyncWallet(Command.ActiveSession);
             }
         }
@@ -46,7 +50,6 @@ namespace CLi.ApplicationLayer.Commands.Wallet
             {
                 OnSyncStateChanged?.Invoke(this, new SyncStateChanged(SyncStateChanged.SyncState.SyncInProgress));
                 IsSynchronizing = true;
-                _console.WriteLine("Syncing wallet with chain ...");
                 Execute().Wait();
                 IsSynchronizing = false;
                 OnSyncStateChanged?.Invoke(this, new SyncStateChanged(SyncStateChanged.SyncState.Idle));
