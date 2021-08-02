@@ -428,7 +428,10 @@ namespace BAMWallet.HD
         {
             using var pedersen = new Pedersen();
 
+            var (spend, scan) = Unlock(session);
             var transactions = SafeguardService.GetTransactions().ToArray();
+
+        begin:
             transactions.Shuffle();
 
             for (var k = 0; k < nRows - 1; ++k)
@@ -436,16 +439,12 @@ namespace BAMWallet.HD
                 {
                     if (i == index)
                     {
-                        var (spend, scan) = Unlock(session);
                         var message = Transaction.Message(session.WalletTransaction.Spending, scan);
                         var oneTimeSpendKey = spend.Uncover(scan, new PubKey(session.WalletTransaction.Spending.E));
-
                         sk[0] = oneTimeSpendKey.ToHex().HexToByte();
                         blinds[0] = message.Blind;
-
                         pcmIn[i + k * nCols] = pedersen.Commit(message.Amount, message.Blind);
                         pkIn[i + k * nCols] = oneTimeSpendKey.PubKey.ToBytes();
-
                         fixed (byte* mm = m, pk = pkIn[i + k * nCols])
                         {
                             Libsecp256k1Zkp.Net.Util.MemCpy(&mm[(i + k * nCols) * 33], pk, 33);
@@ -454,11 +453,18 @@ namespace BAMWallet.HD
                         continue;
                     }
 
-                    transactions[i].Vout.Shuffle();
+                    try
+                    {
+                        var isLocked = transactions[i].IsLockedOrInvalid(scan);
+                        if (isLocked) goto begin;
+                    }
+                    catch (Exception)
+                    {
+                        goto begin;
+                    }
 
                     pcmIn[i + k * nCols] = transactions[i].Vout[0].C;
                     pkIn[i + k * nCols] = transactions[i].Vout[0].P;
-
                     fixed (byte* mm = m, pk = pkIn[i + k * nCols])
                     {
                         Libsecp256k1Zkp.Net.Util.MemCpy(&mm[(i + k * nCols) * 33], pk, 33);
