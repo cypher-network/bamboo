@@ -160,8 +160,6 @@ namespace CLi.ApplicationLayer.Commands
         {
             await StartAllHostedProviders();
 
-            Thread.Sleep(1500); //St.An. what's that?
-
             ClearCurrentConsoleLine();
 
             while (!_hasExited)

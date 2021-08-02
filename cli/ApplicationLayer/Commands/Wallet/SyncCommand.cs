@@ -16,9 +16,9 @@ namespace CLi.ApplicationLayer.Commands.Wallet
     [CommandDescriptor("sync", "syncs wallet with chain")]
     public class SyncCommand : Command
     {
-        private readonly double SYNC_INTERVAL = 1000 * 60 * 5;
+        private static readonly double SYNC_INTERVAL = 1000 * 60 * 1;
         private IWalletService _walletService;
-        private readonly Timer _syncTimer;
+        private static readonly Timer _syncTimer = new Timer(SYNC_INTERVAL);
         public static bool IsSynchronizing { get; private set; }
         public static EventHandler<SyncStateChanged> OnSyncStateChanged;
 
@@ -26,7 +26,6 @@ namespace CLi.ApplicationLayer.Commands.Wallet
             typeof(SyncCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description), serviceProvider.GetService<IConsole>())
         {
             _walletService = walletService;
-            _syncTimer = new Timer(SYNC_INTERVAL);
             _syncTimer.Elapsed += OnSyncInternal;
             _syncTimer.AutoReset = true;
             _syncTimer.Start();
@@ -37,10 +36,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
         {
             if (Command.ActiveSession != null)
             {
-                await Spinner.StartAsync("Syncing wallet with chain ...", async spinner =>
-                {
-                    await _walletService.SyncWallet(Command.ActiveSession);
-                });
+                await _walletService.SyncWallet(Command.ActiveSession);
             }
         }
 
@@ -50,6 +46,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
             {
                 OnSyncStateChanged?.Invoke(this, new SyncStateChanged(SyncStateChanged.SyncState.SyncInProgress));
                 IsSynchronizing = true;
+                _console.WriteLine("Syncing wallet with chain ...");
                 Execute().Wait();
                 IsSynchronizing = false;
                 OnSyncStateChanged?.Invoke(this, new SyncStateChanged(SyncStateChanged.SyncState.Idle));
