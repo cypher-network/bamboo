@@ -94,7 +94,7 @@ namespace BAMWallet.HD
         /// <summary>
         ///
         /// </summary>
-        /// <param name="sessionId"></param>
+        /// <param name="session"></param>
         /// <returns></returns>
         private TaskResult<bool> CalculateChange(Session session)
         {
@@ -116,7 +116,7 @@ namespace BAMWallet.HD
 
                 freeBalances.AddRange(
                     balances
-                        .Where(balance => balance.Commitment.IsLockedOrInvalid() == false)
+                        .Where(balance => !balance.Commitment.IsLockedOrInvalid(scan))
                         .OrderByDescending(x => x.Total));
 
                 foreach (var balance in freeBalances)
@@ -193,7 +193,7 @@ namespace BAMWallet.HD
         /// <summary>
         ///
         /// </summary>
-        /// <param name="sessionId"></param>
+        /// <param name="session"></param>
         /// <returns></returns>
         private List<Balance> AddBalances(Session session)
         {
@@ -228,7 +228,7 @@ namespace BAMWallet.HD
         /// <summary>
         ///
         /// </summary>
-        /// <param name="sessionId"></param>
+        /// <param name="session"></param>
         /// <param name="m"></param>
         /// <param name="nCols"></param>
         /// <param name="pcmOut"></param>
@@ -348,7 +348,7 @@ namespace BAMWallet.HD
         ///
         /// </summary>
         /// <param name="transaction"></param>
-        /// <param name="sessionId"></param>
+        /// <param name="session"></param>
         /// <returns></returns>
         private TaskResult<Transaction> GenerateTransactionTime(Session session, Transaction transaction)
         {
@@ -413,7 +413,7 @@ namespace BAMWallet.HD
         /// <summary>
         ///
         /// </summary>
-        /// <param name="sessionId"></param>
+        /// <param name="session"></param>
         /// <param name="blinds"></param>
         /// <param name="sk"></param>
         /// <param name="nRows"></param>
@@ -551,7 +551,6 @@ namespace BAMWallet.HD
         /// </summary>
         /// <param name="seed"></param>
         /// <param name="passphrase"></param>
-        /// <param name="concatenateMnemonic"></param>
         /// <param name="hdRoot"></param>
         private static void CreateHdRootKey(SecureString seed, SecureString passphrase,
             out ExtKey hdRoot)
@@ -565,7 +564,7 @@ namespace BAMWallet.HD
         }
 
         /// <summary>
-        ///
+        /// 
         /// </summary>
         /// <param name="dateTime"></param>
         /// <param name="memo"></param>
@@ -575,6 +574,8 @@ namespace BAMWallet.HD
         /// <param name="balance"></param>
         /// <param name="outputs"></param>
         /// <param name="txId"></param>
+        /// <param name="isVerified"></param>
+        /// <param name="isLocked"></param>
         /// <returns></returns>
         private static BalanceSheet MoneyBalanceSheet(DateTime dateTime, string memo, ulong sent, ulong received,
             ulong reward, ulong balance, Vout[] outputs, string txId, bool isVerified, bool? isLocked = null)
@@ -637,7 +638,7 @@ namespace BAMWallet.HD
         /// <summary>
         ///
         /// </summary>
-        /// <param name="sessionId"></param>
+        /// <param name="session"></param>
         /// <param name="output"></param>
         /// <returns></returns>
         private byte[] GetKeyImage(Session session, Vout output)
@@ -651,38 +652,44 @@ namespace BAMWallet.HD
             return mlsag.ToKeyImage(oneTimeSpendKey.ToHex().HexToByte(), oneTimeSpendKey.PubKey.ToBytes());
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="session"></param>
+        /// <param name="transactions"></param>
         private async Task SyncTransactions(Session session, IEnumerable<WalletTransaction> transactions)
         {
             var walletTransactions = transactions.ToList();
 
             foreach (var transaction in walletTransactions.Select(walletTransaction => walletTransaction.Transaction))
             {
-                if (await TransactionDoesNotExist(transaction))
+                if (!await TransactionDoesNotExist(transaction)) continue;
+                var rolledBack = RollBackTransaction(session, transaction.Id);
+                if (!rolledBack.Success)
                 {
-                    var rolledBack = RollBackTransaction(session, transaction.Id);
-                    if (!rolledBack.Success)
-                    {
-                        _logger.Here().Error(rolledBack.Exception.Message);
-                        // Continue syncing rest of the wallet
-                    }
+                    _logger.Here().Error(rolledBack.Exception.Message);
+                    // Continue syncing rest of the wallet
                 }
             }
 
             foreach (var transaction in walletTransactions.Where(walletTransaction => !walletTransaction.IsVerified))
             {
-                if (await TransactionExistsInEndpoint(transaction, _networkSettings.Routing.TransactionId))
+                if (!await TransactionExistsInEndpoint(transaction, _networkSettings.Routing.TransactionId)) continue;
+                transaction.IsVerified = true;
+                var saved = Update(session, session.WalletTransaction);
+                if (!saved.Result)
                 {
-                    transaction.IsVerified = true;
-                    var saved = Update(session, session.WalletTransaction);
-                    if (!saved.Result)
-                    {
-                        _logger.Error("Transaction is verified but cannot update transaction {@TxId}", transaction.Transaction.TxnId.HexToByte());
-                    }
+                    _logger.Error("Transaction is verified but cannot update transaction {@TxId}", transaction.Transaction.TxnId.HexToByte());
                 }
 
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="transaction"></param>
+        /// <returns></returns>
         private async Task<bool> TransactionDoesNotExist(Transaction transaction)
         {
             return
@@ -692,6 +699,12 @@ namespace BAMWallet.HD
 
         // TODO: Make this more intuitive. The naming is really weird. We only need to know with certainty when a
         // transaction does not exist. Any uncertainty returns false, absolute certainty returns true.
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="transaction"></param>
+        /// <param name="endpoint"></param>
+        /// <returns></returns>
         private async Task<bool> TransactionDoesNotExistInEndpoint(Transaction transaction, string endpoint)
         {
             var baseAddress = _client.GetBaseAddress();
@@ -712,6 +725,12 @@ namespace BAMWallet.HD
             return true;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="transaction"></param>
+        /// <param name="endpoint"></param>
+        /// <returns></returns>
         private async Task<bool> TransactionExistsInEndpoint(WalletTransaction transaction, string endpoint)
         {
             var baseAddress = _client.GetBaseAddress();
@@ -723,19 +742,14 @@ namespace BAMWallet.HD
             var endpointPath = string.Format(endpoint, transaction.Transaction.TxnId.ByteToHex());
             var transactionQueryResponse = await _client.GetAsync<Transaction>(baseAddress, endpointPath, new CancellationToken());
 
-            if (transactionQueryResponse.HttpStatusCode == HttpStatusCode.OK &&
-                transactionQueryResponse.Data != null)
-            {
-                return true;
-            }
-
-            return false;
+            return transactionQueryResponse.HttpStatusCode == HttpStatusCode.OK &&
+                   transactionQueryResponse.Data != null;
         }
 
         /// <summary>
         ///
         /// </summary>
-        /// <param name="sessionId"></param>
+        /// <param name="session"></param>
         /// <returns></returns>
         private (Key, Key) Unlock(Session session)
         {
@@ -759,10 +773,11 @@ namespace BAMWallet.HD
         }
 
         /// <summary>
-        ///
+        /// 
         /// </summary>
-        /// <param name="sessionId"></param>
+        /// <param name="session"></param>
         /// <param name="data"></param>
+        /// <param name="updateGuid"></param>
         /// <returns></returns>
         private TaskResult<bool> Save<T>(Session session, T data, bool updateGuid = true)
         {
@@ -785,6 +800,13 @@ namespace BAMWallet.HD
             return TaskResult<bool>.CreateSuccess(true);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="session"></param>
+        /// <param name="data"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
         private TaskResult<bool> Update<T>(Session session, T data)
         {
             Guard.Argument(data, nameof(data)).NotEqual(default);
@@ -857,7 +879,7 @@ namespace BAMWallet.HD
         /// <summary>
         ///
         /// </summary>
-        /// <param name="sessionId"></param>
+        /// <param name="session"></param>
         /// <param name="image"></param>
         /// <returns></returns>
         private bool WalletTransactionSpent(Session session, byte[] image)
@@ -922,13 +944,7 @@ namespace BAMWallet.HD
             _commandExecutionCounter = 0;
         }
 
-        public bool IsCommandExecutionInProgress
-        {
-            get
-            {
-                return _commandExecutionCounter > 0;
-            }
-        }
+        public bool IsCommandExecutionInProgress => _commandExecutionCounter > 0;
 
         /// <summary>
         /// BIP39 seed.
@@ -1023,7 +1039,7 @@ namespace BAMWallet.HD
         /// <summary>
         ///
         /// </summary>
-        /// <param name="sessionId"></param>
+        /// <param name="session"></param>
         /// <returns></returns>
         public Transaction GetTransaction(Session session)
         {
@@ -1056,7 +1072,7 @@ namespace BAMWallet.HD
         /// <summary>
         ///
         /// </summary>
-        /// <param name="sessionId"></param>
+        /// <param name="session"></param>
         /// <returns></returns>
         public TaskResult<WalletTransaction> CreateTransaction(Session session)
         {
@@ -1190,11 +1206,11 @@ namespace BAMWallet.HD
         /// <summary>
         ///
         /// </summary>
-        /// <param name="sessionId"></param>
+        /// <param name="session"></param>
         /// <returns></returns>
         public TaskResult<BalanceSheet[]> History(Session session)
         {
-            using var CommandExecutionGuard = new RAIIGuard(WalletService.IncrementCommandExecutionCount, WalletService.DecrementCommandExecutionCount);
+            using var commandExecutionGuard = new RAIIGuard(IncrementCommandExecutionCount, DecrementCommandExecutionCount);
             var balanceSheets = new List<BalanceSheet>();
             var walletTransactions = session.Database.Query<WalletTransaction>().OrderBy(x => x.DateTime).ToList();
             if (walletTransactions?.Any() != true)
@@ -1261,8 +1277,8 @@ namespace BAMWallet.HD
                                 messageCoinbase.Amount,
                                 received,
                                 change,
-                                transaction.Transaction.TxnId.ByteToHex(),
-                                transaction.IsVerified,
+                                transaction.TxnId.ByteToHex(),
+                                walletTransaction.IsVerified,
                                 isLocked));
 
                             continue;
@@ -1278,8 +1294,8 @@ namespace BAMWallet.HD
                             0,
                             received,
                             change,
-                            transaction.Transaction.TxnId.ByteToHex(),
-                            transaction.IsVerified,
+                            transaction.TxnId.ByteToHex(),
+                            walletTransaction.IsVerified,
                             isLocked));
                     }
                     catch (Exception)
@@ -1298,9 +1314,9 @@ namespace BAMWallet.HD
         }
 
         /// <summary>
-        ///
+        /// 
         /// </summary>
-        /// <param name="sessionId"></param>
+        /// <param name="session"></param>
         /// <param name="paymentId"></param>
         /// <returns></returns>
         public async Task<TaskResult<WalletTransaction>> ReceivePayment(Session session, string paymentId)
@@ -1393,7 +1409,7 @@ namespace BAMWallet.HD
         /// <summary>
         ///
         /// </summary>
-        /// <param name="sessionId"></param>
+        /// <param name="session"></param>
         /// <returns></returns>
         public async Task<TaskResult<bool>> Send(Session session)
         {
@@ -1437,6 +1453,10 @@ namespace BAMWallet.HD
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="session"></param>
         public async Task SyncWallet(Session session)
         {
             Guard.Argument(session, nameof(session)).NotNull();
@@ -1451,14 +1471,13 @@ namespace BAMWallet.HD
         /// <summary>
         ///
         /// </summary>
-        /// <param name="sessionId"></param>
+        /// <param name="session"></param>
         /// <param name="start"></param>
         /// <returns></returns>
-        public async Task<TaskResult<bool>> RecoverTransactions(Session s, int start)
+        public async Task<TaskResult<bool>> RecoverTransactions(Session session, int start)
         {
             using var CommandExecutionGuard = new RAIIGuard(WalletService.IncrementCommandExecutionCount, WalletService.DecrementCommandExecutionCount);
             Guard.Argument(start, nameof(start)).NotNegative();
-            var session = s;
             try
             {
                 using (var db = Util.LiteRepositoryFactory(session.Identifier, session.Passphrase))
