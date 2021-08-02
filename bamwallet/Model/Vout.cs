@@ -20,8 +20,17 @@ namespace BAMWallet.Model
         [Key(6)] public string S { get; set; }
         [Key(7)] public CoinType T { get; set; }
 
-        public bool IsLockedOrInvalid()
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public bool IsLockedOrInvalid(Key scan = null)
         {
+            if (T == CoinType.Payment)
+            {
+                return scan == null || Transaction.Amount(this, scan) == 0;
+            }
+
             if (L == 0)
             {
                 return true;
@@ -29,13 +38,13 @@ namespace BAMWallet.Model
 
             var lockTime = new LockTime(Utils.UnixTimeToDateTime(L));
             var script = S;
-
             var sc1 = new Script(Op.GetPushOp(lockTime.Value), OpcodeType.OP_CHECKLOCKTIMEVERIFY);
             var sc2 = new Script(script);
             if (!sc1.ToString().Equals(sc2.ToString()))
             {
                 return true;
             }
+
             var tx = Network.Main.CreateTransaction();
             tx.Outputs.Add(new TxOut { ScriptPubKey = new Script(script) });
             var spending = Network.Main.CreateTransaction();

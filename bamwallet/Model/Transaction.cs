@@ -173,6 +173,7 @@ namespace BAMWallet.Model
         /// 
         /// </summary>
         /// <param name="amount"></param>
+        /// <param name="paid"></param>
         /// <param name="blind"></param>
         /// <param name="memo"></param>
         /// <returns></returns>
@@ -188,14 +189,18 @@ namespace BAMWallet.Model
             });
         }
 
-        public bool IsLockedOrInvalid()
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public bool IsLockedOrInvalid(Key scan)
         {
-            if (Vout.Length < 2)
+            return Vout.Length switch
             {
-                return true;
-            }
-
-            return Vout[1].IsLockedOrInvalid();
+                1 => Vout[0].IsLockedOrInvalid(scan),
+                2 => Vout[1].IsLockedOrInvalid(scan),
+                _ => Vout[0].IsLockedOrInvalid(scan)
+            };
         }
     }
 }
