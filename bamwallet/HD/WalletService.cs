@@ -1207,11 +1207,12 @@ namespace BAMWallet.HD
                 var (_, scan) = Unlock(session);
                 ulong received = 0;
 
-                foreach (var transaction in walletTransactions)
+                foreach (var transaction in walletTransactions.Select(x => x.Transaction).OrderBy(d => d.Vtime.L))
                 {
-                    bool isLocked = transaction.Transaction.IsLockedOrInvalid();
+                    var isLocked = transaction.IsLockedOrInvalid(scan);
+                    var walletTransaction = walletTransactions.First(x => x.Transaction.TxnId.Xor(transaction.TxnId));
 
-                    var payment = transaction.Transaction.Vout.Where(z => z.T is CoinType.Payment).ToArray();
+                    var payment = transaction.Vout.Where(z => z.T is CoinType.Payment).ToArray();
                     if (payment.Any())
                     {
                         try
@@ -1230,18 +1231,19 @@ namespace BAMWallet.HD
                                         0,
                                         received,
                                         payment,
-                                        transaction.Transaction.TxnId.ByteToHex(),
-                                        transaction.IsVerified));
+                                        transaction.TxnId.ByteToHex(),
+                                        walletTransaction.IsVerified,
+                                        isLocked));
                                 }
                             }
                         }
                         catch (Exception)
                         {
-                            // ignored
+                            // ignored  
                         }
                     }
 
-                    var change = transaction.Transaction.Vout
+                    var change = transaction.Vout
                         .Where(z => z.T is CoinType.Change or CoinType.Coinstake or CoinType.Coinbase).ToArray();
                     if (!change.Any()) continue;
                     try
