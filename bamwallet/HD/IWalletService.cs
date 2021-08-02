@@ -24,5 +24,6 @@ namespace BAMWallet.HD
         TaskResult<WalletTransaction> CreateTransaction(Session session);
         Transaction GetTransaction(Session session);
         Task<TaskResult<bool>> RecoverTransactions(Session session, int start);
+        Task SyncWallet(Session session);
     }
 }

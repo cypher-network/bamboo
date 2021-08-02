@@ -32,12 +32,12 @@ namespace BAMWallet.HD
     {
         #region: CLASS_INTERNALS
         private const string HdPath = "m/44'/847177'/0'/0/";
-
         private readonly ISafeguardDownloadingFlagProvider _safeguardDownloadingFlagProvider;
         private readonly ILogger _logger;
         private readonly NBitcoin.Network _network;
         private readonly Client _client;
         private readonly NetworkSettings _networkSettings;
+        private static int _commandExecutionCounter;
         /// <summary>
         ///
         /// </summary>
@@ -892,9 +892,12 @@ namespace BAMWallet.HD
                 _logger.Here().Error("Last session error: {@Error}", obj.Exception.Message);
             }
         }
+
         #endregion
 
         #region: PUBLIC_API
+
+        #region: NON_DB_RELATED_FUNCTIONS
         public WalletService(ISafeguardDownloadingFlagProvider safeguardDownloadingFlagProvider, IOptions<NetworkSettings> networkSettings, ILogger logger)
         {
             _safeguardDownloadingFlagProvider = safeguardDownloadingFlagProvider;
@@ -902,10 +905,62 @@ namespace BAMWallet.HD
             _network = _networkSettings.Environment == Constant.Mainnet ? NBitcoin.Network.Main : NBitcoin.Network.TestNet;
             _logger = logger.ForContext("SourceContext", nameof(WalletService));
             _client = new Client(networkSettings.Value, _logger);
-            IsCommandExecutionInProgress = false;
+            _commandExecutionCounter = 0;
         }
 
-        public bool IsCommandExecutionInProgress { get; private set; }
+        public bool IsCommandExecutionInProgress
+        {
+            get
+            {
+                return _commandExecutionCounter == 0;
+            }
+        }
+
+        /// <summary>
+        /// BIP39 seed.
+        /// </summary>
+        /// <returns></returns>
+        public async Task<string[]> CreateSeed(Language language, WordCount wordCount)
+        {
+            var wordList = await Wordlist.LoadWordList(language);
+            var mnemo = new Mnemonic(wordList, wordCount);
+
+            return mnemo.Words;
+        }
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <returns></returns>
+        public TaskResult<IEnumerable<string>> WalletList()
+        {
+            var wallets = Path.Combine(Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory) ?? string.Empty,
+                "wallets");
+
+            string[] files;
+            try
+            {
+                files = Directory.GetFiles(wallets, "*.db");
+            }
+            catch (Exception ex)
+            {
+                _logger.Here().Error(ex, "Error getting wallet list");
+                return TaskResult<IEnumerable<string>>.CreateFailure(ex);
+            }
+
+            return TaskResult<IEnumerable<string>>.CreateSuccess(files);
+        }
+        #endregion
+
+        public static void IncrementCommandExecutionCount()
+        {
+            ++_commandExecutionCounter;
+        }
+
+        public static void DecrementCommandExecutionCount()
+        {
+            --_commandExecutionCounter;
+        }
 
         /// <summary>
         ///
@@ -915,6 +970,7 @@ namespace BAMWallet.HD
         /// <returns></returns>
         public string CreateWallet(SecureString seed, SecureString passphrase)
         {
+            using var CommandExecutionGuard = new RAIIGuard(WalletService.IncrementCommandExecutionCount, WalletService.DecrementCommandExecutionCount);
             Guard.Argument(seed, nameof(seed)).NotNull();
             Guard.Argument(passphrase, nameof(passphrase)).NotNull();
 
@@ -951,24 +1007,13 @@ namespace BAMWallet.HD
         }
 
         /// <summary>
-        /// BIP39 seed.
-        /// </summary>
-        /// <returns></returns>
-        public async Task<string[]> CreateSeed(Language language, WordCount wordCount)
-        {
-            var wordList = await Wordlist.LoadWordList(language);
-            var mnemo = new Mnemonic(wordList, wordCount);
-
-            return mnemo.Words;
-        }
-
-        /// <summary>
         ///
         /// </summary>
         /// <param name="sessionId"></param>
         /// <returns></returns>
         public Transaction GetTransaction(Session session)
         {
+            using var CommandExecutionGuard = new RAIIGuard(WalletService.IncrementCommandExecutionCount, WalletService.DecrementCommandExecutionCount);
             var walletTransaction = session.Database.Query<WalletTransaction>().Where(x => x.Id == session.SessionId).FirstOrDefault();
             return walletTransaction?.Transaction;
         }
@@ -977,31 +1022,9 @@ namespace BAMWallet.HD
         ///
         /// </summary>
         /// <returns></returns>
-        public TaskResult<IEnumerable<string>> WalletList()
-        {
-            var wallets = Path.Combine(Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory) ?? string.Empty,
-                "wallets");
-
-            string[] files;
-            try
-            {
-                files = Directory.GetFiles(wallets, "*.db");
-            }
-            catch (Exception ex)
-            {
-                _logger.Here().Error(ex, "Error getting wallet list");
-                return TaskResult<IEnumerable<string>>.CreateFailure(ex);
-            }
-
-            return TaskResult<IEnumerable<string>>.CreateSuccess(files);
-        }
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <returns></returns>
         public TaskResult<string> Address(Session session)
         {
+            using var CommandExecutionGuard = new RAIIGuard(WalletService.IncrementCommandExecutionCount, WalletService.DecrementCommandExecutionCount);
             string address = null;
             try
             {
@@ -1023,6 +1046,7 @@ namespace BAMWallet.HD
         /// <returns></returns>
         public TaskResult<WalletTransaction> CreateTransaction(Session session)
         {
+            using var CommandExecutionGuard = new RAIIGuard(WalletService.IncrementCommandExecutionCount, WalletService.DecrementCommandExecutionCount);
             Guard.Argument(session.SessionId, nameof(session.SessionId)).NotDefault();
 
             while (_safeguardDownloadingFlagProvider.IsDownloading)
@@ -1156,6 +1180,7 @@ namespace BAMWallet.HD
         /// <returns></returns>
         public TaskResult<BalanceSheet[]> History(Session session)
         {
+            using var CommandExecutionGuard = new RAIIGuard(WalletService.IncrementCommandExecutionCount, WalletService.DecrementCommandExecutionCount);
             var balanceSheets = new List<BalanceSheet>();
             var walletTransactions = session.Database.Query<WalletTransaction>().OrderBy(x => x.DateTime).ToList();
             if (walletTransactions?.Any() != true)
@@ -1264,6 +1289,7 @@ namespace BAMWallet.HD
         /// <returns></returns>
         public async Task<TaskResult<WalletTransaction>> ReceivePayment(Session session, string paymentId)
         {
+            using var CommandExecutionGuard = new RAIIGuard(WalletService.IncrementCommandExecutionCount, WalletService.DecrementCommandExecutionCount);
             Guard.Argument(paymentId, nameof(paymentId)).NotNull().NotEmpty().NotWhiteSpace();
 
             try
@@ -1355,6 +1381,7 @@ namespace BAMWallet.HD
         /// <returns></returns>
         public async Task<TaskResult<bool>> Send(Session session)
         {
+            using var CommandExecutionGuard = new RAIIGuard(WalletService.IncrementCommandExecutionCount, WalletService.DecrementCommandExecutionCount);
             session.LastError = null;
             Transaction transaction = null;
             try
@@ -1413,6 +1440,7 @@ namespace BAMWallet.HD
         /// <returns></returns>
         public async Task<TaskResult<bool>> RecoverTransactions(Session s, int start)
         {
+            using var CommandExecutionGuard = new RAIIGuard(WalletService.IncrementCommandExecutionCount, WalletService.DecrementCommandExecutionCount);
             Guard.Argument(start, nameof(start)).NotNegative();
             var session = s;
             try
