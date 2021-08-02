@@ -18,6 +18,7 @@ using CLi.Helper;
 using CLi.ApplicationLayer.Commands.Wallet;
 using CLi.ApplicationLayer.Commands.Vault;
 using FuzzySharp;
+using BAMWallet.HD;
 
 namespace CLi.ApplicationLayer.Commands
 {
@@ -31,12 +32,13 @@ namespace CLi.ApplicationLayer.Commands
         private readonly IConsole _console;
         private readonly ILogger _logger;
         private readonly IServiceProvider _serviceProvider;
-        readonly IDictionary<string, ICommand> _commands;
+        private readonly IDictionary<string, ICommand> _commands;
+        private readonly SyncCommand _syncCommand;
         private bool _hasExited;
         private Thread _t;
         private State _commandServiceState;
 
-        public CommandService(IConsole cnsl, IServiceProvider provider, ILogger<CommandService> lgr)
+        public CommandService(IConsole cnsl, IServiceProvider provider, ILogger<CommandService> lgr, IWalletService walletService)
         {
             _serviceProvider = provider;
             _console = cnsl;
@@ -65,6 +67,7 @@ namespace CLi.ApplicationLayer.Commands
                     }
                 }
             };
+            _syncCommand = new SyncCommand(walletService, provider);
         }
 
         private void RegisterLoggedOutCommands()
