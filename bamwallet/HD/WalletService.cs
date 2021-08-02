@@ -30,24 +30,14 @@ namespace BAMWallet.HD
 {
     public class WalletService : IWalletService
     {
+        #region: CLASS_INTERNALS
         private const string HdPath = "m/44'/847177'/0'/0/";
-
         private readonly ISafeguardDownloadingFlagProvider _safeguardDownloadingFlagProvider;
         private readonly ILogger _logger;
         private readonly NBitcoin.Network _network;
         private readonly Client _client;
         private readonly NetworkSettings _networkSettings;
-        public WalletService(ISafeguardDownloadingFlagProvider safeguardDownloadingFlagProvider, IOptions<NetworkSettings> networkSettings, ILogger logger)
-        {
-            _safeguardDownloadingFlagProvider = safeguardDownloadingFlagProvider;
-            _networkSettings = networkSettings.Value;
-            _network = _networkSettings.Environment == Constant.Mainnet ? NBitcoin.Network.Main : NBitcoin.Network.TestNet;
-            _logger = logger.ForContext("SourceContext", nameof(WalletService));
-            _client = new Client(networkSettings.Value, _logger);
-        }
-
-        public Client HttpClient() => _client;
-
+        private static int _commandExecutionCounter;
         /// <summary>
         ///
         /// </summary>
@@ -55,7 +45,7 @@ namespace BAMWallet.HD
         /// <param name="secretKey"></param>
         /// <param name="chainCode"></param>
         /// <returns></returns>
-        public KeySet CreateKeySet(KeyPath keyPath, byte[] secretKey, byte[] chainCode)
+        private KeySet CreateKeySet(KeyPath keyPath, byte[] secretKey, byte[] chainCode)
         {
             Guard.Argument(keyPath, nameof(keyPath)).NotNull();
             Guard.Argument(secretKey, nameof(secretKey)).NotNull().MaxCount(32);
@@ -77,52 +67,9 @@ namespace BAMWallet.HD
         /// <summary>
         ///
         /// </summary>
-        /// <param name="seed"></param>
-        /// <param name="passphrase"></param>
-        /// <returns></returns>
-        public string CreateWallet(SecureString seed, SecureString passphrase)
-        {
-            Guard.Argument(seed, nameof(seed)).NotNull();
-            Guard.Argument(passphrase, nameof(passphrase)).NotNull();
-
-            var walletId = NewId(16);
-
-            walletId.MakeReadOnly();
-            seed.MakeReadOnly();
-            passphrase.MakeReadOnly();
-
-            CreateHdRootKey(seed, passphrase, out var hdRoot);
-
-            var keySet = CreateKeySet(new KeyPath($"{HdPath}0"), hdRoot.PrivateKey.ToHex().HexToByte(),
-                hdRoot.ChainCode);
-
-            try
-            {
-                var db = Util.LiteRepositoryFactory(walletId, passphrase);
-                db.Insert(keySet);
-
-                keySet.ChainCode.ZeroString();
-                keySet.RootKey.ZeroString();
-
-                return walletId.ToUnSecureString();
-            }
-            catch (Exception ex)
-            {
-                _logger.Here().Error(ex, "Error creating wallet");
-                throw new Exception("Failed to create wallet.");
-            }
-            finally
-            {
-                walletId.Dispose();
-            }
-        }
-
-        /// <summary>
-        ///
-        /// </summary>
         /// <param name="bytes"></param>
         /// <returns></returns>
-        public SecureString NewId(int bytes = 32)
+        private SecureString NewId(int bytes = 32)
         {
             using var secp256K1 = new Secp256k1();
 
@@ -133,56 +80,10 @@ namespace BAMWallet.HD
         }
 
         /// <summary>
-        /// BIP39 seed.
-        /// </summary>
-        /// <returns></returns>
-        public async Task<string[]> CreateSeed(Language language, WordCount wordCount)
-        {
-            var wordList = await Wordlist.LoadWordList(language);
-            var mnemo = new Mnemonic(wordList, wordCount);
-
-            return mnemo.Words;
-        }
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="sessionId"></param>
-        /// <returns></returns>
-        public Transaction GetTransaction(Session session)
-        {
-            var walletTransaction = session.Database.Query<WalletTransaction>().Where(x => x.Id == session.SessionId).FirstOrDefault();
-            return walletTransaction?.Transaction;
-        }
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <returns></returns>
-        public TaskResult<IEnumerable<string>> WalletList()
-        {
-            var wallets = Path.Combine(Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory) ?? string.Empty,
-                "wallets");
-
-            string[] files;
-            try
-            {
-                files = Directory.GetFiles(wallets, "*.db");
-            }
-            catch (Exception ex)
-            {
-                _logger.Here().Error(ex, "Error getting wallet list");
-                return TaskResult<IEnumerable<string>>.CreateFailure(ex);
-            }
-
-            return TaskResult<IEnumerable<string>>.CreateSuccess(files);
-        }
-
-        /// <summary>
         /// Multiple key sets not supported, thus we can simply return the only one keyset create during wallet creation.
         /// </summary>
         /// <returns>The one and only KeySet</returns>
-        public KeySet KeySet(Session session)
+        private KeySet KeySet(Session session)
         {
             session.WalletTransaction ??= new WalletTransaction();
             var ks = session.Database.Query<KeySet>().First();
@@ -193,29 +94,9 @@ namespace BAMWallet.HD
         /// <summary>
         ///
         /// </summary>
-        /// <returns></returns>
-        public TaskResult<string> Address(Session session)
-        {
-            string address = null;
-            try
-            {
-                address = KeySet(session).StealthAddress;
-            }
-            catch (Exception ex)
-            {
-                _logger.Here().Error(ex, "Error getting address");
-                return TaskResult<string>.CreateFailure(ex);
-            }
-
-            return TaskResult<string>.CreateSuccess(address);
-        }
-
-        /// <summary>
-        ///
-        /// </summary>
         /// <param name="sessionId"></param>
         /// <returns></returns>
-        public TaskResult<bool> CalculateChange(Session session)
+        private TaskResult<bool> CalculateChange(Session session)
         {
             try
             {
@@ -342,139 +223,6 @@ namespace BAMWallet.HD
             }
 
             return balances.DistinctBy(x => x.Total).ToList();
-        }
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="sessionId"></param>
-        /// <returns></returns>
-        public TaskResult<WalletTransaction> CreateTransaction(Session session)
-        {
-            Guard.Argument(session.SessionId, nameof(session.SessionId)).NotDefault();
-
-            while (_safeguardDownloadingFlagProvider.IsDownloading)
-            {
-                Thread.Sleep(100);
-            }
-
-            session.LastError = null;
-
-            var calculated = CalculateChange(session);
-            if (!calculated.Success)
-            {
-                SetLastError(session, calculated);
-                return TaskResult<WalletTransaction>.CreateFailure(calculated.Exception);
-            }
-
-            using var secp256K1 = new Secp256k1();
-            using var pedersen = new Pedersen();
-            using var mlsag = new MLSAG();
-
-            var blinds = new Span<byte[]>(new byte[3][]);
-            var sk = new Span<byte[]>(new byte[2][]);
-            const int nRows = 2; // last row sums commitments
-            const int nCols = 22; // ring size
-            var index = Libsecp256k1Zkp.Net.Util.Rand(0, nCols) % nCols;
-            var m = new byte[nRows * nCols * 33];
-            var pcmIn = new Span<byte[]>(new byte[nCols * 1][]);
-            var pcmOut = new Span<byte[]>(new byte[2][]);
-            var randSeed = secp256K1.Randomize32();
-            var preimage = secp256K1.Randomize32();
-            var pc = new byte[32];
-            var ki = new byte[33 * 1];
-            var ss = new byte[nCols * nRows * 32];
-            var blindSum = new byte[32];
-            var pkIn = new Span<byte[]>(new byte[nCols * 1][]);
-
-            m = M(session, blinds, sk, nRows, nCols, index, m, pcmIn, pkIn);
-
-            var payment = session.WalletTransaction.Payment;
-            var change = session.WalletTransaction.Change;
-
-            blinds[1] = pedersen.BlindSwitch(payment, secp256K1.CreatePrivateKey());
-            blinds[2] = pedersen.BlindSwitch(change, secp256K1.CreatePrivateKey());
-
-            pcmOut[0] = pedersen.Commit(payment, blinds[1]);
-            pcmOut[1] = pedersen.Commit(change, blinds[2]);
-
-            var commitSumBalance = pedersen.CommitSum(new List<byte[]> { pcmOut[0], pcmOut[1] },
-                new List<byte[]>());
-            if (!pedersen.VerifyCommitSum(new List<byte[]> { commitSumBalance },
-                new List<byte[]> { pcmOut[0], pcmOut[1] }))
-            {
-                return TaskResult<WalletTransaction>.CreateFailure(JObject.FromObject(new
-                {
-                    success = false,
-                    message = "Verify commit sum failed."
-                }));
-            }
-
-            var bulletChange = BulletProof(change, blinds[2], pcmOut[1]);
-            if (!bulletChange.Success)
-            {
-                return TaskResult<WalletTransaction>.CreateFailure(JObject.FromObject(new
-                {
-                    success = false,
-                    message = bulletChange.Exception.Message
-                }));
-            }
-
-            var success = mlsag.Prepare(m, blindSum, pcmOut.Length, pcmOut.Length, nCols, nRows, pcmIn, pcmOut,
-                blinds);
-            if (!success)
-            {
-                return TaskResult<WalletTransaction>.CreateFailure(JObject.FromObject(new
-                {
-                    success = false,
-                    message = "MLSAG Prepare failed."
-                }));
-            }
-
-            sk[nRows - 1] = blindSum;
-
-            success = mlsag.Generate(ki, pc, ss, randSeed, preimage, nCols, nRows, index, sk, m);
-            if (!success)
-            {
-                return TaskResult<WalletTransaction>.CreateFailure(JObject.FromObject(new
-                {
-                    success = false,
-                    message = "MLSAG Generate failed."
-                }));
-            }
-
-            success = mlsag.Verify(preimage, nCols, nRows, m, ki, pc, ss);
-            if (!success)
-            {
-                return TaskResult<WalletTransaction>.CreateFailure(JObject.FromObject(new
-                {
-                    success = false,
-                    message = "MLSAG Verify failed."
-                }));
-            }
-
-            var offsets = Offsets(pcmIn, nCols);
-
-            var generateTransaction = GenerateTransaction(session, m, nCols, pcmOut, blinds, preimage, pc, ki, ss,
-                bulletChange.Result.proof, offsets);
-            if (!generateTransaction.Success)
-            {
-                return TaskResult<WalletTransaction>.CreateFailure(JObject.FromObject(new
-                {
-                    success = false,
-                    message = $"Unable to make the transaction. Inner error message {generateTransaction.NonSuccessMessage.message}"
-                }));
-            }
-
-            var saved = Save(session, session.WalletTransaction, false);
-            if (!saved.Success)
-                return TaskResult<WalletTransaction>.CreateFailure(JObject.FromObject(new
-                {
-                    success = false,
-                    message = "Unable to save the transaction."
-                }));
-
-            return TaskResult<WalletTransaction>.CreateSuccess(session.WalletTransaction);
         }
 
         /// <summary>
@@ -787,19 +535,6 @@ namespace BAMWallet.HD
         /// <summary>
         ///
         /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
-        private static KeyPath IncrementKeyPath(string path)
-        {
-            Guard.Argument(path, nameof(path)).NotNull().NotEmpty().NotWhiteSpace();
-
-            var keyPath = new KeyPath(path);
-            return keyPath.Increment();
-        }
-
-        /// <summary>
-        ///
-        /// </summary>
         /// <param name="seed"></param>
         /// <param name="passphrase"></param>
         /// <param name="concatenateMnemonic"></param>
@@ -818,10 +553,634 @@ namespace BAMWallet.HD
         /// <summary>
         ///
         /// </summary>
+        /// <param name="dateTime"></param>
+        /// <param name="memo"></param>
+        /// <param name="sent"></param>
+        /// <param name="received"></param>
+        /// <param name="reward"></param>
+        /// <param name="balance"></param>
+        /// <param name="outputs"></param>
+        /// <param name="txId"></param>
+        /// <returns></returns>
+        private static BalanceSheet MoneyBalanceSheet(DateTime dateTime, string memo, ulong sent, ulong received,
+            ulong reward, ulong balance, Vout[] outputs, string txId, bool isVerified, bool? isLocked = null)
+        {
+            var balanceSheet = new BalanceSheet
+            {
+                Date = dateTime.ToString("yyyy-MM-dd HH:mm"),
+                Memo = memo,
+                Balance = balance.DivWithNaT().ToString("F9"),
+                Outputs = outputs,
+                TxId = txId,
+                IsVerified = isVerified,
+                IsLocked = isLocked
+            };
+            if (sent != 0)
+            {
+                balanceSheet.MoneyOut = $"-{sent.DivWithNaT():F9}";
+            }
+            if (received != 0)
+            {
+                balanceSheet.MoneyIn = $"{received.DivWithNaT():F9}";
+            }
+            if (reward != 0)
+            {
+                balanceSheet.Reward = $"{reward.DivWithNaT():F9}";
+            }
+            return balanceSheet;
+        }
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name="address"></param>
+        /// <returns></returns>
+        private (PubKey, StealthPayment) StealthPayment(string address)
+        {
+            Guard.Argument(address, nameof(address)).NotNull().NotEmpty().NotWhiteSpace();
+
+            var ephem = new Key();
+            var stealth = new BitcoinStealthAddress(address, _network);
+            var payment = stealth.CreatePayment(ephem);
+            var outPk = stealth.SpendPubKeys[0].UncoverSender(ephem, stealth.ScanPubKey);
+
+            return (outPk, payment);
+        }
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name="address"></param>
+        /// <returns></returns>
+        private PubKey ScanPublicKey(string address)
+        {
+            Guard.Argument(address, nameof(address)).NotNull().NotEmpty().NotWhiteSpace();
+
+            var stealth = new BitcoinStealthAddress(address, _network);
+            return stealth.ScanPubKey;
+        }
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name="sessionId"></param>
+        /// <param name="output"></param>
+        /// <returns></returns>
+        private byte[] GetKeyImage(Session session, Vout output)
+        {
+            Guard.Argument(output, nameof(output)).NotNull();
+
+            var (spend, scan) = Unlock(session);
+            var oneTimeSpendKey = spend.Uncover(scan, new PubKey(output.E));
+            var mlsag = new MLSAG();
+
+            return mlsag.ToKeyImage(oneTimeSpendKey.ToHex().HexToByte(), oneTimeSpendKey.PubKey.ToBytes());
+        }
+
+        private async Task SyncTransactions(Session session, IEnumerable<WalletTransaction> transactions)
+        {
+            var walletTransactions = transactions.ToList();
+
+            foreach (var transaction in walletTransactions.Select(walletTransaction => walletTransaction.Transaction))
+            {
+                if (await TransactionDoesNotExist(transaction))
+                {
+                    var rolledBack = RollBackTransaction(session, transaction.Id);
+                    if (!rolledBack.Success)
+                    {
+                        _logger.Here().Error(rolledBack.Exception.Message);
+                        // Continue syncing rest of the wallet
+                    }
+                }
+            }
+
+            foreach (var transaction in walletTransactions.Where(walletTransaction => !walletTransaction.IsVerified))
+            {
+                if (await TransactionExistsInEndpoint(transaction, _networkSettings.Routing.TransactionId))
+                {
+                    transaction.IsVerified = true;
+                    var saved = Update(session, session.WalletTransaction);
+                    if (!saved.Result)
+                    {
+                        _logger.Error("Transaction is verified but cannot update transaction {@TxId}", transaction.Transaction.TxnId.HexToByte());
+                    }
+                }
+
+            }
+        }
+
+        private async Task<bool> TransactionDoesNotExist(Transaction transaction)
+        {
+            return
+                await TransactionDoesNotExistInEndpoint(transaction, _networkSettings.Routing.TransactionId) &&
+                await TransactionDoesNotExistInEndpoint(transaction, _networkSettings.Routing.MempoolTransactionId);
+        }
+
+        // TODO: Make this more intuitive. The naming is really weird. We only need to know with certainty when a
+        // transaction does not exist. Any uncertainty returns false, absolute certainty returns true.
+        private async Task<bool> TransactionDoesNotExistInEndpoint(Transaction transaction, string endpoint)
+        {
+            var baseAddress = _client.GetBaseAddress();
+            if (baseAddress == null)
+            {
+                return false;
+            }
+
+            var endpointPath = string.Format(endpoint, transaction.TxnId.ByteToHex());
+            var transactionQueryResponse = await _client.GetAsync<Transaction>(baseAddress, endpointPath, new CancellationToken());
+
+            if (transactionQueryResponse.HttpStatusCode == HttpStatusCode.OK ||
+                transactionQueryResponse.HttpStatusCode == HttpStatusCode.ServiceUnavailable)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private async Task<bool> TransactionExistsInEndpoint(WalletTransaction transaction, string endpoint)
+        {
+            var baseAddress = _client.GetBaseAddress();
+            if (baseAddress == null)
+            {
+                return false;
+            }
+
+            var endpointPath = string.Format(endpoint, transaction.Transaction.TxnId.ByteToHex());
+            var transactionQueryResponse = await _client.GetAsync<Transaction>(baseAddress, endpointPath, new CancellationToken());
+
+            if (transactionQueryResponse.HttpStatusCode == HttpStatusCode.OK &&
+                transactionQueryResponse.Data != null)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name="sessionId"></param>
+        /// <returns></returns>
+        private (Key, Key) Unlock(Session session)
+        {
+            Key spend = null;
+            Key scan = null;
+
+            try
+            {
+                var keySet = KeySet(session);
+                var masterKey = MasterKey(keySet);
+
+                spend = masterKey.Derive(new KeyPath($"{HdPath}0")).PrivateKey;
+                scan = masterKey.Derive(new KeyPath($"{HdPath}1")).PrivateKey;
+            }
+            catch (Exception ex)
+            {
+                _logger.Here().Error(ex, "Error unlocking");
+            }
+
+            return (spend, scan);
+        }
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name="sessionId"></param>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        private TaskResult<bool> Save<T>(Session session, T data, bool updateGuid = true)
+        {
+            Guard.Argument(data, nameof(data)).NotEqual(default);
+
+            try
+            {
+                session.Database.Insert(data);
+                if (updateGuid)
+                {
+                    session.SessionId = Guid.NewGuid();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Here().Error(ex, "Error saving");
+                return TaskResult<bool>.CreateFailure(ex);
+            }
+
+            return TaskResult<bool>.CreateSuccess(true);
+        }
+
+        private TaskResult<bool> Update<T>(Session session, T data)
+        {
+            Guard.Argument(data, nameof(data)).NotEqual(default);
+
+            try
+            {
+                session.Database.Update(data);
+            }
+            catch (Exception ex)
+            {
+                _logger.Here().Error(ex, "Error updating");
+                return TaskResult<bool>.CreateFailure(ex);
+            }
+
+            return TaskResult<bool>.CreateSuccess(true);
+        }
+
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name="session"></param>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        private TaskResult<bool> RollBackTransaction(Session session, Guid id)
+        {
+            Guard.Argument(id, nameof(id)).NotDefault();
+            try
+            {
+                var walletTransaction = session.Database.Query<WalletTransaction>()
+                    .Where(s => s.Id == id).FirstOrDefault();
+                if (walletTransaction != null)
+                {
+                    session.Database.Delete<WalletTransaction>(new LiteDB.BsonValue(walletTransaction.Id));
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Here().Error(ex, "Error rolling back transaction");
+                return TaskResult<bool>.CreateFailure(ex);
+            }
+
+            return TaskResult<bool>.CreateSuccess(true);
+        }
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name="paymentId"></param>
+        /// <param name="session"></param>
+        /// <param name="taskResult"></param>
+        /// <returns></returns>
+        private bool AlreadyReceivedPayment(string paymentId, Session session,
+            out TaskResult<WalletTransaction> taskResult)
+        {
+            taskResult = null;
+            var walletTransactions = session.Database.Query<WalletTransaction>().ToList();
+            if (!walletTransactions.Any()) return false;
+            var walletTransaction = walletTransactions.FirstOrDefault(x => x.Transaction.TxnId.Xor(paymentId.HexToByte()));
+            if (walletTransaction == null) return false;
+            var output = TaskResult<WalletTransaction>.CreateFailure(
+                new Exception($"Transaction with paymentId: {paymentId} already exists"));
+            SetLastError(session, output);
+            {
+                taskResult = output;
+                return true;
+            }
+        }
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name="sessionId"></param>
+        /// <param name="image"></param>
+        /// <returns></returns>
+        private bool WalletTransactionSpent(Session session, byte[] image)
+        {
+            Guard.Argument(image, nameof(image)).NotNull().MaxCount(33);
+
+            var spent = false;
+            var walletTransactions = session.Database.Query<WalletTransaction>().ToList();
+            var transactions = walletTransactions.Where(x => x.Transaction.Vin.Any(t => t.Key.KImage.Xor(image)));
+            try
+            {
+                spent = transactions.Any();
+            }
+            catch (Exception)
+            {
+                // Ignore
+            }
+
+            return spent;
+        }
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="session"></param>
+        /// <param name="obj"></param>
+        private void SetLastError<T>(Session session, TaskResult<T> obj)
+        {
+            Guard.Argument(session, nameof(session)).NotNull();
+            Guard.Argument(obj, nameof(obj)).NotNull();
+
+            if (obj.Exception == null)
+            {
+                session.LastError = obj.NonSuccessMessage;
+                _logger.Here().Error("Last session error: {@Error}", obj.NonSuccessMessage.message);
+            }
+            else
+            {
+                session.LastError = JObject.FromObject(new
+                {
+                    success = false,
+                    message = obj.Exception.Message
+                });
+
+                _logger.Here().Error("Last session error: {@Error}", obj.Exception.Message);
+            }
+        }
+
+        #endregion
+
+        #region: PUBLIC_API
+
+        #region: NON_DB_RELATED_FUNCTIONS
+        public WalletService(ISafeguardDownloadingFlagProvider safeguardDownloadingFlagProvider, IOptions<NetworkSettings> networkSettings, ILogger logger)
+        {
+            _safeguardDownloadingFlagProvider = safeguardDownloadingFlagProvider;
+            _networkSettings = networkSettings.Value;
+            _network = _networkSettings.Environment == Constant.Mainnet ? NBitcoin.Network.Main : NBitcoin.Network.TestNet;
+            _logger = logger.ForContext("SourceContext", nameof(WalletService));
+            _client = new Client(networkSettings.Value, _logger);
+            _commandExecutionCounter = 0;
+        }
+
+        public bool IsCommandExecutionInProgress
+        {
+            get
+            {
+                return _commandExecutionCounter > 0;
+            }
+        }
+
+        /// <summary>
+        /// BIP39 seed.
+        /// </summary>
+        /// <returns></returns>
+        public async Task<string[]> CreateSeed(Language language, WordCount wordCount)
+        {
+            var wordList = await Wordlist.LoadWordList(language);
+            var mnemo = new Mnemonic(wordList, wordCount);
+
+            return mnemo.Words;
+        }
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <returns></returns>
+        public TaskResult<IEnumerable<string>> WalletList()
+        {
+            var wallets = Path.Combine(Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory) ?? string.Empty,
+                "wallets");
+
+            string[] files;
+            try
+            {
+                files = Directory.GetFiles(wallets, "*.db");
+            }
+            catch (Exception ex)
+            {
+                _logger.Here().Error(ex, "Error getting wallet list");
+                return TaskResult<IEnumerable<string>>.CreateFailure(ex);
+            }
+
+            return TaskResult<IEnumerable<string>>.CreateSuccess(files);
+        }
+        #endregion
+
+        public static void IncrementCommandExecutionCount()
+        {
+            ++_commandExecutionCounter;
+        }
+
+        public static void DecrementCommandExecutionCount()
+        {
+            --_commandExecutionCounter;
+        }
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name="seed"></param>
+        /// <param name="passphrase"></param>
+        /// <returns></returns>
+        public string CreateWallet(SecureString seed, SecureString passphrase)
+        {
+            using var CommandExecutionGuard = new RAIIGuard(WalletService.IncrementCommandExecutionCount, WalletService.DecrementCommandExecutionCount);
+            Guard.Argument(seed, nameof(seed)).NotNull();
+            Guard.Argument(passphrase, nameof(passphrase)).NotNull();
+
+            var walletId = NewId(16);
+
+            walletId.MakeReadOnly();
+            seed.MakeReadOnly();
+            passphrase.MakeReadOnly();
+
+            CreateHdRootKey(seed, passphrase, out var hdRoot);
+
+            var keySet = CreateKeySet(new KeyPath($"{HdPath}0"), hdRoot.PrivateKey.ToHex().HexToByte(),
+                hdRoot.ChainCode);
+
+            try
+            {
+                var db = Util.LiteRepositoryFactory(walletId, passphrase);
+                db.Insert(keySet);
+
+                keySet.ChainCode.ZeroString();
+                keySet.RootKey.ZeroString();
+
+                return walletId.ToUnSecureString();
+            }
+            catch (Exception ex)
+            {
+                _logger.Here().Error(ex, "Error creating wallet");
+                throw new Exception("Failed to create wallet.");
+            }
+            finally
+            {
+                walletId.Dispose();
+            }
+        }
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name="sessionId"></param>
+        /// <returns></returns>
+        public Transaction GetTransaction(Session session)
+        {
+            using var CommandExecutionGuard = new RAIIGuard(WalletService.IncrementCommandExecutionCount, WalletService.DecrementCommandExecutionCount);
+            var walletTransaction = session.Database.Query<WalletTransaction>().Where(x => x.Id == session.SessionId).FirstOrDefault();
+            return walletTransaction?.Transaction;
+        }
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <returns></returns>
+        public TaskResult<string> Address(Session session)
+        {
+            using var CommandExecutionGuard = new RAIIGuard(WalletService.IncrementCommandExecutionCount, WalletService.DecrementCommandExecutionCount);
+            string address = null;
+            try
+            {
+                address = KeySet(session).StealthAddress;
+            }
+            catch (Exception ex)
+            {
+                _logger.Here().Error(ex, "Error getting address");
+                return TaskResult<string>.CreateFailure(ex);
+            }
+
+            return TaskResult<string>.CreateSuccess(address);
+        }
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name="sessionId"></param>
+        /// <returns></returns>
+        public TaskResult<WalletTransaction> CreateTransaction(Session session)
+        {
+            using var CommandExecutionGuard = new RAIIGuard(WalletService.IncrementCommandExecutionCount, WalletService.DecrementCommandExecutionCount);
+            Guard.Argument(session.SessionId, nameof(session.SessionId)).NotDefault();
+
+            while (_safeguardDownloadingFlagProvider.IsDownloading)
+            {
+                Thread.Sleep(100);
+            }
+
+            session.LastError = null;
+
+            var calculated = CalculateChange(session);
+            if (!calculated.Success)
+            {
+                SetLastError(session, calculated);
+                return TaskResult<WalletTransaction>.CreateFailure(calculated.Exception);
+            }
+
+            using var secp256K1 = new Secp256k1();
+            using var pedersen = new Pedersen();
+            using var mlsag = new MLSAG();
+
+            var blinds = new Span<byte[]>(new byte[3][]);
+            var sk = new Span<byte[]>(new byte[2][]);
+            const int nRows = 2; // last row sums commitments
+            const int nCols = 22; // ring size
+            var index = Libsecp256k1Zkp.Net.Util.Rand(0, nCols) % nCols;
+            var m = new byte[nRows * nCols * 33];
+            var pcmIn = new Span<byte[]>(new byte[nCols * 1][]);
+            var pcmOut = new Span<byte[]>(new byte[2][]);
+            var randSeed = secp256K1.Randomize32();
+            var preimage = secp256K1.Randomize32();
+            var pc = new byte[32];
+            var ki = new byte[33 * 1];
+            var ss = new byte[nCols * nRows * 32];
+            var blindSum = new byte[32];
+            var pkIn = new Span<byte[]>(new byte[nCols * 1][]);
+
+            m = M(session, blinds, sk, nRows, nCols, index, m, pcmIn, pkIn);
+
+            var payment = session.WalletTransaction.Payment;
+            var change = session.WalletTransaction.Change;
+
+            blinds[1] = pedersen.BlindSwitch(payment, secp256K1.CreatePrivateKey());
+            blinds[2] = pedersen.BlindSwitch(change, secp256K1.CreatePrivateKey());
+
+            pcmOut[0] = pedersen.Commit(payment, blinds[1]);
+            pcmOut[1] = pedersen.Commit(change, blinds[2]);
+
+            var commitSumBalance = pedersen.CommitSum(new List<byte[]> { pcmOut[0], pcmOut[1] },
+                new List<byte[]>());
+            if (!pedersen.VerifyCommitSum(new List<byte[]> { commitSumBalance },
+                new List<byte[]> { pcmOut[0], pcmOut[1] }))
+            {
+                return TaskResult<WalletTransaction>.CreateFailure(JObject.FromObject(new
+                {
+                    success = false,
+                    message = "Verify commit sum failed."
+                }));
+            }
+
+            var bulletChange = BulletProof(change, blinds[2], pcmOut[1]);
+            if (!bulletChange.Success)
+            {
+                return TaskResult<WalletTransaction>.CreateFailure(JObject.FromObject(new
+                {
+                    success = false,
+                    message = bulletChange.Exception.Message
+                }));
+            }
+
+            var success = mlsag.Prepare(m, blindSum, pcmOut.Length, pcmOut.Length, nCols, nRows, pcmIn, pcmOut,
+                blinds);
+            if (!success)
+            {
+                return TaskResult<WalletTransaction>.CreateFailure(JObject.FromObject(new
+                {
+                    success = false,
+                    message = "MLSAG Prepare failed."
+                }));
+            }
+
+            sk[nRows - 1] = blindSum;
+
+            success = mlsag.Generate(ki, pc, ss, randSeed, preimage, nCols, nRows, index, sk, m);
+            if (!success)
+            {
+                return TaskResult<WalletTransaction>.CreateFailure(JObject.FromObject(new
+                {
+                    success = false,
+                    message = "MLSAG Generate failed."
+                }));
+            }
+
+            success = mlsag.Verify(preimage, nCols, nRows, m, ki, pc, ss);
+            if (!success)
+            {
+                return TaskResult<WalletTransaction>.CreateFailure(JObject.FromObject(new
+                {
+                    success = false,
+                    message = "MLSAG Verify failed."
+                }));
+            }
+
+            var offsets = Offsets(pcmIn, nCols);
+
+            var generateTransaction = GenerateTransaction(session, m, nCols, pcmOut, blinds, preimage, pc, ki, ss,
+                bulletChange.Result.proof, offsets);
+            if (!generateTransaction.Success)
+            {
+                return TaskResult<WalletTransaction>.CreateFailure(JObject.FromObject(new
+                {
+                    success = false,
+                    message = $"Unable to make the transaction. Inner error message {generateTransaction.NonSuccessMessage.message}"
+                }));
+            }
+
+            var saved = Save(session, session.WalletTransaction, false);
+            if (!saved.Success)
+                return TaskResult<WalletTransaction>.CreateFailure(JObject.FromObject(new
+                {
+                    success = false,
+                    message = "Unable to save the transaction."
+                }));
+
+            return TaskResult<WalletTransaction>.CreateSuccess(session.WalletTransaction);
+        }
+
+        /// <summary>
+        ///
+        /// </summary>
         /// <param name="sessionId"></param>
         /// <returns></returns>
         public TaskResult<BalanceSheet[]> History(Session session)
         {
+            using var CommandExecutionGuard = new RAIIGuard(WalletService.IncrementCommandExecutionCount, WalletService.DecrementCommandExecutionCount);
             var balanceSheets = new List<BalanceSheet>();
             var walletTransactions = session.Database.Query<WalletTransaction>().OrderBy(x => x.DateTime).ToList();
             if (walletTransactions?.Any() != true)
@@ -922,121 +1281,6 @@ namespace BAMWallet.HD
             return TaskResult<BalanceSheet[]>.CreateSuccess(balanceSheets.OrderBy(x => x.Date).ToArray());
         }
 
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="dateTime"></param>
-        /// <param name="memo"></param>
-        /// <param name="sent"></param>
-        /// <param name="received"></param>
-        /// <param name="reward"></param>
-        /// <param name="balance"></param>
-        /// <param name="outputs"></param>
-        /// <param name="txId"></param>
-        /// <returns></returns>
-        private static BalanceSheet MoneyBalanceSheet(DateTime dateTime, string memo, ulong sent, ulong received,
-            ulong reward, ulong balance, Vout[] outputs, string txId, bool isVerified, bool? isLocked = null)
-        {
-            var balanceSheet = new BalanceSheet
-            {
-                Date = dateTime.ToString("yyyy-MM-dd HH:mm"),
-                Memo = memo,
-                Balance = balance.DivWithNaT().ToString("F9"),
-                Outputs = outputs,
-                TxId = txId,
-                IsVerified = isVerified,
-                IsLocked = isLocked
-            };
-            if (sent != 0)
-            {
-                balanceSheet.MoneyOut = $"-{sent.DivWithNaT():F9}";
-            }
-            if (received != 0)
-            {
-                balanceSheet.MoneyIn = $"{received.DivWithNaT():F9}";
-            }
-            if (reward != 0)
-            {
-                balanceSheet.Reward = $"{reward.DivWithNaT():F9}";
-            }
-            return balanceSheet;
-        }
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="session"></param>
-        /// <returns></returns>
-        private Vout GetLasTransactionSpent(Session session)
-        {
-            Guard.Argument(session, nameof(session)).NotNull();
-
-            var walletTransactionMessages = new List<WalletTransactionMessage>();
-            var (_, scan) = Unlock(session);
-            var walletTransactions = session.Database.Query<WalletTransaction>().ToArray();
-            foreach (var output in walletTransactions.SelectMany(x =>
-                x.Transaction.Vout.Where(z => z.T is CoinType.Change)))
-            {
-                try
-                {
-                    var keyImage = GetKeyImage(session, output);
-                    if (keyImage == null) continue;
-                    var spent = WalletTransactionSpent(session, keyImage);
-                    if (spent) continue;
-
-                    walletTransactionMessages.Add(Transaction.Message(output, scan));
-                }
-                catch (Exception)
-                {
-                    // ignored
-                }
-            }
-
-            var transactionMessages = walletTransactionMessages.OrderByDescending(x => x.Amount);
-            return transactionMessages.Last().Output;
-        }
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="sessionId"></param>
-        /// <returns></returns>
-        public int Count(Session session)
-        {
-            return session.Database.Query<WalletTransaction>().ToList().Count;
-        }
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="address"></param>
-        /// <returns></returns>
-        public (PubKey, StealthPayment) StealthPayment(string address)
-        {
-            Guard.Argument(address, nameof(address)).NotNull().NotEmpty().NotWhiteSpace();
-
-            var ephem = new Key();
-            var stealth = new BitcoinStealthAddress(address, _network);
-            var payment = stealth.CreatePayment(ephem);
-            var outPk = stealth.SpendPubKeys[0].UncoverSender(ephem, stealth.ScanPubKey);
-
-            return (outPk, payment);
-        }
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="address"></param>
-        /// <returns></returns>
-        public PubKey ScanPublicKey(string address)
-        {
-            Guard.Argument(address, nameof(address)).NotNull().NotEmpty().NotWhiteSpace();
-
-            var stealth = new BitcoinStealthAddress(address, _network);
-            return stealth.ScanPubKey;
-        }
-
         /// <summary>
         ///
         /// </summary>
@@ -1045,6 +1289,7 @@ namespace BAMWallet.HD
         /// <returns></returns>
         public async Task<TaskResult<WalletTransaction>> ReceivePayment(Session session, string paymentId)
         {
+            using var CommandExecutionGuard = new RAIIGuard(WalletService.IncrementCommandExecutionCount, WalletService.DecrementCommandExecutionCount);
             Guard.Argument(paymentId, nameof(paymentId)).NotNull().NotEmpty().NotWhiteSpace();
 
             try
@@ -1133,26 +1378,10 @@ namespace BAMWallet.HD
         ///
         /// </summary>
         /// <param name="sessionId"></param>
-        /// <param name="output"></param>
-        /// <returns></returns>
-        public byte[] GetKeyImage(Session session, Vout output)
-        {
-            Guard.Argument(output, nameof(output)).NotNull();
-
-            var (spend, scan) = Unlock(session);
-            var oneTimeSpendKey = spend.Uncover(scan, new PubKey(output.E));
-            var mlsag = new MLSAG();
-
-            return mlsag.ToKeyImage(oneTimeSpendKey.ToHex().HexToByte(), oneTimeSpendKey.PubKey.ToBytes());
-        }
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="sessionId"></param>
         /// <returns></returns>
         public async Task<TaskResult<bool>> Send(Session session)
         {
+            using var CommandExecutionGuard = new RAIIGuard(WalletService.IncrementCommandExecutionCount, WalletService.DecrementCommandExecutionCount);
             session.LastError = null;
             Transaction transaction = null;
             try
@@ -1192,103 +1421,16 @@ namespace BAMWallet.HD
             }
         }
 
-
-        public async Task SyncWallet(Session session, int maxNumberOfTransactions = 3)
+        public async Task SyncWallet(Session session)
         {
-            Guard.Argument(maxNumberOfTransactions, nameof(maxNumberOfTransactions)).NotNegative();
-
-            var walletTransactions = session.Database.Query<WalletTransaction>()
+            Guard.Argument(session, nameof(session)).NotNull();
+            var walletTransactions = session.Database.Query<WalletTransaction>().Where(x => !x.IsVerified)
                 .ToList()
                 .OrderBy(d => d.DateTime)
-                .TakeLast(maxNumberOfTransactions)
                 .ToArray();
 
             await SyncTransactions(session, walletTransactions);
         }
-
-
-        private async Task SyncTransactions(Session session, IEnumerable<WalletTransaction> transactions)
-        {
-            var walletTransactions = transactions.ToList();
-
-            foreach (var transaction in walletTransactions.Select(walletTransaction => walletTransaction.Transaction))
-            {
-                if (await TransactionDoesNotExist(transaction))
-                {
-                    var rolledBack = RollBackTransaction(session, transaction.Id);
-                    if (!rolledBack.Success)
-                    {
-                        _logger.Here().Error(rolledBack.Exception.Message);
-                        // Continue syncing rest of the wallet
-                    }
-                }
-            }
-
-            foreach (var transaction in walletTransactions.Where(walletTransaction => !walletTransaction.IsVerified))
-            {
-                if (await TransactionExistsInEndpoint(transaction, _networkSettings.Routing.TransactionId))
-                {
-                    transaction.IsVerified = true;
-                    var saved = Update(session, session.WalletTransaction);
-                    if (!saved.Result)
-                    {
-                        _logger.Error("Transaction is verified but cannot update transaction {@TxId}", transaction.Transaction.TxnId.HexToByte());
-                    }
-                }
-
-            }
-        }
-
-        private async Task<bool> TransactionDoesNotExist(Transaction transaction)
-        {
-            return
-                await TransactionDoesNotExistInEndpoint(transaction, _networkSettings.Routing.TransactionId) &&
-                await TransactionDoesNotExistInEndpoint(transaction, _networkSettings.Routing.MempoolTransactionId);
-        }
-
-        // TODO: Make this more intuitive. The naming is really weird. We only need to know with certainty when a
-        // transaction does not exist. Any uncertainty returns false, absolute certainty returns true.
-        private async Task<bool> TransactionDoesNotExistInEndpoint(Transaction transaction, string endpoint)
-        {
-            var baseAddress = _client.GetBaseAddress();
-            if (baseAddress == null)
-            {
-                return false;
-            }
-
-            var endpointPath = string.Format(endpoint, transaction.TxnId.ByteToHex());
-            var transactionQueryResponse = await _client.GetAsync<Transaction>(baseAddress, endpointPath, new CancellationToken());
-
-            if (transactionQueryResponse.HttpStatusCode == HttpStatusCode.OK ||
-                transactionQueryResponse.HttpStatusCode == HttpStatusCode.ServiceUnavailable)
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-
-        private async Task<bool> TransactionExistsInEndpoint(WalletTransaction transaction, string endpoint)
-        {
-            var baseAddress = _client.GetBaseAddress();
-            if (baseAddress == null)
-            {
-                return false;
-            }
-
-            var endpointPath = string.Format(endpoint, transaction.Transaction.TxnId.ByteToHex());
-            var transactionQueryResponse = await _client.GetAsync<Transaction>(baseAddress, endpointPath, new CancellationToken());
-
-            if (transactionQueryResponse.HttpStatusCode == HttpStatusCode.OK &&
-                transactionQueryResponse.Data != null)
-            {
-                return true;
-            }
-
-            return false;
-        }
-
 
         /// <summary>
         ///
@@ -1298,6 +1440,7 @@ namespace BAMWallet.HD
         /// <returns></returns>
         public async Task<TaskResult<bool>> RecoverTransactions(Session s, int start)
         {
+            using var CommandExecutionGuard = new RAIIGuard(WalletService.IncrementCommandExecutionCount, WalletService.DecrementCommandExecutionCount);
             Guard.Argument(start, nameof(start)).NotNegative();
             var session = s;
             try
@@ -1393,181 +1536,6 @@ namespace BAMWallet.HD
                 return TaskResult<bool>.CreateSuccess(false);
             }
         }
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="sessionId"></param>
-        /// <returns></returns>
-        public (Key, Key) Unlock(Session session)
-        {
-            Key spend = null;
-            Key scan = null;
-
-            try
-            {
-                var keySet = KeySet(session);
-                var masterKey = MasterKey(keySet);
-
-                spend = masterKey.Derive(new KeyPath($"{HdPath}0")).PrivateKey;
-                scan = masterKey.Derive(new KeyPath($"{HdPath}1")).PrivateKey;
-            }
-            catch (Exception ex)
-            {
-                _logger.Here().Error(ex, "Error unlocking");
-            }
-
-            return (spend, scan);
-        }
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="sessionId"></param>
-        /// <param name="data"></param>
-        /// <returns></returns>
-        public TaskResult<bool> Save<T>(Session session, T data, bool updateGuid = true)
-        {
-            Guard.Argument(data, nameof(data)).NotEqual(default);
-
-            try
-            {
-                session.Database.Insert(data);
-                if (updateGuid)
-                {
-                    session.SessionId = Guid.NewGuid();
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.Here().Error(ex, "Error saving");
-                return TaskResult<bool>.CreateFailure(ex);
-            }
-
-            return TaskResult<bool>.CreateSuccess(true);
-        }
-
-
-        public TaskResult<bool> Update<T>(Session session, T data)
-        {
-            Guard.Argument(data, nameof(data)).NotEqual(default);
-
-            try
-            {
-                session.Database.Update(data);
-            }
-            catch (Exception ex)
-            {
-                _logger.Here().Error(ex, "Error updating");
-                return TaskResult<bool>.CreateFailure(ex);
-            }
-
-            return TaskResult<bool>.CreateSuccess(true);
-        }
-
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="session"></param>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        public TaskResult<bool> RollBackTransaction(Session session, Guid id)
-        {
-            Guard.Argument(id, nameof(id)).NotDefault();
-            try
-            {
-                var walletTransaction = session.Database.Query<WalletTransaction>()
-                    .Where(s => s.Id == id).FirstOrDefault();
-                if (walletTransaction != null)
-                {
-                    session.Database.Delete<WalletTransaction>(new LiteDB.BsonValue(walletTransaction.Id));
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.Here().Error(ex, "Error rolling back transaction");
-                return TaskResult<bool>.CreateFailure(ex);
-            }
-
-            return TaskResult<bool>.CreateSuccess(true);
-        }
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="paymentId"></param>
-        /// <param name="session"></param>
-        /// <param name="taskResult"></param>
-        /// <returns></returns>
-        private bool AlreadyReceivedPayment(string paymentId, Session session,
-            out TaskResult<WalletTransaction> taskResult)
-        {
-            taskResult = null;
-            var walletTransactions = session.Database.Query<WalletTransaction>().ToList();
-            if (!walletTransactions.Any()) return false;
-            var walletTransaction = walletTransactions.FirstOrDefault(x => x.Transaction.TxnId.Xor(paymentId.HexToByte()));
-            if (walletTransaction == null) return false;
-            var output = TaskResult<WalletTransaction>.CreateFailure(
-                new Exception($"Transaction with paymentId: {paymentId} already exists"));
-            SetLastError(session, output);
-            {
-                taskResult = output;
-                return true;
-            }
-        }
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="sessionId"></param>
-        /// <param name="image"></param>
-        /// <returns></returns>
-        private bool WalletTransactionSpent(Session session, byte[] image)
-        {
-            Guard.Argument(image, nameof(image)).NotNull().MaxCount(33);
-
-            var spent = false;
-            var walletTransactions = session.Database.Query<WalletTransaction>().ToList();
-            var transactions = walletTransactions.Where(x => x.Transaction.Vin.Any(t => t.Key.KImage.Xor(image)));
-            try
-            {
-                spent = transactions.Any();
-            }
-            catch (Exception)
-            {
-                // Ignore
-            }
-
-            return spent;
-        }
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="session"></param>
-        /// <param name="obj"></param>
-        private void SetLastError<T>(Session session, TaskResult<T> obj)
-        {
-            Guard.Argument(session, nameof(session)).NotNull();
-            Guard.Argument(obj, nameof(obj)).NotNull();
-
-            if (obj.Exception == null)
-            {
-                session.LastError = obj.NonSuccessMessage;
-                _logger.Here().Error("Last session error: {@Error}", obj.NonSuccessMessage.message);
-            }
-            else
-            {
-                session.LastError = JObject.FromObject(new
-                {
-                    success = false,
-                    message = obj.Exception.Message
-                });
-
-                _logger.Here().Error("Last session error: {@Error}", obj.Exception.Message);
-            }
-        }
+        #endregion
     }
 }
