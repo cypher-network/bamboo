@@ -247,8 +247,13 @@ namespace BAMWallet.HD
             {
                 var (outPkPayment, stealthPayment) = StealthPayment(session.WalletTransaction.RecipientAddress);
                 var (outPkChange, stealthChange) = StealthPayment(session.WalletTransaction.SenderAddress);
-
-                var changeLockTime = new LockTime(Utils.DateTimeToUnixTime(DateTimeOffset.UtcNow.AddMinutes(10)));
+                var changeLockTime = session.SessionType switch
+                {
+                    SessionType.Coinstake => new LockTime(
+                        Utils.DateTimeToUnixTime(DateTimeOffset.UtcNow.AddMinutes(15))),
+                    _ => new LockTime(Utils.DateTimeToUnixTime(DateTimeOffset.UtcNow.AddMinutes(10)))
+                };
+                var coinstakeLockTime = new LockTime(Utils.DateTimeToUnixTime(DateTimeOffset.UtcNow.AddSeconds(15)));
                 var tx = new Transaction
                 {
                     Bp = new[] { new Bp { Proof = bp } },
@@ -263,10 +268,13 @@ namespace BAMWallet.HD
                             A = session.SessionType == SessionType.Coinstake ? session.WalletTransaction.Payment : 0,
                             C = pcmOut[0],
                             E = stealthPayment.Metadata.EphemKey.ToBytes(),
+                            L = session.SessionType == SessionType.Coinstake ? coinstakeLockTime.Value : 0,
                             N = ScanPublicKey(session.WalletTransaction.RecipientAddress).Encrypt(
                                 Transaction.Message(session.WalletTransaction.Payment, 0, blinds[1],
                                     session.WalletTransaction.Memo)),
                             P = outPkPayment.ToBytes(),
+                            S = session.SessionType == SessionType.Coinstake? new Script(Op.GetPushOp(changeLockTime.Value), OpcodeType.OP_CHECKLOCKTIMEVERIFY)
+                                .ToString() : null,
                             T = session.SessionType == SessionType.Coin ? CoinType.Payment : CoinType.Coinstake
                         },
                         new Vout
