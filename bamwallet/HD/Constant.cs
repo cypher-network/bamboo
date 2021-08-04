@@ -1,4 +1,4 @@
-﻿// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0. 
+﻿// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0.
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
 namespace BAMWallet.HD
@@ -17,5 +17,11 @@ namespace BAMWallet.HD
         public const string ConfigSectionNameConfigVersion = "ConfigVersion";
 
         public const int MinimumConfigVersion = 1;
+
+        public const string WALLET_DIR_SUFFIX = "wallets";
+
+        public const string WALLET_FILE_EXTENSION = "*.db";
+
+        public const string HD_PATH = "m/44'/847177'/0'/0/";
     }
 }
