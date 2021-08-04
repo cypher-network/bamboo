@@ -67,11 +67,15 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                             }
                             if (!deleted)
                             {
+                                _console.ForegroundColor = ConsoleColor.Red;
                                 _console.WriteLine("Wallet with id: {0} does not exist. Command failed.", _idToDelete);
+                                _console.ForegroundColor = ConsoleColor.White;
                             }
                             else
                             {
+                                _console.ForegroundColor = ConsoleColor.Green;
                                 _console.WriteLine("Wallet with id: {0} permenantly deleted.", _idToDelete);
+                                _console.ForegroundColor = ConsoleColor.White;
                             }
                         }
                     }
@@ -83,8 +87,8 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                 _idToDelete = String.Empty;
             }
         }
-        public WalletRemoveCommand(IServiceProvider serviceProvider, ILogger logger) : base(typeof(Logout).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
-            typeof(Logout).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description), serviceProvider.GetService<IConsole>())
+        public WalletRemoveCommand(IServiceProvider serviceProvider, ILogger logger) : base(typeof(WalletRemoveCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
+            typeof(WalletRemoveCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description), serviceProvider.GetService<IConsole>())
         {
             _logger = logger;
             _isSyncInProgress = false;
@@ -111,12 +115,11 @@ namespace CLi.ApplicationLayer.Commands.Wallet
             lock (_lock)
             {
                 var identifier = Prompt.GetPasswordAsSecureString("Identifier:", ConsoleColor.Yellow);
-                var confirmation = Prompt.GetPasswordAsSecureString(string.Format("Are you sure you want to delete wallet with Identifier: {0}? (This action cannot be undone).[Y]es/[N]o:/[C]ancel", identifier.ToUnSecureString()), ConsoleColor.Yellow);
+                var isDeletionConfirmed = Prompt.GetYesNo(string.Format("Are you sure you want to delete wallet with Identifier: {0}? (This action cannot be undone!)", identifier.ToUnSecureString()), false, ConsoleColor.Red);
 
-                if (String.Equals("yes", confirmation.ToUnSecureString(), StringComparison.InvariantCultureIgnoreCase) ||
-                String.Equals("y", confirmation.ToUnSecureString(), StringComparison.InvariantCultureIgnoreCase))
+                if (isDeletionConfirmed)
                 {
-                    _idToDelete = confirmation.ToUnSecureString();
+                    _idToDelete = identifier.ToUnSecureString();
                     if (IsLoggedInWithWallet(identifier))
                     {
                         _isLogoutRequested = true;
@@ -125,6 +128,10 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                             Logout();
                             DeleteWallet();
                         }
+                    }
+                    else
+                    {
+                        DeleteWallet();
                     }
                 }
                 return Task.CompletedTask;
