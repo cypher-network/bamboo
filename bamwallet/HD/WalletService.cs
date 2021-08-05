@@ -25,13 +25,14 @@ using System.Threading.Tasks;
 using Block = BAMWallet.Model.Block;
 using Transaction = BAMWallet.Model.Transaction;
 using Util = BAMWallet.Helper.Util;
+using Constants = BAMWallet.HD.Constant;
 
 namespace BAMWallet.HD
 {
     public class WalletService : IWalletService
     {
         #region: CLASS_INTERNALS
-        private const string HdPath = "m/44'/847177'/0'/0/";
+        private const string HdPath = Constants.HD_PATH;
         private readonly ISafeguardDownloadingFlagProvider _safeguardDownloadingFlagProvider;
         private readonly ILogger _logger;
         private readonly NBitcoin.Network _network;
@@ -964,21 +965,28 @@ namespace BAMWallet.HD
         /// <returns></returns>
         public TaskResult<IEnumerable<string>> WalletList()
         {
-            var wallets = Path.Combine(Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory) ?? string.Empty,
-                "wallets");
-
-            string[] files;
+            var baseDir = Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory);
             try
             {
-                files = Directory.GetFiles(wallets, "*.db");
+                if (Directory.Exists(baseDir))
+                {
+                    var walletsDir = Path.Combine(baseDir, Constants.WALLET_DIR_SUFFIX);
+                    if (Directory.Exists(walletsDir))
+                    {
+                        var files = Directory.GetFiles(walletsDir, Constants.WALLET_FILE_EXTENSION);
+                        if (files.Count() != 0)
+                        {
+                            return TaskResult<IEnumerable<string>>.CreateSuccess(files);
+                        }
+                    }
+                }
             }
             catch (Exception ex)
             {
                 _logger.Here().Error(ex, "Error getting wallet list");
                 return TaskResult<IEnumerable<string>>.CreateFailure(ex);
             }
-
-            return TaskResult<IEnumerable<string>>.CreateSuccess(files);
+            return TaskResult<IEnumerable<string>>.CreateSuccess(new List<string>());
         }
         #endregion
 

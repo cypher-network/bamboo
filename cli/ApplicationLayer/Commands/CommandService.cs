@@ -74,6 +74,7 @@ namespace CLi.ApplicationLayer.Commands
         {
             _commands.Clear();
             RegisterCommand(new Login(_serviceProvider));
+            RegisterCommand(new WalletRemoveCommand(_serviceProvider, _logger));
             RegisterCommand(new WalletCreateCommand(_serviceProvider));
             RegisterCommand(new WalletCreateMnemonicCommand(_serviceProvider));
             RegisterCommand(new WalletListCommand(_serviceProvider));
@@ -86,6 +87,7 @@ namespace CLi.ApplicationLayer.Commands
         {
             _commands.Clear();
             RegisterCommand(new Logout(_serviceProvider));
+            RegisterCommand(new WalletRemoveCommand(_serviceProvider, _logger));
             RegisterCommand(new WalletCreateCommand(_serviceProvider));
             RegisterCommand(new WalletCreateMnemonicCommand(_serviceProvider));
             RegisterCommand(new WalletListCommand(_serviceProvider));
