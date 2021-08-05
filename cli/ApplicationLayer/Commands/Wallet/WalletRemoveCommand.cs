@@ -56,7 +56,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                         {
                             var files = Directory.GetFiles(walletsDir, Constants.WALLET_FILE_EXTENSION);
                             bool deleted = false;
-                            if (files.Count() != 0)
+                            if (files.Any())
                             {
                                 var walletFile = files.Where(x => String.Equals(Path.GetFileNameWithoutExtension(x), _idToDelete, StringComparison.CurrentCulture)).FirstOrDefault();
                                 if (!String.IsNullOrEmpty(walletFile))
