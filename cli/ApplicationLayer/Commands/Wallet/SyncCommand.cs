@@ -35,10 +35,10 @@ namespace CLi.ApplicationLayer.Commands.Wallet
         {
             if (Command.ActiveSession != null)
             {
-                _console.WriteLine("Syncing wallet with chain ...");
-                _console.ForegroundColor = ConsoleColor.Cyan;
-                _console.Write("bamboo$ ");
-                _console.ForegroundColor = ConsoleColor.White;
+                // _console.WriteLine("Syncing wallet with chain ...");
+                // _console.ForegroundColor = ConsoleColor.Cyan;
+                // _console.Write("bamboo$ ");
+                // _console.ForegroundColor = ConsoleColor.White;
                 await _walletService.SyncWallet(Command.ActiveSession);
             }
         }
