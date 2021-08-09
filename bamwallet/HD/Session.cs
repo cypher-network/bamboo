@@ -39,7 +39,7 @@ namespace BAMWallet.HD
             SessionId = Guid.NewGuid();
             if (!IsValid)
             {
-                throw new FileLoadException(string.Format("Wallet with ID: {0} not found!", identifier));
+                throw new FileLoadException(string.Format("Wallet with ID: {0} not found!", identifier.ToUnSecureString()));
             }
             Database = Util.LiteRepositoryFactory(identifier, passphrase);
         }
