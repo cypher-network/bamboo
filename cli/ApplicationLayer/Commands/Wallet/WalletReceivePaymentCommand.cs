@@ -9,15 +9,16 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json;
+
 using Kurukuru;
 using McMaster.Extensions.CommandLineUtils;
+using Newtonsoft.Json;
+
 using BAMWallet.HD;
-using BAMWallet.Extensions;
 using BAMWallet.Helper;
+
 namespace CLi.ApplicationLayer.Commands.Wallet
 {
     [CommandDescriptor("receive", "Receive a payment")]
@@ -28,8 +29,8 @@ namespace CLi.ApplicationLayer.Commands.Wallet
 
         private Spinner spinner;
 
-        public WalletReceivePaymentCommand(IServiceProvider serviceProvider) : base(typeof(WalletReceivePaymentCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
-            typeof(WalletReceivePaymentCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description), serviceProvider.GetService<IConsole>())
+        public WalletReceivePaymentCommand(IServiceProvider serviceProvider)
+            : base(typeof(WalletReceivePaymentCommand), serviceProvider)
         {
             _walletService = serviceProvider.GetService<IWalletService>();
             _logger = serviceProvider.GetService<ILogger<WalletReceivePaymentCommand>>();

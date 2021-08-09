@@ -8,7 +8,6 @@
 
 using System;
 using System.Threading.Tasks;
-
 using Microsoft.Extensions.DependencyInjection;
 
 using McMaster.Extensions.CommandLineUtils;
@@ -24,8 +23,8 @@ namespace CLi.ApplicationLayer.Commands.Wallet
     {
         private readonly IWalletService _walletService;
 
-        public WalletCreateCommand(IServiceProvider serviceProvider) : base(typeof(WalletCreateCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
-            typeof(WalletCreateCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description), serviceProvider.GetService<IConsole>())
+        public WalletCreateCommand(IServiceProvider serviceProvider)
+            : base(typeof(WalletCreateCommand), serviceProvider)
         {
             _walletService = serviceProvider.GetService<IWalletService>();
         }

@@ -3,11 +3,9 @@
 
 using System;
 using System.Timers;
-using BAMWallet.HD;
 using System.Threading.Tasks;
-using McMaster.Extensions.CommandLineUtils;
-using Microsoft.Extensions.DependencyInjection;
-using BAMWallet.Extensions;
+
+using BAMWallet.HD;
 using CLi.ApplicationLayer.Events;
 
 namespace CLi.ApplicationLayer.Commands.Wallet
@@ -15,15 +13,15 @@ namespace CLi.ApplicationLayer.Commands.Wallet
     [CommandDescriptor("sync", "syncs wallet with chain")]
     public class SyncCommand : Command
     {
-        private static readonly double SYNC_INTERVAL = 1000 * 60 * 1;
         private IWalletService _walletService;
-        private readonly Timer _syncTimer = new Timer(SYNC_INTERVAL);
+        private readonly Timer _syncTimer;
         public static bool IsSynchronizing { get; private set; }
         public static EventHandler<SyncStateChanged> OnSyncStateChanged;
 
-        public SyncCommand(IWalletService walletService, IServiceProvider serviceProvider) : base(typeof(SyncCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
-            typeof(SyncCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description), serviceProvider.GetService<IConsole>())
+        public SyncCommand(IWalletService walletService, IServiceProvider serviceProvider)
+            : base(typeof(SyncCommand), serviceProvider)
         {
+            _syncTimer = new Timer(TimeSpan.FromMinutes(_timingSettings.SyncIntervalMins).TotalMilliseconds);
             _walletService = walletService;
             _syncTimer.Elapsed += OnSyncInternal;
             _syncTimer.AutoReset = true;

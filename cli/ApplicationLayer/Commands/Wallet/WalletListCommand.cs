@@ -10,10 +10,12 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-using McMaster.Extensions.CommandLineUtils;
+
 using ConsoleTables;
+using McMaster.Extensions.CommandLineUtils;
+
 using BAMWallet.HD;
-using BAMWallet.Extensions;
+
 namespace CLi.ApplicationLayer.Commands.Wallet
 {
     [CommandDescriptor("list", "Available wallets")]
@@ -21,8 +23,8 @@ namespace CLi.ApplicationLayer.Commands.Wallet
     {
         private readonly IWalletService _walletService;
 
-        public WalletListCommand(IServiceProvider serviceProvider) : base(typeof(WalletListCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
-            typeof(WalletListCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description), serviceProvider.GetService<IConsole>())
+        public WalletListCommand(IServiceProvider serviceProvider)
+            : base(typeof(WalletListCommand), serviceProvider)
         {
             _walletService = serviceProvider.GetService<IWalletService>();
         }

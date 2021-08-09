@@ -41,6 +41,7 @@ namespace Cli
             var ranAsWebServer = Convert.ToBoolean(Configuration["NetworkSettings:RunAsWebServer"]);
             services.AddOptions()
                 .Configure<NetworkSettings>(options => Configuration.GetSection("NetworkSettings").Bind(options))
+                .Configure<TimingSettings>(options => Configuration.GetSection("Timing").Bind(options))
                 .AddSingleton(Log.Logger);
 
             if (ranAsWebServer)

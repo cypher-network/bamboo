@@ -10,12 +10,14 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-using McMaster.Extensions.CommandLineUtils;
+
 using ConsoleTables;
-using BAMWallet.HD;
 using Kurukuru;
-using BAMWallet.Extensions;
+using McMaster.Extensions.CommandLineUtils;
+
+using BAMWallet.HD;
 using BAMWallet.Helper;
+
 namespace CLi.ApplicationLayer.Commands.Wallet
 {
     [CommandDescriptor("history", "Show my transactions")]
@@ -23,8 +25,8 @@ namespace CLi.ApplicationLayer.Commands.Wallet
     {
         private readonly IWalletService _walletService;
 
-        public WalletTxHistoryCommand(IServiceProvider serviceProvider) : base(typeof(WalletTxHistoryCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
-            typeof(WalletTxHistoryCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description), serviceProvider.GetService<IConsole>())
+        public WalletTxHistoryCommand(IServiceProvider serviceProvider)
+            : base(typeof(WalletTxHistoryCommand), serviceProvider)
         {
             _walletService = serviceProvider.GetService<IWalletService>();
         }

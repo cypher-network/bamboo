@@ -6,13 +6,15 @@
 // You should have received a copy of the license along with this
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
 
-using BAMWallet.HD;
-using McMaster.Extensions.CommandLineUtils;
-using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Threading.Tasks;
-using BAMWallet.Extensions;
+using Microsoft.Extensions.DependencyInjection;
+
+using McMaster.Extensions.CommandLineUtils;
+
+using BAMWallet.HD;
 using BAMWallet.Helper;
+
 namespace CLi.ApplicationLayer.Commands.Wallet
 {
     [CommandDescriptor("restore", "Restore wallet from seed")]
@@ -20,8 +22,8 @@ namespace CLi.ApplicationLayer.Commands.Wallet
     {
         private readonly IWalletService _walletService;
 
-        public WalletRestoreCommand(IServiceProvider serviceProvider) : base(typeof(WalletRestoreCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
-            typeof(WalletRestoreCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description), serviceProvider.GetService<IConsole>())
+        public WalletRestoreCommand(IServiceProvider serviceProvider)
+            : base(typeof(WalletRestoreCommand), serviceProvider)
         {
             _walletService = serviceProvider.GetService<IWalletService>();
         }

@@ -6,12 +6,11 @@
 // You should have received a copy of the license along with this
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
 
-using McMaster.Extensions.CommandLineUtils;
-using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Threading.Tasks;
-using BAMWallet.Extensions;
+
 using CLi.ApplicationLayer.Events;
+
 namespace CLi.ApplicationLayer.Commands.Wallet
 {
     [CommandDescriptor("logout", "Logs out and locks wallet.")]
@@ -20,8 +19,8 @@ namespace CLi.ApplicationLayer.Commands.Wallet
         private object _lock;
         private bool _isSyncInProgress;
         private bool _isLogoutRequested;
-        public Logout(IServiceProvider serviceProvider) : base(typeof(Logout).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
-            typeof(Logout).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description), serviceProvider.GetService<IConsole>())
+        public Logout(IServiceProvider serviceProvider)
+            : base(typeof(Logout), serviceProvider)
         {
             _isSyncInProgress = false;
             _isLogoutRequested = false;

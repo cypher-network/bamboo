@@ -8,9 +8,7 @@
 
 using System;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using BAMWallet.Extensions;
-using McMaster.Extensions.CommandLineUtils;
+
 namespace CLi.ApplicationLayer.Commands.Vault
 {
     [CommandDescriptor("exit", "Exit the wallet")]
@@ -18,8 +16,8 @@ namespace CLi.ApplicationLayer.Commands.Vault
     {
         ICommandService commandService;
 
-        public ExitCommand(ICommandService service, IServiceProvider serviceProvider) : base(typeof(ExitCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
-            typeof(ExitCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description), serviceProvider.GetService<IConsole>())
+        public ExitCommand(ICommandService service, IServiceProvider serviceProvider)
+            : base(typeof(ExitCommand), serviceProvider)
         {
             commandService = service;
         }

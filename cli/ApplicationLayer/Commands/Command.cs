@@ -9,40 +9,56 @@
 using System;
 using System.Threading.Tasks;
 using System.Timers;
-using CLi.ApplicationLayer.Events;
-using BAMWallet.HD;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+
 using McMaster.Extensions.CommandLineUtils;
+
+using BAMWallet.Extensions;
+using BAMWallet.HD;
+using BAMWallet.Model;
+using CLi.ApplicationLayer.Events;
+
 namespace CLi.ApplicationLayer.Commands
 {
     public abstract class Command : ICommand
     {
+        protected readonly TimingSettings _timingSettings;
         protected readonly IConsole _console;
         private static bool _isInitialized = false;
-        private static readonly double TIMEOUT = 1000 * 60 * 30;
-        private static Timer _timeout = new Timer(TIMEOUT);
+        private static Timer _timeout;
         private static LogInStateChanged.LoginEvent _loginState = LogInStateChanged.LoginEvent.Init;
         private void OnTimeout(object source, ElapsedEventArgs e)
         {
+            _console.ForegroundColor = ConsoleColor.Red;
             _console.WriteLine("You have been logged out of the wallet due to inactivity. Please login again to use the wallet.");
             _console.ForegroundColor = ConsoleColor.Cyan;
             _console.Write("bamboo$ ");
             _console.ForegroundColor = ConsoleColor.White;
             Logout();
+            _console.ResetColor();
         }
 
         private void ReinitializeLogoutTimer()
         {
-            _timeout.Elapsed -= OnTimeout;
-            _timeout.Stop();
-            _timeout = new Timer(TIMEOUT);
+            if (_timeout != null)
+            {
+                _timeout.Elapsed -= OnTimeout;
+                _timeout.Stop();
+            }
+
+            _timeout = new Timer(TimeSpan.FromMinutes(_timingSettings.SessionTimeoutMins).TotalMilliseconds);
             _timeout.Elapsed += OnTimeout;
         }
 
-        protected Command(string name, string description, IConsole console)
+        protected Command(Type commandType, IServiceProvider serviceProvider)
         {
-            _console = console;
-            Name = name;
-            Description = description;
+            Name = commandType.GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name);
+            Description = commandType.GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description);
+
+            _timingSettings = serviceProvider.GetService<IOptions<TimingSettings>>()?.Value ?? new();
+
+            _console = serviceProvider.GetService<IConsole>();
             if (!_isInitialized)
             {
                 ActiveSession = null;
