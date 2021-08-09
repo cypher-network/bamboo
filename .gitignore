@@ -16,6 +16,8 @@
 /bamwallet/.DS_Store
 *.dll
 *.pdb
+.DS_Store
+CLI/appsettings.json
 
 # Build results
 [Dd]ebug/

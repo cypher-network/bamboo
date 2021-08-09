@@ -101,15 +101,15 @@ namespace BAMWallet.HD
         {
             try
             {
+                var freeBalances = new List<Balance>();
                 var (_, scan) = Unlock(session);
-                var multiBalance = new List<decimal>();
-                var divisions = new List<Balance>();
-                var divisionAmount = session.WalletTransaction.Payment.DivWithNaT();
-                var amount = session.WalletTransaction.Payment.DivWithNaT();
                 var balances = AddBalances(session);
 
-                var freeBalances = new List<Balance>();
-
+                if (session.WalletTransaction.Payment == 0)
+                {
+                    return TaskResult<bool>.CreateFailure(new Exception("Unable to use zero value payment."));
+                }
+                
                 if (balances.FirstOrDefault()?.Commitment.L == 0)
                 {
                     freeBalances.Add(balances.First());
@@ -117,38 +117,17 @@ namespace BAMWallet.HD
 
                 freeBalances.AddRange(
                     balances
-                        .Where(balance => !balance.Commitment.IsLockedOrInvalid(scan))
+                        .Where(balance =>
+                            !balance.Commitment.IsLockedOrInvalid(scan) &&
+                            balance.Total / session.WalletTransaction.Payment != 0)
                         .OrderByDescending(x => x.Total));
 
-                foreach (var balance in freeBalances)
-                {
-                    var t = balance.Total.DivWithNaT();
-                    var count = (int)(amount / t);
-                    try
-                    {
-                        var g = t / divisionAmount;
-                        if ((int)g != 0)
-                        {
-                            divisions.Add(balance);
-                        }
-                    }
-                    catch (DivideByZeroException)
-                    {
-                        // Ignore
-                    }
-
-                    if (count != 0)
-                        for (var k = 0; k < count; k++)
-                            multiBalance.Add(balance.Total.DivWithNaT());
-                    amount %= t;
-                }
-
-                if (!divisions.Any())
+                if (!freeBalances.Any())
                 {
                     return TaskResult<bool>.CreateFailure(new Exception("No free commitments available. Please retry after commitments unlock."));
                 }
 
-                var useAmount = divisions.Min(x => x.Total);
+                var useAmount = freeBalances.Min(x => x.Total);
                 if (useAmount == 0)
                 {
                     return TaskResult<bool>.CreateFailure(new Exception("Multi single transactions are not implemented"));
@@ -165,7 +144,6 @@ namespace BAMWallet.HD
                 }
 
                 var change = total - session.WalletTransaction.Payment;
-
                 session.WalletTransaction = new WalletTransaction
                 {
                     Balance = total,

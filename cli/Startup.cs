@@ -48,7 +48,6 @@ namespace Cli
                 services.AddSingleton<IHostedService, SelfHosted>(sp =>
                 {
                     var selfHosted = new SelfHosted(sp.GetService<IOptions<NetworkSettings>>());
-
                     return selfHosted;
                 });
             }
