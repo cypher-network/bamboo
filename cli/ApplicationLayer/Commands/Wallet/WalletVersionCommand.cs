@@ -8,16 +8,16 @@
 
 using System;
 using System.Threading.Tasks;
+
 using McMaster.Extensions.CommandLineUtils;
-using Microsoft.Extensions.DependencyInjection;
-using BAMWallet.Extensions;
+
 namespace CLi.ApplicationLayer.Commands.Wallet
 {
     [CommandDescriptor("version", "Running version")]
     public class WalletVersionCommand : Command
     {
-        public WalletVersionCommand(IServiceProvider serviceProvider) : base(typeof(WalletVersionCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
-            typeof(WalletVersionCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description), serviceProvider.GetService<IConsole>())
+        public WalletVersionCommand(IServiceProvider serviceProvider)
+            : base(typeof(WalletVersionCommand), serviceProvider)
         {
         }
 

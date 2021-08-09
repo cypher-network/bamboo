@@ -10,11 +10,13 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-using McMaster.Extensions.CommandLineUtils;
-using BAMWallet.Extensions;
-using BAMWallet.HD;
+
 using Kurukuru;
+using McMaster.Extensions.CommandLineUtils;
+
+using BAMWallet.HD;
 using BAMWallet.Helper;
+
 namespace CLi.ApplicationLayer.Commands.Wallet
 {
     [CommandDescriptor("balance", "Get your wallet balance")]
@@ -23,8 +25,8 @@ namespace CLi.ApplicationLayer.Commands.Wallet
         private readonly IWalletService _walletService;
         private Spinner _spinner;
 
-        public WalletBalanceCommand(IServiceProvider serviceProvider) : base(typeof(WalletBalanceCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
-            typeof(WalletBalanceCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description), serviceProvider.GetService<IConsole>())
+        public WalletBalanceCommand(IServiceProvider serviceProvider)
+            : base(typeof(WalletBalanceCommand), serviceProvider)
         {
             _walletService = serviceProvider.GetService<IWalletService>();
         }

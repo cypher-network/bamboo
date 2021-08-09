@@ -6,17 +6,18 @@
 // You should have received a copy of the license along with this
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
 
-using McMaster.Extensions.CommandLineUtils;
-using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Threading.Tasks;
-using BAMWallet.Extensions;
-using CLi.ApplicationLayer.Events;
 using System.Security;
 using System.IO;
-using Constants = BAMWallet.HD.Constant;
 using System.Linq;
 using Microsoft.Extensions.Logging;
+
+using McMaster.Extensions.CommandLineUtils;
+
+using BAMWallet.Extensions;
+using Constants = BAMWallet.HD.Constant;
+using CLi.ApplicationLayer.Events;
 using CLi.Helper;
 
 namespace CLi.ApplicationLayer.Commands.Wallet
@@ -32,9 +33,9 @@ namespace CLi.ApplicationLayer.Commands.Wallet
 
         private bool IsLoggedInWithWallet(SecureString identifier)
         {
-            if (Command.ActiveSession != null)
+            if (ActiveSession != null)
             {
-                return String.Equals(identifier.ToUnSecureString(), Command.ActiveSession.Identifier.ToUnSecureString());
+                return String.Equals(identifier.ToUnSecureString(), ActiveSession.Identifier.ToUnSecureString());
             }
             else
             {
@@ -87,8 +88,8 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                 _idToDelete = String.Empty;
             }
         }
-        public WalletRemoveCommand(IServiceProvider serviceProvider, ILogger logger) : base(typeof(WalletRemoveCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
-            typeof(WalletRemoveCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description), serviceProvider.GetService<IConsole>())
+        public WalletRemoveCommand(IServiceProvider serviceProvider, ILogger logger)
+            : base(typeof(WalletRemoveCommand), serviceProvider)
         {
             _logger = logger;
             _isSyncInProgress = false;

@@ -109,7 +109,7 @@ namespace BAMWallet.HD
                 {
                     return TaskResult<bool>.CreateFailure(new Exception("Unable to use zero value payment."));
                 }
-                
+
                 if (balances.FirstOrDefault()?.Commitment.L == 0)
                 {
                     freeBalances.Add(balances.First());

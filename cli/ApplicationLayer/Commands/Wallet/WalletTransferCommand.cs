@@ -11,13 +11,15 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json;
-using McMaster.Extensions.CommandLineUtils;
+
 using Kurukuru;
-using BAMWallet.HD;
-using BAMWallet.Model;
+using McMaster.Extensions.CommandLineUtils;
+using Newtonsoft.Json;
+
 using BAMWallet.Extensions;
+using BAMWallet.HD;
 using BAMWallet.Helper;
+using BAMWallet.Model;
 
 namespace CLi.ApplicationLayer.Commands.Wallet
 {
@@ -29,8 +31,8 @@ namespace CLi.ApplicationLayer.Commands.Wallet
 
         private Spinner _spinner;
 
-        public WalletTransferCommand(IServiceProvider serviceProvider) : base(typeof(WalletTransferCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
-            typeof(WalletTransferCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description), serviceProvider.GetService<IConsole>())
+        public WalletTransferCommand(IServiceProvider serviceProvider)
+            : base(typeof(WalletTransferCommand), serviceProvider)
         {
             _walletService = serviceProvider.GetService<IWalletService>();
             _logger = serviceProvider.GetService<ILogger<WalletTransferCommand>>();

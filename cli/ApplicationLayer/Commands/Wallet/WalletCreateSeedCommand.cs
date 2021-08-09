@@ -9,9 +9,10 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+
 using McMaster.Extensions.CommandLineUtils;
 using NBitcoin;
-using BAMWallet.Extensions;
+
 using BAMWallet.HD;
 
 namespace CLi.ApplicationLayer.Commands.Wallet
@@ -21,8 +22,8 @@ namespace CLi.ApplicationLayer.Commands.Wallet
     {
         private readonly IWalletService _walletService;
 
-        public WalletCreateMnemonicCommand(IServiceProvider serviceProvider) : base(typeof(WalletCreateMnemonicCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name),
-            typeof(WalletCreateMnemonicCommand).GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description), serviceProvider.GetService<IConsole>())
+        public WalletCreateMnemonicCommand(IServiceProvider serviceProvider)
+            : base(typeof(WalletCreateMnemonicCommand), serviceProvider)
         {
             _walletService = serviceProvider.GetService<IWalletService>();
         }
