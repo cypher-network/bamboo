@@ -133,11 +133,8 @@ namespace BAMWallet.HD
                     return TaskResult<bool>.CreateFailure(new Exception("Multi single transactions are not implemented"));
                 }
 
-                var rem = useAmount.DivWithNaT();
-                var closest = balances.Select(x => x.Total.DivWithNaT())
-                    .Aggregate((x, y) => Math.Abs(x - rem) < Math.Abs(y - rem) ? x : y);
-                var tx = balances.First(a => a.Total.DivWithNaT() == closest);
-                var total = Transaction.Amount(tx.Commitment, scan);
+                var spending = freeBalances.First(bal => bal.Total == useAmount);
+                var total = Transaction.Amount(spending.Commitment, scan);
                 if (session.WalletTransaction.Payment > total)
                 {
                     return TaskResult<bool>.CreateFailure(new Exception("The payment exceeds the total commitment balance"));
@@ -155,7 +152,7 @@ namespace BAMWallet.HD
                     Reward = session.SessionType == SessionType.Coinstake ? session.WalletTransaction.Reward : 0,
                     RecipientAddress = session.WalletTransaction.RecipientAddress,
                     SenderAddress = session.WalletTransaction.SenderAddress,
-                    Spending = tx.Commitment,
+                    Spending = spending.Commitment,
                     Spent = change == 0,
                     Delay = session.WalletTransaction.Delay
                 };
