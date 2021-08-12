@@ -125,13 +125,7 @@ namespace BAMWallet.HD
                     return TaskResult<bool>.CreateFailure(new Exception("No free commitments available. Please retry after commitments unlock."));
                 }
 
-                var useAmount = freeBalances.Min(x => x.Total);
-                if (useAmount == 0)
-                {
-                    return TaskResult<bool>.CreateFailure(new Exception("Multi single transactions are not implemented"));
-                }
-
-                var spending = freeBalances.First(bal => bal.Total == useAmount);
+                var spending = freeBalances.First(x => x.Total >= session.WalletTransaction.Payment);
                 var total = Transaction.Amount(spending.Commitment, scan);
                 if (session.WalletTransaction.Payment > total)
                 {
