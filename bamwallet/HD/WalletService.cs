@@ -115,12 +115,10 @@ namespace BAMWallet.HD
                     freeBalances.Add(balances.First());
                 }
 
-                freeBalances.AddRange(
-                    balances
-                        .Where(balance =>
-                            !balance.Commitment.IsLockedOrInvalid(scan) &&
-                            balance.Total / session.WalletTransaction.Payment != 0)
-                        .OrderByDescending(x => x.Total));
+                freeBalances.AddRange(balances
+                    .Where(balance =>
+                        !balance.Commitment.IsLockedOrInvalid(scan) &&
+                        session.WalletTransaction.Payment <= balance.Total).OrderByDescending(x => x.Total));
 
                 if (!freeBalances.Any())
                 {
