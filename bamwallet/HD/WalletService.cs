@@ -115,29 +115,18 @@ namespace BAMWallet.HD
                     freeBalances.Add(balances.First());
                 }
 
-                freeBalances.AddRange(
-                    balances
-                        .Where(balance =>
-                            !balance.Commitment.IsLockedOrInvalid(scan) &&
-                            balance.Total / session.WalletTransaction.Payment != 0)
-                        .OrderByDescending(x => x.Total));
+                freeBalances.AddRange(balances
+                    .Where(balance =>
+                        !balance.Commitment.IsLockedOrInvalid(scan) &&
+                        session.WalletTransaction.Payment <= balance.Total).OrderByDescending(x => x.Total));
 
                 if (!freeBalances.Any())
                 {
                     return TaskResult<bool>.CreateFailure(new Exception("No free commitments available. Please retry after commitments unlock."));
                 }
 
-                var useAmount = freeBalances.Min(x => x.Total);
-                if (useAmount == 0)
-                {
-                    return TaskResult<bool>.CreateFailure(new Exception("Multi single transactions are not implemented"));
-                }
-
-                var rem = useAmount.DivWithNaT();
-                var closest = balances.Select(x => x.Total.DivWithNaT())
-                    .Aggregate((x, y) => Math.Abs(x - rem) < Math.Abs(y - rem) ? x : y);
-                var tx = balances.First(a => a.Total.DivWithNaT() == closest);
-                var total = Transaction.Amount(tx.Commitment, scan);
+                var spending = freeBalances.First(x => x.Total >= session.WalletTransaction.Payment);
+                var total = Transaction.Amount(spending.Commitment, scan);
                 if (session.WalletTransaction.Payment > total)
                 {
                     return TaskResult<bool>.CreateFailure(new Exception("The payment exceeds the total commitment balance"));
@@ -155,7 +144,7 @@ namespace BAMWallet.HD
                     Reward = session.SessionType == SessionType.Coinstake ? session.WalletTransaction.Reward : 0,
                     RecipientAddress = session.WalletTransaction.RecipientAddress,
                     SenderAddress = session.WalletTransaction.SenderAddress,
-                    Spending = tx.Commitment,
+                    Spending = spending.Commitment,
                     Spent = change == 0,
                     Delay = session.WalletTransaction.Delay
                 };
