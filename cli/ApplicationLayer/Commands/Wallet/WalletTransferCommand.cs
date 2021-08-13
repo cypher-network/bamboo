@@ -38,7 +38,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
             _logger = serviceProvider.GetService<ILogger<WalletTransferCommand>>();
         }
 
-        public override async Task Execute()
+        public override void Execute()
         {
             this.Login();
             using var KeepLoginState = new RAIIGuard(Command.FreezeTimer, Command.UnfreezeTimer);
@@ -49,7 +49,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
 
             if (decimal.TryParse(amount, out var t))
             {
-                await Spinner.StartAsync("Processing payment ...", async spinner =>
+                Spinner.StartAsync("Processing payment ...", spinner =>
                 {
                     _spinner = spinner;
 
@@ -73,15 +73,11 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                         if (session.LastError != null)
                         {
                             spinner.Fail(JsonConvert.SerializeObject(session.LastError.GetValue("message")));
-                            return;
                         }
 
-                        await _walletService.Send(session);
-
-                        if (session.LastError != null)
+                        if (!_walletService.Send(session).Item1)
                         {
                             spinner.Fail(JsonConvert.SerializeObject(session.LastError.GetValue("message")));
-                            return;
                         }
 
                         var balance = _walletService.History(session);
@@ -101,6 +97,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                         _logger.LogError(ex.StackTrace);
                         throw;
                     }
+                    return Task.CompletedTask;
                 }, Patterns.Toggle3);
             }
         }

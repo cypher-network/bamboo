@@ -7,8 +7,6 @@
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
 
 using System;
-using System.Threading.Tasks;
-
 namespace CLi.ApplicationLayer.Commands.Vault
 {
     [CommandDescriptor("exit", "Exit the wallet")]
@@ -22,10 +20,10 @@ namespace CLi.ApplicationLayer.Commands.Vault
             commandService = service;
         }
 
-        public override async Task Execute()
+        public override void Execute()
         {
             Logout();
-            await commandService.Exit();
+            commandService.Exit();
         }
     }
 }

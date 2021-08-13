@@ -28,7 +28,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
             _walletService = serviceProvider.GetService<IWalletService>();
         }
 
-        public override async Task Execute()
+        public override void Execute()
         {
             _console.ForegroundColor = ConsoleColor.Magenta;
 
@@ -36,7 +36,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
 
             Options(out Language lang, out WordCount wCount, 3);
 
-            var seed = await _walletService.CreateSeed(lang, wCount);
+            var seed = _walletService.CreateSeed(lang, wCount);
 
             _console.ForegroundColor = ConsoleColor.Magenta;
 
@@ -45,7 +45,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
 
             Options(out lang, out wCount, 1);
 
-            var passphrase = await _walletService.CreateSeed(lang, wCount);
+            var passphrase = _walletService.CreateSeed(lang, wCount);
 
             _console.WriteLine("Seed phrase: " + string.Join(" ", seed));
             _console.WriteLine("Passphrase:  " + string.Join(" ", passphrase));

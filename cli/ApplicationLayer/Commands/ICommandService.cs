@@ -7,9 +7,6 @@
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
 
 using Microsoft.Extensions.Hosting;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace CLi.ApplicationLayer.Commands
@@ -17,7 +14,7 @@ namespace CLi.ApplicationLayer.Commands
     public interface ICommandService : IHostedService
     {
         void RegisterCommand(ICommand command);
-        Task Execute(string arg);
+        void Execute(string arg);
         Task Exit();
     }
 }

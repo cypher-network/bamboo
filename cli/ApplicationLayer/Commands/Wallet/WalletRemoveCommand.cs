@@ -111,7 +111,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
             };
         }
 
-        public override Task Execute()
+        public override void Execute()
         {
             lock (_lock)
             {
@@ -135,7 +135,6 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                         DeleteWallet();
                     }
                 }
-                return Task.CompletedTask;
             }
         }
     }

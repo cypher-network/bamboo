@@ -29,7 +29,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
             OnSyncStateChanged?.Invoke(this, new SyncStateChanged(SyncStateChanged.SyncState.Idle));
         }
 
-        public override async Task Execute()
+        public override void Execute()
         {
             if (Command.ActiveSession != null)
             {
@@ -37,7 +37,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                 // _console.ForegroundColor = ConsoleColor.Cyan;
                 // _console.Write("bamboo$ ");
                 // _console.ForegroundColor = ConsoleColor.White;
-                await _walletService.SyncWallet(Command.ActiveSession);
+                _walletService.SyncWallet(Command.ActiveSession);
             }
         }
 
@@ -47,7 +47,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
             {
                 OnSyncStateChanged?.Invoke(this, new SyncStateChanged(SyncStateChanged.SyncState.SyncInProgress));
                 IsSynchronizing = true;
-                Execute().Wait();
+                Execute();
                 IsSynchronizing = false;
                 OnSyncStateChanged?.Invoke(this, new SyncStateChanged(SyncStateChanged.SyncState.Idle));
             }

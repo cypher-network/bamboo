@@ -102,7 +102,7 @@ namespace CLi.ApplicationLayer.Commands
 
         public string Name { get; set; }
         public string Description { get; set; }
-        public abstract Task Execute();
+        public abstract void Execute();
         public static event EventHandler<LogInStateChanged> LoginStateChanged;
     }
 }

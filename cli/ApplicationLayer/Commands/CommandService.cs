@@ -126,7 +126,7 @@ namespace CLi.ApplicationLayer.Commands
             return null;
         }
 
-        public async Task Execute(string arg)
+        public void Execute(string arg)
         {
             var command = GetCommand(arg);
 
@@ -136,7 +136,7 @@ namespace CLi.ApplicationLayer.Commands
                 return;
             }
 
-            await command.Execute();
+            command.Execute();
         }
 
         private void PrintHelp()
@@ -193,7 +193,7 @@ namespace CLi.ApplicationLayer.Commands
                 }
                 try
                 {
-                    await Execute(args[0]).ConfigureAwait(false);
+                    Execute(args[0]);
                 }
                 catch (Exception e)
                 {

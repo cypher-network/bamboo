@@ -14,25 +14,19 @@ namespace CLi.ApplicationLayer.Commands.Wallet
     {
         private readonly IWalletService _walletService;
 
-        private Spinner _spinner;
-
         public WalletRecoverTransactionsCommand(IServiceProvider serviceProvider)
             : base(typeof(WalletRecoverTransactionsCommand), serviceProvider)
         {
             _walletService = serviceProvider.GetService<IWalletService>();
         }
 
-        public override async Task Execute()
+        public override void Execute()
         {
             this.Login();
             using var KeepLoginState = new RAIIGuard(Command.FreezeTimer, Command.UnfreezeTimer);
-            await Spinner.StartAsync("Recovering transactions ...", async spinner =>
+            Spinner.StartAsync("Recovering transactions ...", spinner =>
             {
-                _spinner = spinner;
-                var session = ActiveSession;
-
-                await _walletService.RecoverTransactions(session, 0);
-
+                _walletService.RecoverTransactions(ActiveSession, 0);
                 return Task.CompletedTask;
             }, Patterns.Pong);
         }

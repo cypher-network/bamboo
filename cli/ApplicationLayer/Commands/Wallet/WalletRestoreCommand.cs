@@ -28,7 +28,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
             _walletService = serviceProvider.GetService<IWalletService>();
         }
 
-        public override Task Execute()
+        public override void Execute()
         {
             using var seed = Prompt.GetPasswordAsSecureString("Seed:", ConsoleColor.Yellow);
             using var passphrase = Prompt.GetPasswordAsSecureString("Passphrase:", ConsoleColor.Yellow);
@@ -38,7 +38,6 @@ namespace CLi.ApplicationLayer.Commands.Wallet
 
             _console.WriteLine($"Wallet ID: {id}");
             _console.WriteLine($"Wallet Path: {path}");
-            return Task.CompletedTask;
         }
     }
 }

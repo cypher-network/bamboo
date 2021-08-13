@@ -8,6 +8,7 @@ using NBitcoin;
 using BAMWallet.Helper;
 using BAMWallet.Model;
 using Transaction = BAMWallet.Model.Transaction;
+using System;
 
 namespace BAMWallet.HD
 {
@@ -15,15 +16,15 @@ namespace BAMWallet.HD
     {
         bool IsCommandExecutionInProgress { get; }
         string CreateWallet(SecureString seed, SecureString passphrase);
-        Task<string[]> CreateSeed(Language language, WordCount wordCount);
+        string[] CreateSeed(Language language, WordCount wordCount);
         TaskResult<IEnumerable<string>> WalletList();
         TaskResult<BalanceSheet[]> History(Session session);
         TaskResult<string> Address(Session session);
-        Task<TaskResult<bool>> Send(Session session);
-        Task<TaskResult<WalletTransaction>> ReceivePayment(Session session, string paymentId);
+        Tuple<bool, string> Send(Session session);
+        TaskResult<WalletTransaction> ReceivePayment(Session session, string paymentId);
         TaskResult<WalletTransaction> CreateTransaction(Session session);
         Transaction GetTransaction(Session session);
-        Task<TaskResult<bool>> RecoverTransactions(Session session, int start);
-        Task SyncWallet(Session session);
+        Tuple<bool, string> RecoverTransactions(Session session, int start);
+        void SyncWallet(Session session);
     }
 }

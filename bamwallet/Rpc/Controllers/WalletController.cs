@@ -65,10 +65,10 @@ namespace BAMWallet.Rpc.Controllers
         }
 
         [HttpGet("create", Name = "Create")]
-        public async Task<IActionResult> Create(string seed = null, string passphrase = null)
+        public IActionResult Create(string seed = null, string passphrase = null)
         {
-            string[] seedDefault = await _walletService.CreateSeed(Language.English, WordCount.TwentyFour);
-            string[] passPhraseDefault = await _walletService.CreateSeed(Language.English, WordCount.Twelve);
+            string[] seedDefault = _walletService.CreateSeed(Language.English, WordCount.TwentyFour);
+            string[] passPhraseDefault = _walletService.CreateSeed(Language.English, WordCount.Twelve);
             string joinMmnemonic = string.Join(" ", seed ?? string.Join(' ', seedDefault));
             string joinPassphrase = string.Join(" ", passphrase ?? string.Join(' ', passPhraseDefault));
             string id = _walletService.CreateWallet(joinMmnemonic.ToSecureString(), joinPassphrase.ToSecureString());
@@ -92,12 +92,12 @@ namespace BAMWallet.Rpc.Controllers
         }
 
         [HttpGet("seed", Name = "CreateSeed")]
-        public async Task<IActionResult> CreateSeed(Language language = Language.English,
+        public IActionResult CreateSeed(Language language = Language.English,
             WordCount mnemonicWordCount = WordCount.TwentyFour,
             WordCount passphraseWordCount = WordCount.Twelve)
         {
-            var seed = await _walletService.CreateSeed(language, mnemonicWordCount);
-            var passphrase = await _walletService.CreateSeed(language, passphraseWordCount);
+            var seed = _walletService.CreateSeed(language, mnemonicWordCount);
+            var passphrase = _walletService.CreateSeed(language, passphraseWordCount);
 
             return new ObjectResult(new
             {
@@ -168,7 +168,7 @@ namespace BAMWallet.Rpc.Controllers
         }
 
         [HttpPost("receive", Name = "Receive")]
-        public async Task<IActionResult> Receive([FromBody] Receive receive)
+        public IActionResult Receive([FromBody] Receive receive)
         {
             Guard.Argument(receive.Identifier, nameof(receive.Identifier)).NotNull().NotEmpty().NotWhiteSpace();
             Guard.Argument(receive.Passphrase, nameof(receive.Passphrase)).NotNull().NotEmpty().NotWhiteSpace();
@@ -176,7 +176,7 @@ namespace BAMWallet.Rpc.Controllers
 
             var session = new Session(receive.Identifier.ToSecureString(), receive.Passphrase.ToSecureString());
 
-            var request = await _walletService.ReceivePayment(session, receive.PaymentId);
+            var request = _walletService.ReceivePayment(session, receive.PaymentId);
             if (!request.Success)
                 return new BadRequestObjectResult(request.NonSuccessMessage);
 
@@ -190,7 +190,7 @@ namespace BAMWallet.Rpc.Controllers
         }
 
         [HttpPost("spend", Name = "Spend")]
-        public async Task<IActionResult> Spend([FromBody] Spend spend)
+        public IActionResult Spend([FromBody] Spend spend)
         {
             Guard.Argument(spend.Identifier, nameof(spend.Identifier)).NotNull().NotEmpty().NotWhiteSpace();
             Guard.Argument(spend.Passphrase, nameof(spend.Passphrase)).NotNull().NotEmpty().NotWhiteSpace();
@@ -213,9 +213,9 @@ namespace BAMWallet.Rpc.Controllers
             if (!createPayment.Success)
                 return new BadRequestObjectResult(createPayment.NonSuccessMessage);
 
-            var send = await _walletService.Send(session);
-            if (!send.Success)
-                return new BadRequestObjectResult(send.NonSuccessMessage);
+            var send = _walletService.Send(session);
+            if (!send.Item1)
+                return new BadRequestObjectResult(send.Item2);
 
             var balance = _walletService.History(session);
             var walletTx = _walletService.GetTransaction(session);

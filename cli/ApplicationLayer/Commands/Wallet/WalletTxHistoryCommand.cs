@@ -31,7 +31,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
             _walletService = serviceProvider.GetService<IWalletService>();
         }
 
-        public override async Task Execute()
+        public override void Execute()
         {
             this.Login();
             using var KeepLoginState = new RAIIGuard(Command.FreezeTimer, Command.UnfreezeTimer);
@@ -39,7 +39,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
             {
                 var session = ActiveSession;
 
-                await Spinner.StartAsync("Looking up history ...", spinner =>
+                Spinner.StartAsync("Looking up history ...", spinner =>
                 {
                     var request = _walletService.History(session);
 

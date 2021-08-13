@@ -29,7 +29,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
             _walletService = serviceProvider.GetService<IWalletService>();
         }
 
-        public override Task Execute()
+        public override void Execute()
         {
             var request = _walletService.WalletList();
 
@@ -38,7 +38,6 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                 _console.ForegroundColor = ConsoleColor.Red;
                 _console.WriteLine("Wallet list request failed.");
                 _console.ForegroundColor = ConsoleColor.White;
-                return Task.CompletedTask;
             }
 
             if (!request.Result.Any())
@@ -46,7 +45,6 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                 _console.ForegroundColor = ConsoleColor.Red;
                 _console.WriteLine("No wallets have been created.");
                 _console.ForegroundColor = ConsoleColor.White;
-                return Task.CompletedTask;
             }
 
             var table = new ConsoleTable("Path");
@@ -55,8 +53,6 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                 table.AddRow(key);
 
             _console.WriteLine($"\n{table}");
-
-            return Task.CompletedTask;
         }
     }
 }

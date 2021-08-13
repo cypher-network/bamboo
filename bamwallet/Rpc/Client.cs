@@ -1,4 +1,4 @@
-﻿// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0. 
+﻿// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0.
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
 using System;
@@ -30,14 +30,12 @@ namespace BAMWallet.Rpc
         }
 
         /// <summary>
-        /// Get async.
         /// </summary>
-        /// <returns>The async.</returns>
         /// <param name="baseAddress">Base address.</param>
         /// <param name="path">Path.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <typeparam name="T">The 1st type parameter.</typeparam>
-        public async Task<GenericResponse<T>> GetAsync<T>(Uri baseAddress, string path,
+        public GenericResponse<T> GetAsync<T>(Uri baseAddress, string path,
             CancellationToken cancellationToken) where T : class
         {
             Guard.Argument(baseAddress, nameof(baseAddress)).NotNull();
@@ -53,7 +51,7 @@ namespace BAMWallet.Rpc
             try
             {
                 using var request = new HttpRequestMessage(HttpMethod.Get, path);
-                using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead,
+                using var response = client.Send(request, HttpCompletionOption.ResponseHeadersRead,
                     cancellationToken);
                 if (response.IsSuccessStatusCode)
                 {
@@ -65,7 +63,7 @@ namespace BAMWallet.Rpc
                     return new GenericResponse<T> { Data = t, HttpStatusCode = HttpStatusCode.OK };
                 }
 
-                var content = await response.Content.ReadAsStringAsync(cancellationToken);
+                var content = response.Content.ReadAsStringAsync(cancellationToken);
                 _logger.Here().Error("Result: {@Content}\n StatusCode: {@StatusCode}", content, response.StatusCode);
                 return new GenericResponse<T> { Data = null, HttpStatusCode = response.StatusCode };
             }
@@ -76,7 +74,7 @@ namespace BAMWallet.Rpc
             }
         }
 
-        public async Task<BlockHeight> GetBlockHeightAsync(Uri baseAddress, string path, CancellationToken cancellationToken)
+        public BlockHeight GetBlockHeightAsync(Uri baseAddress, string path, CancellationToken cancellationToken)
         {
             Guard.Argument(baseAddress, nameof(baseAddress)).NotNull();
             Guard.Argument(path, nameof(path)).NotNull().NotEmpty();
@@ -91,7 +89,7 @@ namespace BAMWallet.Rpc
             try
             {
                 using var request = new HttpRequestMessage(HttpMethod.Get, path);
-                using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead,
+                using var response = client.Send(request, HttpCompletionOption.ResponseHeadersRead,
                     cancellationToken);
                 if (response.IsSuccessStatusCode)
                 {
@@ -99,7 +97,7 @@ namespace BAMWallet.Rpc
                     return JsonConvert.DeserializeObject<BlockHeight>(read);
                 }
 
-                var content = await response.Content.ReadAsStringAsync(cancellationToken);
+                var content = response.Content.ReadAsStringAsync(cancellationToken);
                 _logger.Here().Error("Result: {@Content}\n StatusCode: {@StatusCode}", content, response.StatusCode);
                 return null;
             }
@@ -111,7 +109,7 @@ namespace BAMWallet.Rpc
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <returns></returns>
         public Uri GetBaseAddress()
@@ -137,13 +135,13 @@ namespace BAMWallet.Rpc
         }
 
         /// <summary>
-        /// Get range async.
+        /// Get range.
         /// </summary>
-        /// <returns>The range async.</returns>
+        /// <returns>The range.</returns>
         /// <param name="baseAddress">Base address.</param>
         /// <param name="path">Path.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
-        public async Task<GenericList<T>> GetRangeAsync<T>(Uri baseAddress, string path, CancellationToken cancellationToken)
+        public GenericList<T> GetRangeAsync<T>(Uri baseAddress, string path, CancellationToken cancellationToken)
         {
             Guard.Argument(baseAddress, nameof(baseAddress)).NotNull();
             Guard.Argument(path, nameof(path)).NotNull().NotEmpty();
@@ -165,7 +163,7 @@ namespace BAMWallet.Rpc
             try
             {
                 using var request = new HttpRequestMessage(HttpMethod.Get, path);
-                using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead,
+                using var response = client.Send(request, HttpCompletionOption.ResponseHeadersRead,
                     cancellationToken);
                 if (response.IsSuccessStatusCode)
                 {
@@ -178,10 +176,10 @@ namespace BAMWallet.Rpc
                 }
                 else
                 {
-                    var content = await response.Content.ReadAsStringAsync(cancellationToken);
+                    var content = response.Content.ReadAsStringAsync(cancellationToken);
                     _logger.Here().Error("Result: {@Content}\n StatusCode: {@StatusCode}",
                         content, response.StatusCode);
-                    throw new Exception(content);
+                    throw new Exception(content.Result);
                 }
             }
             catch (TaskCanceledException)
@@ -205,7 +203,7 @@ namespace BAMWallet.Rpc
         /// <param name="path"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task<HttpStatusCode> PostAsync<T>(T payload, Uri baseAddress, string path,
+        public HttpStatusCode PostAsync<T>(T payload, Uri baseAddress, string path,
             CancellationToken cancellationToken) where T : class
         {
             Guard.Argument(baseAddress, nameof(baseAddress)).NotNull();
@@ -218,13 +216,13 @@ namespace BAMWallet.Rpc
             try
             {
                 var buffer = MessagePackSerializer.Serialize(payload, cancellationToken: cancellationToken);
-                using var response = await client.PostAsJsonAsync(path, buffer, cancellationToken);
-                var _ = response.Content.ReadAsStringAsync(cancellationToken).Result;
-                if (response.IsSuccessStatusCode) return HttpStatusCode.OK;
-                var content = await response.Content.ReadAsStringAsync(cancellationToken);
+                using var response = client.PostAsJsonAsync(path, buffer, cancellationToken);
+                var _ = response.Result.Content.ReadAsStringAsync(cancellationToken).Result;
+                if (response.Result.IsSuccessStatusCode) return HttpStatusCode.OK;
+                var content = response.Result.Content.ReadAsStringAsync(cancellationToken);
                 _logger.Here().Error("Result: {@Content}\n StatusCode: {@StatusCode}",
-                    content, response.StatusCode);
-                return response.StatusCode;
+                    content, response.Result.Content);
+                return response.Result.StatusCode;
             }
             catch (Exception ex)
             {

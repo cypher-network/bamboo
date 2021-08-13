@@ -21,10 +21,9 @@ namespace CLi.ApplicationLayer.Commands.Wallet
         {
         }
 
-        public override Task Execute()
+        public override void Execute()
         {
             _console.WriteLine($"{BAMWallet.Helper.Util.GetAssemblyVersion()}");
-            return Task.CompletedTask;
         }
     }
 }

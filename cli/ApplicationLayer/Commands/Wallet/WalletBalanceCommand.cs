@@ -31,13 +31,13 @@ namespace CLi.ApplicationLayer.Commands.Wallet
             _walletService = serviceProvider.GetService<IWalletService>();
         }
 
-        public override async Task Execute()
+        public override void Execute()
         {
             this.Login();
             using var KeepLoginState = new RAIIGuard(Command.FreezeTimer, Command.UnfreezeTimer);
             try
             {
-                await Spinner.StartAsync("Checking balance ...", spinner =>
+                Spinner.StartAsync("Checking balance ...", spinner =>
                 {
                     _spinner = spinner;
                     var session = ActiveSession;

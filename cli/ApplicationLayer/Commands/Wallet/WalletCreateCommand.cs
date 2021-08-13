@@ -29,12 +29,12 @@ namespace CLi.ApplicationLayer.Commands.Wallet
             _walletService = serviceProvider.GetService<IWalletService>();
         }
 
-        public override async Task Execute()
+        public override void Execute()
         {
             try
             {
-                var seedDefault = await _walletService.CreateSeed(NBitcoin.Language.English, NBitcoin.WordCount.TwentyFour);
-                var passPhraseDefault = await _walletService.CreateSeed(NBitcoin.Language.English, NBitcoin.WordCount.Twelve);
+                var seedDefault = _walletService.CreateSeed(NBitcoin.Language.English, NBitcoin.WordCount.TwentyFour);
+                var passPhraseDefault = _walletService.CreateSeed(NBitcoin.Language.English, NBitcoin.WordCount.Twelve);
                 var joinMmnemonic = string.Join(" ", seedDefault);
                 var joinPassphrase = string.Join(" ", passPhraseDefault);
                 var id = _walletService.CreateWallet(joinMmnemonic.ToSecureString(), joinPassphrase.ToSecureString());

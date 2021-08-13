@@ -36,24 +36,23 @@ namespace CLi.ApplicationLayer.Commands.Wallet
             _logger = serviceProvider.GetService<ILogger<WalletReceivePaymentCommand>>();
         }
 
-        public override async Task Execute()
+        public override void Execute()
         {
             this.Login();
             using var KeepLoginState = new RAIIGuard(Command.FreezeTimer, Command.UnfreezeTimer);
             var paymentId = Prompt.GetString("PAYMENTID:", null, ConsoleColor.Green);
             if (!string.IsNullOrEmpty(paymentId))
             {
-                await Spinner.StartAsync("Receiving payment...", async spinner =>
+                Spinner.StartAsync("Receiving payment...",  spinner =>
                 {
                     this.spinner = spinner;
                     try
                     {
                         var session = ActiveSession;
-                        await _walletService.ReceivePayment(session, paymentId);
+                        _walletService.ReceivePayment(session, paymentId);
                         if (session.LastError != null)
                         {
                             spinner.Fail(JsonConvert.SerializeObject(session.LastError.GetValue("message")));
-                            return;
                         }
 
                         var balance = _walletService.History(session).Result.Last();
@@ -65,6 +64,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                         _logger.LogError($"Message: {ex.Message}\n Stack: {ex.StackTrace}");
                         throw;
                     }
+                    return Task.CompletedTask;
                 }, Patterns.Toggle3);
             }
         }

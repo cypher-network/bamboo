@@ -521,7 +521,7 @@ namespace BAMWallet.HD
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="dateTime"></param>
         /// <param name="memo"></param>
@@ -610,17 +610,17 @@ namespace BAMWallet.HD
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="session"></param>
         /// <param name="transactions"></param>
-        private async Task SyncTransactions(Session session, IEnumerable<WalletTransaction> transactions)
+        private void SyncTransactions(Session session, IEnumerable<WalletTransaction> transactions)
         {
             var walletTransactions = transactions.ToList();
 
             foreach (var transaction in walletTransactions.Select(walletTransaction => walletTransaction.Transaction))
             {
-                if (!await TransactionDoesNotExist(transaction)) continue;
+                if (!TransactionDoesNotExist(transaction)) continue;
                 var rolledBack = RollBackTransaction(session, transaction.Id);
                 if (!rolledBack.Success)
                 {
@@ -631,7 +631,7 @@ namespace BAMWallet.HD
 
             foreach (var transaction in walletTransactions.Where(walletTransaction => !walletTransaction.IsVerified))
             {
-                if (!await TransactionExistsInEndpoint(transaction, _networkSettings.Routing.TransactionId)) continue;
+                if (!TransactionExistsInEndpoint(transaction, _networkSettings.Routing.TransactionId)) continue;
                 transaction.IsVerified = true;
                 var saved = Update(session, session.WalletTransaction);
                 if (!saved.Result)
@@ -643,26 +643,24 @@ namespace BAMWallet.HD
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="transaction"></param>
         /// <returns></returns>
-        private async Task<bool> TransactionDoesNotExist(Transaction transaction)
+        private bool TransactionDoesNotExist(Transaction transaction)
         {
-            return
-                await TransactionDoesNotExistInEndpoint(transaction, _networkSettings.Routing.TransactionId) &&
-                await TransactionDoesNotExistInEndpoint(transaction, _networkSettings.Routing.MempoolTransactionId);
+            return (TransactionDoesNotExistInEndpoint(transaction, _networkSettings.Routing.TransactionId) && TransactionDoesNotExistInEndpoint(transaction, _networkSettings.Routing.MempoolTransactionId));
         }
 
         // TODO: Make this more intuitive. The naming is really weird. We only need to know with certainty when a
         // transaction does not exist. Any uncertainty returns false, absolute certainty returns true.
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="transaction"></param>
         /// <param name="endpoint"></param>
         /// <returns></returns>
-        private async Task<bool> TransactionDoesNotExistInEndpoint(Transaction transaction, string endpoint)
+        private bool TransactionDoesNotExistInEndpoint(Transaction transaction, string endpoint)
         {
             var baseAddress = _client.GetBaseAddress();
             if (baseAddress == null)
@@ -671,7 +669,7 @@ namespace BAMWallet.HD
             }
 
             var endpointPath = string.Format(endpoint, transaction.TxnId.ByteToHex());
-            var transactionQueryResponse = await _client.GetAsync<Transaction>(baseAddress, endpointPath, new CancellationToken());
+            var transactionQueryResponse = _client.GetAsync<Transaction>(baseAddress, endpointPath, new CancellationToken());
 
             if (transactionQueryResponse.HttpStatusCode == HttpStatusCode.OK ||
                 transactionQueryResponse.HttpStatusCode == HttpStatusCode.ServiceUnavailable)
@@ -683,12 +681,12 @@ namespace BAMWallet.HD
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="transaction"></param>
         /// <param name="endpoint"></param>
         /// <returns></returns>
-        private async Task<bool> TransactionExistsInEndpoint(WalletTransaction transaction, string endpoint)
+        private bool TransactionExistsInEndpoint(WalletTransaction transaction, string endpoint)
         {
             var baseAddress = _client.GetBaseAddress();
             if (baseAddress == null)
@@ -697,7 +695,7 @@ namespace BAMWallet.HD
             }
 
             var endpointPath = string.Format(endpoint, transaction.Transaction.TxnId.ByteToHex());
-            var transactionQueryResponse = await _client.GetAsync<Transaction>(baseAddress, endpointPath, new CancellationToken());
+            var transactionQueryResponse = _client.GetAsync<Transaction>(baseAddress, endpointPath, new CancellationToken());
 
             return transactionQueryResponse.HttpStatusCode == HttpStatusCode.OK &&
                    transactionQueryResponse.Data != null;
@@ -730,7 +728,7 @@ namespace BAMWallet.HD
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="session"></param>
         /// <param name="data"></param>
@@ -758,7 +756,7 @@ namespace BAMWallet.HD
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="session"></param>
         /// <param name="data"></param>
@@ -907,11 +905,11 @@ namespace BAMWallet.HD
         /// BIP39 seed.
         /// </summary>
         /// <returns></returns>
-        public async Task<string[]> CreateSeed(Language language, WordCount wordCount)
+        public string[] CreateSeed(Language language, WordCount wordCount)
         {
-            var wordList = await Wordlist.LoadWordList(language);
-            var mnemo = new Mnemonic(wordList, wordCount);
-
+            var task = Task.Run(async () => await Wordlist.LoadWordList(language));
+            task.Wait();
+            var mnemo = new Mnemonic(task.Result, wordCount);
             return mnemo.Words;
         }
 
@@ -1219,7 +1217,7 @@ namespace BAMWallet.HD
                         }
                         catch (Exception)
                         {
-                            // ignored  
+                            // ignored
                         }
                     }
 
@@ -1278,12 +1276,12 @@ namespace BAMWallet.HD
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="session"></param>
         /// <param name="paymentId"></param>
         /// <returns></returns>
-        public async Task<TaskResult<WalletTransaction>> ReceivePayment(Session session, string paymentId)
+        public TaskResult<WalletTransaction> ReceivePayment(Session session, string paymentId)
         {
             using var CommandExecutionGuard = new RAIIGuard(WalletService.IncrementCommandExecutionCount, WalletService.DecrementCommandExecutionCount);
             Guard.Argument(paymentId, nameof(paymentId)).NotNull().NotEmpty().NotWhiteSpace();
@@ -1299,7 +1297,7 @@ namespace BAMWallet.HD
                 }
 
                 var path = string.Format(_networkSettings.Routing.TransactionId, paymentId);
-                var genericResponse = await _client.GetAsync<Transaction>(baseAddress, path,
+                var genericResponse = _client.GetAsync<Transaction>(baseAddress, path,
                     new CancellationToken());
                 if (genericResponse == null)
                 {
@@ -1375,7 +1373,7 @@ namespace BAMWallet.HD
         /// </summary>
         /// <param name="session"></param>
         /// <returns></returns>
-        public async Task<TaskResult<bool>> Send(Session session)
+        public Tuple<bool,string> Send(Session session)
         {
             using var CommandExecutionGuard = new RAIIGuard(WalletService.IncrementCommandExecutionCount, WalletService.DecrementCommandExecutionCount);
             session.LastError = null;
@@ -1391,15 +1389,15 @@ namespace BAMWallet.HD
                 }
 
                 var postedStatusCode =
-                    await _client.PostAsync(transaction, baseAddress, _networkSettings.Routing.Transaction, new CancellationToken());
-                if (postedStatusCode == HttpStatusCode.OK) return TaskResult<bool>.CreateSuccess(true);
+                    _client.PostAsync(transaction, baseAddress, _networkSettings.Routing.Transaction, new CancellationToken());
+                if (postedStatusCode == HttpStatusCode.OK) return new Tuple<bool, string>(true,String.Empty);
 
                 var fail = TaskResult<bool>.CreateFailure(
                     new Exception($"Unable to send transaction with paymentId: {transaction.TxnId.ByteToHex()}"));
                 SetLastError(session, fail);
                 RollBackTransaction(session, transaction.Id);
 
-                return fail;
+                return new Tuple<bool, string>(false,fail.NonSuccessMessage);
             }
             catch (Exception ex)
             {
@@ -1413,15 +1411,15 @@ namespace BAMWallet.HD
                 var output = TaskResult<bool>.CreateFailure(new Exception($"{message}"));
                 SetLastError(session, output);
                 if (transaction != null) RollBackTransaction(session, transaction.Id);
-                return output;
+                return new Tuple<bool, string>(false,output.NonSuccessMessage);
             }
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="session"></param>
-        public async Task SyncWallet(Session session)
+        public void SyncWallet(Session session)
         {
             Guard.Argument(session, nameof(session)).NotNull();
             var walletTransactions = session.Database.Query<WalletTransaction>().Where(x => !x.IsVerified)
@@ -1429,7 +1427,7 @@ namespace BAMWallet.HD
                 .OrderBy(d => d.DateTime)
                 .ToArray();
 
-            await SyncTransactions(session, walletTransactions);
+            SyncTransactions(session, walletTransactions);
         }
 
         /// <summary>
@@ -1438,7 +1436,7 @@ namespace BAMWallet.HD
         /// <param name="session"></param>
         /// <param name="start"></param>
         /// <returns></returns>
-        public async Task<TaskResult<bool>> RecoverTransactions(Session session, int start)
+        public Tuple<bool, string> RecoverTransactions(Session session, int start)
         {
             using var CommandExecutionGuard = new RAIIGuard(WalletService.IncrementCommandExecutionCount, WalletService.DecrementCommandExecutionCount);
             Guard.Argument(start, nameof(start)).NotNegative();
@@ -1454,7 +1452,7 @@ namespace BAMWallet.HD
                         {
                             var message = $"Unable to drop collection for {nameof(WalletTransaction)}";
                             _logger.Here().Error(message);
-                            return TaskResult<bool>.CreateFailure(new Exception(message));
+                            return new Tuple<bool, string>(false, message);
                         }
                     }
                 }
@@ -1465,12 +1463,12 @@ namespace BAMWallet.HD
                     throw new Exception("Cannot get base address");
                 }
 
-                var blockHeight = await _client.GetBlockHeightAsync(baseAddress, _networkSettings.Routing.BlockHeight, new CancellationToken());
+                var blockHeight = _client.GetBlockHeightAsync(baseAddress, _networkSettings.Routing.BlockHeight, new CancellationToken());
                 if (blockHeight == null)
                 {
                     var output = TaskResult<bool>.CreateFailure(new Exception("Failed to find any blocks"));
                     SetLastError(session, output);
-                    return output;
+                    return new Tuple<bool, string>(false, output.NonSuccessMessage);
                 }
 
                 var height = (int)blockHeight.Height;
@@ -1480,7 +1478,7 @@ namespace BAMWallet.HD
                 foreach (var chunk in chunks)
                 {
                     var path = string.Format(_networkSettings.Routing.Blocks, start, chunk);
-                    var blocks = await _client.GetRangeAsync<Block>(baseAddress, path, new CancellationToken());
+                    var blocks = _client.GetRangeAsync<Block>(baseAddress, path, new CancellationToken());
                     if (blocks != null)
                     {
                         foreach (var transaction in blocks.Data.SelectMany(x => x.Txs))
@@ -1527,12 +1525,12 @@ namespace BAMWallet.HD
                     start += chunk;
                 }
 
-                return TaskResult<bool>.CreateSuccess(true);
+                return new Tuple<bool, string>(true, String.Empty);
             }
             catch (Exception ex)
             {
                 _logger.Here().Error(ex, "Error recovering transactions");
-                return TaskResult<bool>.CreateSuccess(false);
+                return new Tuple<bool, string>(false, String.Empty);
             }
         }
         #endregion

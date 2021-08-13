@@ -29,7 +29,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
             _walletService = serviceProvider.GetService<IWalletService>();
         }
 
-        public override Task Execute()
+        public override void Execute()
         {
             this.Login();
             using var KeepLoginState = new RAIIGuard(Command.FreezeTimer, Command.UnfreezeTimer);
@@ -41,7 +41,6 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                 _console.ForegroundColor = ConsoleColor.Red;
                 _console.WriteLine("Address request failed.");
                 _console.ForegroundColor = ConsoleColor.White;
-                return Task.CompletedTask;
             }
 
             if (!request.Result.Any())
@@ -49,15 +48,12 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                 _console.ForegroundColor = ConsoleColor.Red;
                 _console.WriteLine("No address can be found.");
                 _console.ForegroundColor = ConsoleColor.White;
-                return Task.CompletedTask;
             }
 
             var table = new ConsoleTable("Address");
             table.AddRow(request.Result);
 
             _console.WriteLine($"\n{table}");
-
-            return Task.CompletedTask;
         }
     }
 }
