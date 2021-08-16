@@ -28,8 +28,13 @@ namespace BAMWallet.HD
         {
             get
             {
-                return File.Exists(Util.WalletPath(Identifier.ToUnSecureString()));
+                return IsIdentifierValid(Identifier);
             }
+        }
+
+        public static bool IsIdentifierValid(SecureString identifier)
+        {
+            return File.Exists(Util.WalletPath(identifier.ToUnSecureString()));
         }
 
         public Session(SecureString identifier, SecureString passphrase)

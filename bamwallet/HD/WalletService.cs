@@ -1373,7 +1373,7 @@ namespace BAMWallet.HD
         /// </summary>
         /// <param name="session"></param>
         /// <returns></returns>
-        public Tuple<bool,string> Send(Session session)
+        public Tuple<bool, string> Send(Session session)
         {
             using var CommandExecutionGuard = new RAIIGuard(WalletService.IncrementCommandExecutionCount, WalletService.DecrementCommandExecutionCount);
             session.LastError = null;
@@ -1390,14 +1390,14 @@ namespace BAMWallet.HD
 
                 var postedStatusCode =
                     _client.PostAsync(transaction, baseAddress, _networkSettings.Routing.Transaction, new CancellationToken());
-                if (postedStatusCode == HttpStatusCode.OK) return new Tuple<bool, string>(true,String.Empty);
+                if (postedStatusCode == HttpStatusCode.OK) return new Tuple<bool, string>(true, String.Empty);
 
                 var fail = TaskResult<bool>.CreateFailure(
                     new Exception($"Unable to send transaction with paymentId: {transaction.TxnId.ByteToHex()}"));
                 SetLastError(session, fail);
                 RollBackTransaction(session, transaction.Id);
 
-                return new Tuple<bool, string>(false,fail.NonSuccessMessage);
+                return new Tuple<bool, string>(false, fail.NonSuccessMessage);
             }
             catch (Exception ex)
             {
@@ -1411,7 +1411,7 @@ namespace BAMWallet.HD
                 var output = TaskResult<bool>.CreateFailure(new Exception($"{message}"));
                 SetLastError(session, output);
                 if (transaction != null) RollBackTransaction(session, transaction.Id);
-                return new Tuple<bool, string>(false,output.NonSuccessMessage);
+                return new Tuple<bool, string>(false, output.NonSuccessMessage);
             }
         }
 

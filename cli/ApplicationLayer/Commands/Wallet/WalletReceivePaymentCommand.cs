@@ -43,29 +43,29 @@ namespace CLi.ApplicationLayer.Commands.Wallet
             var paymentId = Prompt.GetString("PAYMENTID:", null, ConsoleColor.Green);
             if (!string.IsNullOrEmpty(paymentId))
             {
-                Spinner.StartAsync("Receiving payment...",  spinner =>
-                {
-                    this.spinner = spinner;
-                    try
-                    {
-                        var session = ActiveSession;
-                        _walletService.ReceivePayment(session, paymentId);
-                        if (session.LastError != null)
-                        {
-                            spinner.Fail(JsonConvert.SerializeObject(session.LastError.GetValue("message")));
-                        }
+                Spinner.StartAsync("Receiving payment...", spinner =>
+               {
+                   this.spinner = spinner;
+                   try
+                   {
+                       var session = ActiveSession;
+                       _walletService.ReceivePayment(session, paymentId);
+                       if (session.LastError != null)
+                       {
+                           spinner.Fail(JsonConvert.SerializeObject(session.LastError.GetValue("message")));
+                       }
 
-                        var balance = _walletService.History(session).Result.Last();
-                        spinner.Succeed(
-                            $"Memo: {balance.Memo}  Received: {balance.MoneyIn}  Available Balance: {balance.Balance}");
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError($"Message: {ex.Message}\n Stack: {ex.StackTrace}");
-                        throw;
-                    }
-                    return Task.CompletedTask;
-                }, Patterns.Toggle3);
+                       var balance = _walletService.History(session).Result.Last();
+                       spinner.Succeed(
+                           $"Memo: {balance.Memo}  Received: {balance.MoneyIn}  Available Balance: {balance.Balance}");
+                   }
+                   catch (Exception ex)
+                   {
+                       _logger.LogError($"Message: {ex.Message}\n Stack: {ex.StackTrace}");
+                       throw;
+                   }
+                   return Task.CompletedTask;
+               }, Patterns.Toggle3);
             }
         }
     }
