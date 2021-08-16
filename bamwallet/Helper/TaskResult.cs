@@ -1,4 +1,4 @@
-﻿// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0. 
+﻿// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0.
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
 using System;
@@ -18,17 +18,7 @@ namespace BAMWallet.Helper
         public Exception Exception { get; private set; }
 
         /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="result"></param>
-        /// <returns></returns>
-        public static TaskResult<T> CreateSuccess(T result)
-        {
-            return new TaskResult<T> { Success = result != null, Result = result };
-        }
-
-        /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="successMessage"></param>
         /// <returns></returns>
@@ -38,7 +28,7 @@ namespace BAMWallet.Helper
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="nonSuccessMessage"></param>
         /// <returns></returns>
@@ -48,7 +38,7 @@ namespace BAMWallet.Helper
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="ex"></param>
         /// <returns></returns>

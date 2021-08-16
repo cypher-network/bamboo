@@ -1,17 +1,17 @@
 ﻿// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0.
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
-using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Linq;
-using System.Threading.Tasks;
-using NBitcoin;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using BAMWallet.Extensions;
 using BAMWallet.HD;
 using BAMWallet.Helper;
 using BAMWallet.Model;
 using Dawn;
 using MessagePack;
-using Microsoft.AspNetCore.Http;
+using NBitcoin;
 namespace BAMWallet.Rpc.Controllers
 {
     [Route("api/wallet")]
@@ -20,11 +20,17 @@ namespace BAMWallet.Rpc.Controllers
     {
         private readonly IWalletService _walletService;
 
-        private TaskResult<BalanceSheet[]> GetHistory(Credentials credentials)
+        private IActionResult GetHistory(Credentials credentials, bool last = false)
         {
             Guard.Argument(credentials, nameof(credentials)).NotNull();
             var session = new Session(credentials.Identifier.ToSecureString(), credentials.Passphrase.ToSecureString());
-            return _walletService.History(session);
+            var history = _walletService.History(session);
+            if (history.Item1 is null)
+            {
+                return new BadRequestObjectResult(history.Item2);
+            }
+            var balance = (history.Item1 as IOrderedEnumerable<BalanceSheet>);
+            return last ? new OkObjectResult($"{balance.Last()}") : new OkObjectResult(balance);
         }
 
         public WalletController(IWalletService walletService)
@@ -56,12 +62,7 @@ namespace BAMWallet.Rpc.Controllers
         [HttpPost("balance", Name = "Balance")]
         public IActionResult Balance([FromBody] Credentials credentials)
         {
-            var history = GetHistory(credentials);
-            if (!history.Success)
-            {
-                return new BadRequestObjectResult(history.NonSuccessMessage);
-            }
-            return new OkObjectResult($"{history.Result.Last()}");
+            return GetHistory(credentials, true);
         }
 
         [HttpGet("create", Name = "Create")]
@@ -124,12 +125,7 @@ namespace BAMWallet.Rpc.Controllers
         [HttpPost("history", Name = "History")]
         public IActionResult History([FromBody] Credentials credentials)
         {
-            var history = GetHistory(credentials);
-            if (!history.Success)
-            {
-                return new BadRequestObjectResult(history.NonSuccessMessage);
-            }
-            return new OkObjectResult(history.Result);
+            return GetHistory(credentials);
         }
 
         /// <summary>

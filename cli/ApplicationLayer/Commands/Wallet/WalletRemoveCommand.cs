@@ -7,15 +7,12 @@
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
 
 using System;
-using System.Threading.Tasks;
-using System.Security;
 using System.IO;
 using System.Linq;
+using System.Security;
 using Microsoft.Extensions.Logging;
-
-using McMaster.Extensions.CommandLineUtils;
-
 using BAMWallet.Extensions;
+using McMaster.Extensions.CommandLineUtils;
 using Constants = BAMWallet.HD.Constant;
 using CLi.ApplicationLayer.Events;
 using CLi.Helper;

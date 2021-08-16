@@ -3,10 +3,9 @@
 
 using System.Collections.Generic;
 using System.Security;
-using System.Threading.Tasks;
-using NBitcoin;
 using BAMWallet.Helper;
 using BAMWallet.Model;
+using NBitcoin;
 using Transaction = BAMWallet.Model.Transaction;
 using System;
 
@@ -18,7 +17,7 @@ namespace BAMWallet.HD
         string CreateWallet(SecureString seed, SecureString passphrase);
         string[] CreateSeed(Language language, WordCount wordCount);
         TaskResult<IEnumerable<string>> WalletList();
-        TaskResult<BalanceSheet[]> History(Session session);
+        Tuple<object, string> History(Session session);
         TaskResult<string> Address(Session session);
         Tuple<bool, string> Send(Session session);
         TaskResult<WalletTransaction> ReceivePayment(Session session, string paymentId);

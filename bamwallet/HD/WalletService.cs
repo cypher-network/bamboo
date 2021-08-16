@@ -1170,14 +1170,14 @@ namespace BAMWallet.HD
         /// </summary>
         /// <param name="session"></param>
         /// <returns></returns>
-        public TaskResult<BalanceSheet[]> History(Session session)
+        public Tuple<object, string> History(Session session)
         {
             using var commandExecutionGuard = new RAIIGuard(IncrementCommandExecutionCount, DecrementCommandExecutionCount);
             var balanceSheets = new List<BalanceSheet>();
             var walletTransactions = session.Database.Query<WalletTransaction>().OrderBy(x => x.DateTime).ToList();
             if (walletTransactions?.Any() != true)
             {
-                return TaskResult<BalanceSheet[]>.CreateFailure("Unable to find any wallet transactions");
+                return new Tuple<object, string>(null, "Unable to find any wallet transactions");
             }
 
             try
@@ -1269,10 +1269,10 @@ namespace BAMWallet.HD
             catch (Exception ex)
             {
                 _logger.Here().Error(ex, "Error getting history");
-                return TaskResult<BalanceSheet[]>.CreateFailure(ex.Message);
+                return new Tuple<object, string>(null, ex.Message);
             }
 
-            return TaskResult<BalanceSheet[]>.CreateSuccess(balanceSheets.OrderBy(x => x.Date).ToArray());
+            return new Tuple<object, string>(balanceSheets.OrderBy(x => x.Date), String.Empty);
         }
 
         /// <summary>
