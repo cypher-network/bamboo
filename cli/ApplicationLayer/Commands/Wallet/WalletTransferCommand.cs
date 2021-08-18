@@ -67,7 +67,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                         };
 
                         var createTransactionResult = _walletService.CreateTransaction(session, ref transaction);
-                        if(createTransactionResult.Item1 is null)
+                        if (createTransactionResult.Item1 is null)
                         {
                             spinner.Fail(createTransactionResult.Item2);
                         }
@@ -79,7 +79,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                         else
                         {
                             var balanceResult = _walletService.History(session);
-                            if(balanceResult.Item1 is null)
+                            if (balanceResult.Item1 is null)
                             {
                                 spinner.Fail(balanceResult.Item2);
                             }

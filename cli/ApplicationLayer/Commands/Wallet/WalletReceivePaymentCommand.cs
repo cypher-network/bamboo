@@ -54,16 +54,16 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                        }
                        else
                        {
-                            var balanceResult = _walletService.History(session);
-                            if(balanceResult.Item1 is null)
-                            {
-                                spinner.Fail(balanceResult.Item2);
-                            }
-                            else
-                            {
-                                var lastSheet = (balanceResult.Item1 as IOrderedEnumerable<BalanceSheet>).Last();
-                                spinner.Succeed($"Memo: {lastSheet.Memo}  Received: {lastSheet.MoneyIn}  Available Balance: {lastSheet.Balance}");
-                            }
+                           var balanceResult = _walletService.History(session);
+                           if (balanceResult.Item1 is null)
+                           {
+                               spinner.Fail(balanceResult.Item2);
+                           }
+                           else
+                           {
+                               var lastSheet = (balanceResult.Item1 as IOrderedEnumerable<BalanceSheet>).Last();
+                               spinner.Succeed($"Memo: {lastSheet.Memo}  Received: {lastSheet.MoneyIn}  Available Balance: {lastSheet.Balance}");
+                           }
                        }
                    }
                    catch (Exception ex)

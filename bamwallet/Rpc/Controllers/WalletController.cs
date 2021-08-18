@@ -46,7 +46,7 @@ namespace BAMWallet.Rpc.Controllers
             using var identifier = credentials.Identifier.ToSecureString();
             using var pass = credentials.Passphrase.ToSecureString();
 
-            if(Session.AreCredentialsValid(identifier, pass))
+            if (Session.AreCredentialsValid(identifier, pass))
             {
                 var session = new Session(identifier, pass);
                 var result = _walletService.Address(session);
@@ -139,7 +139,7 @@ namespace BAMWallet.Rpc.Controllers
             using var identifier = payment.Credentials.Identifier.ToSecureString();
             using var pass = payment.Credentials.Passphrase.ToSecureString();
 
-            if(Session.AreCredentialsValid(identifier, pass))
+            if (Session.AreCredentialsValid(identifier, pass))
             {
                 var session = new Session(identifier, pass);
                 var senderAddress = session.KeySet.StealthAddress;
@@ -180,7 +180,7 @@ namespace BAMWallet.Rpc.Controllers
             using var identifier = receive.Identifier.ToSecureString();
             using var pass = receive.Passphrase.ToSecureString();
 
-            if(Session.AreCredentialsValid(identifier, pass))
+            if (Session.AreCredentialsValid(identifier, pass))
             {
                 var session = new Session(identifier, pass);
 
@@ -190,7 +190,7 @@ namespace BAMWallet.Rpc.Controllers
                 {
                     return new BadRequestObjectResult(receivePaymentResult.Item2);
                 }
-                if(balanceSheetResult.Item1 is null)
+                if (balanceSheetResult.Item1 is null)
                 {
                     return new BadRequestObjectResult(balanceSheetResult.Item2);
                 }
@@ -216,7 +216,7 @@ namespace BAMWallet.Rpc.Controllers
             using var identifier = spend.Identifier.ToSecureString();
             using var pass = spend.Passphrase.ToSecureString();
 
-            if(Session.AreCredentialsValid(identifier, pass))
+            if (Session.AreCredentialsValid(identifier, pass))
             {
                 var session = new Session(identifier, pass);
                 var senderAddress = session.KeySet.StealthAddress;

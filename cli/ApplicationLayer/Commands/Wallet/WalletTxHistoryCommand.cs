@@ -41,7 +41,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                 Spinner.StartAsync("Looking up history ...", spinner =>
                 {
                     var balanceResult = _walletService.History(session);
-                    if(balanceResult.Item1 is null)
+                    if (balanceResult.Item1 is null)
                     {
                         _console.ForegroundColor = ConsoleColor.Red;
                         spinner.Fail($"balanceResult.Item2");

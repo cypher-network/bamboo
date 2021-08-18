@@ -41,7 +41,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                     _spinner = spinner;
                     var session = ActiveSession;
                     var balanceResult = _walletService.History(session);
-                    if(balanceResult.Item1 is null)
+                    if (balanceResult.Item1 is null)
                     {
                         spinner.Fail(balanceResult.Item2);
                     }
