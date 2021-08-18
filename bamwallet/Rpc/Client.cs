@@ -130,8 +130,7 @@ namespace BAMWallet.Rpc
                 _logger.Here().Error("Invalid URI scheme '{@Scheme}' in '{@UriString}'",
                     baseAddress.Scheme, uriString);
             }
-
-            return null;
+            throw new Exception("Cannot get base address");
         }
 
         /// <summary>

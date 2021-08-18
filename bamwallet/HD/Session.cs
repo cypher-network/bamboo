@@ -6,23 +6,32 @@ using System.Collections.Generic;
 using System.IO;
 using System.Security;
 using BAMWallet.Extensions;
-using LiteDB;
-using Newtonsoft.Json.Linq;
 using BAMWallet.Helper;
 using BAMWallet.Model;
+using LiteDB;
 
 namespace BAMWallet.HD
 {
     public class Session : IEqualityComparer<Session>
     {
         public SecureString Identifier { get; }
-        public JObject LastError { get; set; }
         public SecureString Passphrase { get; }
         public Guid SessionId { get; set; }
         public SessionType SessionType { get; set; }
-        public WalletTransaction WalletTransaction { get; set; }
         public LiteRepository Database { get; set; }
         public bool Syncing { get; set; }
+
+        /// <summary>
+        /// Multiple key sets not supported, thus we can simply return the only one keyset create during wallet creation.
+        /// </summary>
+        /// <returns>The one and only KeySet</returns>
+        public KeySet KeySet
+        {
+            get
+            {
+                return Database.Query<KeySet>().First();
+            }
+        }
 
         public bool IsValid
         {
@@ -32,7 +41,12 @@ namespace BAMWallet.HD
             }
         }
 
-        public static bool IsIdentifierValid(SecureString identifier)
+        public static bool AreCredentialsValid(SecureString identifier, SecureString passphrase)
+        {
+            return (IsIdentifierValid(identifier) && IsPassPhraseValid(identifier, passphrase));
+        }
+
+        private static bool IsIdentifierValid(SecureString identifier)
         {
             return File.Exists(Util.WalletPath(identifier.ToUnSecureString()));
         }
@@ -69,6 +83,32 @@ namespace BAMWallet.HD
         {
             Session s = session;
             return s.SessionId.GetHashCode();
+        }
+
+        private static bool IsPassPhraseValid(SecureString id, SecureString pass)
+        {
+            var connectionString = new ConnectionString
+            {
+                Filename = Util.WalletPath(id.ToUnSecureString()),
+                Password = pass.ToUnSecureString(),
+                Connection = ConnectionType.Shared
+            };
+            using (var db = new LiteDatabase(connectionString))
+            {
+                var collection = db.GetCollection<KeySet>();
+                try
+                {
+                    if (collection.Count() == 1)
+                    {
+                        return true;
+                    }
+                }
+                catch (LiteException)
+                {
+                    return false;
+                }
+            }
+            return false;
         }
     }
 }

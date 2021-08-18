@@ -1,7 +1,7 @@
 ﻿// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0.
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
-using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -39,24 +39,25 @@ namespace BAMWallet.Rpc.Controllers
         }
 
         [HttpPost("address", Name = "Address")]
-        public IActionResult Addresses([FromBody] Credentials credentials)
+        public IActionResult Address([FromBody] Credentials credentials)
         {
             Guard.Argument(credentials, nameof(credentials)).NotNull();
 
-            var session = new Session(credentials.Identifier.ToSecureString(), credentials.Passphrase.ToSecureString());
+            using var identifier = credentials.Identifier.ToSecureString();
+            using var pass = credentials.Passphrase.ToSecureString();
 
-            var request = _walletService.Address(session);
-            if (!request.Success)
+            if(Session.AreCredentialsValid(identifier, pass))
             {
-                return new BadRequestObjectResult(request.NonSuccessMessage);
+                var session = new Session(identifier, pass);
+                var result = _walletService.Address(session);
+                if (result.Item1 is null)
+                {
+                    return new BadRequestObjectResult(result.Item2);
+                }
+                var address = (result.Item1 as string);
+                return new OkObjectResult(address);
             }
-
-            if (!request.Result.Any())
-            {
-                return new NotFoundResult();
-            }
-
-            return new OkObjectResult(request.Result);
+            return new BadRequestObjectResult("Invalid identifier or password!");
         }
 
         [HttpPost("balance", Name = "Balance")]
@@ -75,12 +76,11 @@ namespace BAMWallet.Rpc.Controllers
             string id = _walletService.CreateWallet(joinMmnemonic.ToSecureString(), joinPassphrase.ToSecureString());
             var session = new Session(id.ToSecureString(), joinPassphrase.ToSecureString());
 
-            var request = _walletService.Address(session);
-            if (!request.Success)
-                return new BadRequestObjectResult(request.NonSuccessMessage);
-
-            if (request.Result.Any() != true)
-                return new NotFoundResult();
+            var addressResult = _walletService.Address(session);
+            if (addressResult.Item1 is null)
+            {
+                return new BadRequestObjectResult(addressResult.Item2 as string);
+            }
 
             return new OkObjectResult(new
             {
@@ -88,7 +88,7 @@ namespace BAMWallet.Rpc.Controllers
                 identifier = id,
                 seed = joinMmnemonic,
                 passphrase = joinPassphrase,
-                address = request.Result
+                address = addressResult.Item1 as string
             });
         }
 
@@ -111,15 +111,14 @@ namespace BAMWallet.Rpc.Controllers
         [HttpGet("list", Name = "List")]
         public IActionResult List()
         {
-            var request = _walletService.WalletList();
+            var walletListResult = _walletService.WalletList();
 
-            if (!request.Success)
-                return new BadRequestObjectResult(request.NonSuccessMessage);
+            if (walletListResult.Item1 is null)
+            {
+                return new BadRequestObjectResult(walletListResult.Item2 as string);
+            }
 
-            if (request.Result.Any() != true)
-                return new NotFoundResult();
-
-            return new OkObjectResult(request.Result);
+            return new OkObjectResult(walletListResult.Item1 as List<string>);
         }
 
         [HttpPost("history", Name = "History")]
@@ -137,30 +136,38 @@ namespace BAMWallet.Rpc.Controllers
         public IActionResult CreateTransaction([FromBody] byte[] data)
         {
             var payment = MessagePackSerializer.Deserialize<SendPayment>(data);
-            var session = new Session(payment.Credentials.Identifier.ToSecureString(), payment.Credentials.Passphrase.ToSecureString());
+            using var identifier = payment.Credentials.Identifier.ToSecureString();
+            using var pass = payment.Credentials.Passphrase.ToSecureString();
 
-            session.SessionType = payment.SessionType;
-            session.WalletTransaction = new WalletTransaction
+            if(Session.AreCredentialsValid(identifier, pass))
             {
-                Delay = 5,
-                Payment = payment.Amount,
-                Reward = payment.SessionType == SessionType.Coinstake ? payment.Reward : 0,
-                Memo = payment.Memo,
-                RecipientAddress = payment.Address,
-                WalletType = WalletType.Send
-            };
+                var session = new Session(identifier, pass);
+                var senderAddress = session.KeySet.StealthAddress;
 
+                session.SessionType = payment.SessionType;
+                var transaction = new WalletTransaction
+                {
+                    Delay = 5,
+                    Payment = payment.Amount,
+                    Reward = payment.SessionType == SessionType.Coinstake ? payment.Reward : 0,
+                    Memo = payment.Memo,
+                    RecipientAddress = payment.Address,
+                    WalletType = WalletType.Send,
+                    SenderAddress = senderAddress,
+                    IsVerified = false
+                };
 
-            var walletTransaction = _walletService.CreateTransaction(session);
-            if (!walletTransaction.Success) return new StatusCodeResult(StatusCodes.Status404NotFound);
-
-            var transaction = _walletService.GetTransaction(session);
-            if (transaction != null)
-            {
-                return new ObjectResult(new { messagepack = transaction.Serialize() });
+                var walletTransaction = _walletService.CreateTransaction(session, ref transaction);
+                if (walletTransaction.Item1 is null)
+                {
+                    return new StatusCodeResult(StatusCodes.Status404NotFound);
+                }
+                else
+                {
+                    return new ObjectResult(new { messagepack = transaction.Transaction.Serialize() });
+                }
             }
-
-            return new StatusCodeResult(StatusCodes.Status404NotFound);
+            return new BadRequestObjectResult("Invalid identifier or password!");
         }
 
         [HttpPost("receive", Name = "Receive")]
@@ -170,19 +177,32 @@ namespace BAMWallet.Rpc.Controllers
             Guard.Argument(receive.Passphrase, nameof(receive.Passphrase)).NotNull().NotEmpty().NotWhiteSpace();
             Guard.Argument(receive.PaymentId, nameof(receive.PaymentId)).NotNull().NotEmpty().NotWhiteSpace();
 
-            var session = new Session(receive.Identifier.ToSecureString(), receive.Passphrase.ToSecureString());
+            using var identifier = receive.Identifier.ToSecureString();
+            using var pass = receive.Passphrase.ToSecureString();
 
-            var request = _walletService.ReceivePayment(session, receive.PaymentId);
-            if (!request.Success)
-                return new BadRequestObjectResult(request.NonSuccessMessage);
-
-            var balanceSheet = _walletService.History(session).Result.Last();
-            return new OkObjectResult(new
+            if(Session.AreCredentialsValid(identifier, pass))
             {
-                memo = balanceSheet.Memo,
-                received = balanceSheet.MoneyIn,
-                balance = $"{balanceSheet.Balance}"
-            });
+                var session = new Session(identifier, pass);
+
+                var receivePaymentResult = _walletService.ReceivePayment(session, receive.PaymentId);
+                var balanceSheetResult = _walletService.History(session);
+                if (receivePaymentResult.Item1 is null)
+                {
+                    return new BadRequestObjectResult(receivePaymentResult.Item2);
+                }
+                if(balanceSheetResult.Item1 is null)
+                {
+                    return new BadRequestObjectResult(balanceSheetResult.Item2);
+                }
+                var lastSheet = (balanceSheetResult.Item1 as List<BalanceSheet>).Last();
+                return new OkObjectResult(new
+                {
+                    memo = lastSheet.Memo,
+                    received = lastSheet.MoneyIn,
+                    balance = $"{lastSheet.Balance}"
+                });
+            }
+            return new BadRequestObjectResult("Invalid identifier or password!");
         }
 
         [HttpPost("spend", Name = "Spend")]
@@ -193,34 +213,50 @@ namespace BAMWallet.Rpc.Controllers
             Guard.Argument(spend.Address, nameof(spend.Address)).NotNull().NotEmpty().NotWhiteSpace();
             Guard.Argument(spend.Amount, nameof(spend.Amount)).Positive();
 
+            using var identifier = spend.Identifier.ToSecureString();
+            using var pass = spend.Passphrase.ToSecureString();
 
-            var session = new Session(spend.Identifier.ToSecureString(), spend.Passphrase.ToSecureString());
-
-            session.SessionType = SessionType.Coin;
-            session.WalletTransaction = new WalletTransaction
+            if(Session.AreCredentialsValid(identifier, pass))
             {
-                Memo = spend.Memo,
-                Payment = spend.Amount.ConvertToUInt64(),
-                RecipientAddress = spend.Address,
-                WalletType = WalletType.Send
-            };
+                var session = new Session(identifier, pass);
+                var senderAddress = session.KeySet.StealthAddress;
 
-            var createPayment = _walletService.CreateTransaction(session);
-            if (!createPayment.Success)
-                return new BadRequestObjectResult(createPayment.NonSuccessMessage);
+                session.SessionType = SessionType.Coin;
+                var transaction = new WalletTransaction
+                {
+                    Memo = spend.Memo,
+                    Payment = spend.Amount.ConvertToUInt64(),
+                    RecipientAddress = spend.Address,
+                    WalletType = WalletType.Send,
+                    SenderAddress = senderAddress,
+                    IsVerified = false
+                };
 
-            var send = _walletService.Send(session);
-            if (!send.Item1)
-                return new BadRequestObjectResult(send.Item2);
+                var createPaymentResult = _walletService.CreateTransaction(session, ref transaction);
+                if (createPaymentResult.Item1 is null)
+                {
+                    return new BadRequestObjectResult(createPaymentResult.Item2);
+                }
 
-            var balance = _walletService.History(session);
-            var walletTx = _walletService.GetTransaction(session);
+                var send = _walletService.Send(session, ref transaction);
+                if (send.Item1 is null)
+                {
+                    return new BadRequestObjectResult(send.Item2);
+                }
 
-            return new OkObjectResult(new
-            {
-                balance = $"{balance.Result.Last().Balance}",
-                paymentId = walletTx?.TxnId.ByteToHex()
-            });
+                var history = _walletService.History(session);
+                if (history.Item1 is null)
+                {
+                    return new BadRequestObjectResult(history.Item2);
+                }
+
+                return new OkObjectResult(new
+                {
+                    balance = $"{(history.Item1 as IOrderedEnumerable<BalanceSheet>).Last().Balance}",
+                    paymentId = transaction.Transaction.TxnId.ByteToHex()
+                });
+            }
+            return new BadRequestObjectResult("Invalid identifier or password!");
         }
     }
 }

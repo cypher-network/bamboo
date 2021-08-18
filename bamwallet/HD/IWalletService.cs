@@ -1,12 +1,9 @@
 ﻿// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0.
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
-using System.Collections.Generic;
 using System.Security;
-using BAMWallet.Helper;
 using BAMWallet.Model;
 using NBitcoin;
-using Transaction = BAMWallet.Model.Transaction;
 using System;
 
 namespace BAMWallet.HD
@@ -16,14 +13,13 @@ namespace BAMWallet.HD
         bool IsCommandExecutionInProgress { get; }
         string CreateWallet(SecureString seed, SecureString passphrase);
         string[] CreateSeed(Language language, WordCount wordCount);
-        TaskResult<IEnumerable<string>> WalletList();
+        Tuple<object, string> WalletList();
         Tuple<object, string> History(Session session);
-        TaskResult<string> Address(Session session);
-        Tuple<bool, string> Send(Session session);
-        TaskResult<WalletTransaction> ReceivePayment(Session session, string paymentId);
-        TaskResult<WalletTransaction> CreateTransaction(Session session);
-        Transaction GetTransaction(Session session);
-        Tuple<bool, string> RecoverTransactions(Session session, int start);
+        Tuple<object, string> Address(Session session);
+        Tuple<object, string> Send(Session session, ref WalletTransaction transaction);
+        Tuple<object, string> ReceivePayment(Session session, string paymentId);
+        Tuple<object, string> CreateTransaction(Session session, ref WalletTransaction transaction);
+        Tuple<object, string> RecoverTransactions(Session session, int start);
         void SyncWallet(Session session);
     }
 }

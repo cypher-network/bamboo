@@ -71,11 +71,6 @@ namespace BAMWallet.Services
                     _safeguardDownloadingFlagService.IsDownloading = true;
 
                     var baseAddress = _client.GetBaseAddress();
-                    if (baseAddress == null)
-                    {
-                        throw new Exception("Cannot get base address");
-                    }
-
                     var blocks = _client.GetRangeAsync<Block>(baseAddress, _networkSettings.Routing.SafeguardTransactions, stoppingToken);
                     if (blocks != null)
                     {

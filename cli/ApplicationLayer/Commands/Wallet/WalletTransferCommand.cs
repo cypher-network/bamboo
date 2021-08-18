@@ -56,28 +56,29 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                     try
                     {
                         var session = ActiveSession;
+                        var senderAddress = session.KeySet.StealthAddress;
 
                         session.SessionType = SessionType.Coin;
-                        session.WalletTransaction = new WalletTransaction
+                        var transaction = new WalletTransaction
                         {
                             Memo = memo,
                             Payment = t.ConvertToUInt64(),
                             RecipientAddress = address,
                             WalletType = WalletType.Send,
                             Delay = delay,
-                            IsVerified = false
+                            IsVerified = false,
+                            SenderAddress = senderAddress
                         };
 
-                        _walletService.CreateTransaction(session);
-
-                        if (session.LastError != null)
+                        var createTransactionResult = _walletService.CreateTransaction(session, transaction);
+                        if(createTransactionResult.Item1 is null)
                         {
-                            spinner.Fail(JsonConvert.SerializeObject(session.LastError.GetValue("message")));
+                            spinner.Fail(createTransactionResult.Item2);
                         }
-
-                        if (!_walletService.Send(session).Item1)
+                        var sendResult = _walletService.Send(session, transaction);
+                        if (sendResult.Item1 is null)
                         {
-                            spinner.Fail(JsonConvert.SerializeObject(session.LastError.GetValue("message")));
+                            spinner.Fail(sendResult.Item2);
                         }
 
                         var balance = _walletService.History(session);
