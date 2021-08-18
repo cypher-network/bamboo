@@ -7,15 +7,11 @@
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
 
 using System;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-
-using ConsoleTables;
-using McMaster.Extensions.CommandLineUtils;
-
 using BAMWallet.HD;
 using BAMWallet.Helper;
+using ConsoleTables;
+using McMaster.Extensions.CommandLineUtils;
 
 namespace CLi.ApplicationLayer.Commands.Wallet
 {
@@ -36,23 +32,15 @@ namespace CLi.ApplicationLayer.Commands.Wallet
             var session = ActiveSession;
 
             var request = _walletService.Address(session);
-            if (!request.Success)
+            if (request.Item1 is null)
             {
                 _console.ForegroundColor = ConsoleColor.Red;
-                _console.WriteLine("Address request failed.");
-                _console.ForegroundColor = ConsoleColor.White;
-            }
-
-            if (!request.Result.Any())
-            {
-                _console.ForegroundColor = ConsoleColor.Red;
-                _console.WriteLine("No address can be found.");
+                _console.WriteLine($"Address request failed : {request.Item2}");
                 _console.ForegroundColor = ConsoleColor.White;
             }
 
             var table = new ConsoleTable("Address");
-            table.AddRow(request.Result);
-
+            table.AddRow(request.Item1 as string);
             _console.WriteLine($"\n{table}");
         }
     }

@@ -9,17 +9,14 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
-
-using Kurukuru;
-using McMaster.Extensions.CommandLineUtils;
-using Newtonsoft.Json;
-
+using Microsoft.Extensions.Logging;
 using BAMWallet.Extensions;
 using BAMWallet.HD;
 using BAMWallet.Helper;
 using BAMWallet.Model;
+using Kurukuru;
+using McMaster.Extensions.CommandLineUtils;
 
 namespace CLi.ApplicationLayer.Commands.Wallet
 {
@@ -56,7 +53,6 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                     try
                     {
                         var session = ActiveSession;
-                        var senderAddress = session.KeySet.StealthAddress;
 
                         session.SessionType = SessionType.Coin;
                         var transaction = new WalletTransaction
@@ -67,30 +63,34 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                             WalletType = WalletType.Send,
                             Delay = delay,
                             IsVerified = false,
-                            SenderAddress = senderAddress
+                            SenderAddress = session.KeySet.StealthAddress
                         };
 
-                        var createTransactionResult = _walletService.CreateTransaction(session, transaction);
+                        var createTransactionResult = _walletService.CreateTransaction(session, ref transaction);
                         if(createTransactionResult.Item1 is null)
                         {
                             spinner.Fail(createTransactionResult.Item2);
                         }
-                        var sendResult = _walletService.Send(session, transaction);
+                        var sendResult = _walletService.Send(session, ref transaction);
                         if (sendResult.Item1 is null)
                         {
                             spinner.Fail(sendResult.Item2);
                         }
-
-                        var balance = _walletService.History(session);
-                        var message = $"Available Balance: {balance.Result.Last().Balance}";
-
-                        var walletTx = _walletService.GetTransaction(session);
-                        if (walletTx != null)
+                        else
                         {
-                            message += $"\nPaymentID: {walletTx?.TxnId.ByteToHex()}";
+                            var balanceResult = _walletService.History(session);
+                            if(balanceResult.Item1 is null)
+                            {
+                                spinner.Fail(balanceResult.Item2);
+                            }
+                            else
+                            {
+                                var message = $"Available Balance: {(balanceResult.Item1 as IOrderedEnumerable<BalanceSheet>).Last().Balance}";
+                                message += $"\nPaymentID: {transaction.Transaction.TxnId.ByteToHex()}";
+                                ActiveSession.SessionId = Guid.NewGuid();
+                                spinner.Succeed(message);
+                            }
                         }
-                        ActiveSession.SessionId = Guid.NewGuid();
-                        spinner.Succeed(message);
                     }
                     catch (Exception ex)
                     {

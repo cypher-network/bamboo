@@ -7,8 +7,8 @@
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 
 using ConsoleTables;
@@ -33,24 +33,19 @@ namespace CLi.ApplicationLayer.Commands.Wallet
         {
             var request = _walletService.WalletList();
 
-            if (!request.Success)
+            if (request.Item1 is null)
             {
                 _console.ForegroundColor = ConsoleColor.Red;
-                _console.WriteLine("Wallet list request failed.");
-                _console.ForegroundColor = ConsoleColor.White;
-            }
-
-            if (!request.Result.Any())
-            {
-                _console.ForegroundColor = ConsoleColor.Red;
-                _console.WriteLine("No wallets have been created.");
+                _console.WriteLine($"Wallet list request failed: {request.Item2}!");
                 _console.ForegroundColor = ConsoleColor.White;
             }
 
             var table = new ConsoleTable("Path");
 
-            foreach (var key in request.Result)
+            foreach (var key in request.Item1 as List<string>)
+            {
                 table.AddRow(key);
+            }
 
             _console.WriteLine($"\n{table}");
         }

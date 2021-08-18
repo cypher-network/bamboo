@@ -7,17 +7,15 @@
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
 
 using System;
-using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
+using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
-
-using Kurukuru;
-using McMaster.Extensions.CommandLineUtils;
-using Newtonsoft.Json;
-
+using Microsoft.Extensions.Logging;
 using BAMWallet.HD;
 using BAMWallet.Helper;
+using BAMWallet.Model;
+using Kurukuru;
+using McMaster.Extensions.CommandLineUtils;
 
 namespace CLi.ApplicationLayer.Commands.Wallet
 {
@@ -49,15 +47,24 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                    try
                    {
                        var session = ActiveSession;
-                       _walletService.ReceivePayment(session, paymentId);
-                       if (session.LastError != null)
+                       var receivePaymentResult = _walletService.ReceivePayment(session, paymentId);
+                       if (receivePaymentResult.Item1 is null)
                        {
-                           spinner.Fail(JsonConvert.SerializeObject(session.LastError.GetValue("message")));
+                           spinner.Fail(receivePaymentResult.Item2);
                        }
-
-                       var balance = _walletService.History(session).Result.Last();
-                       spinner.Succeed(
-                           $"Memo: {balance.Memo}  Received: {balance.MoneyIn}  Available Balance: {balance.Balance}");
+                       else
+                       {
+                            var balanceResult = _walletService.History(session);
+                            if(balanceResult.Item1 is null)
+                            {
+                                spinner.Fail(balanceResult.Item2);
+                            }
+                            else
+                            {
+                                var lastSheet = (balanceResult.Item1 as IOrderedEnumerable<BalanceSheet>).Last();
+                                spinner.Succeed($"Memo: {lastSheet.Memo}  Received: {lastSheet.MoneyIn}  Available Balance: {lastSheet.Balance}");
+                            }
+                       }
                    }
                    catch (Exception ex)
                    {

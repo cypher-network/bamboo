@@ -10,12 +10,11 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-
-using Kurukuru;
-using McMaster.Extensions.CommandLineUtils;
-
 using BAMWallet.HD;
 using BAMWallet.Helper;
+using BAMWallet.Model;
+using Kurukuru;
+using McMaster.Extensions.CommandLineUtils;
 
 namespace CLi.ApplicationLayer.Commands.Wallet
 {
@@ -41,19 +40,18 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                 {
                     _spinner = spinner;
                     var session = ActiveSession;
-                    var balance = _walletService.History(session);
-                    if (balance.Success)
+                    var balanceResult = _walletService.History(session);
+                    if(balanceResult.Item1 is null)
                     {
-                        _console.ForegroundColor = ConsoleColor.Green;
-                        _console.WriteLine($"\n Balance: {balance.Result.Last().Balance}");
-                        _console.ForegroundColor = ConsoleColor.White;
+                        spinner.Fail(balanceResult.Item2);
                     }
                     else
                     {
-                        _console.ForegroundColor = ConsoleColor.Red;
-                        _console.WriteLine($"\n {balance.NonSuccessMessage}");
+                        var lastSheet = (balanceResult.Item1 as IOrderedEnumerable<BalanceSheet>).Last();
+                        _console.ForegroundColor = ConsoleColor.Green;
+                        _console.WriteLine($"\n Balance: {lastSheet.Balance}");
                         _console.ForegroundColor = ConsoleColor.White;
-                        spinner.Fail();
+                        spinner.Succeed();
                     }
                     return Task.CompletedTask;
                 });

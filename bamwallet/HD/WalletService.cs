@@ -947,7 +947,7 @@ namespace BAMWallet.HD
             string address = null;
             try
             {
-                address = KeySet(session).StealthAddress;
+                address = session.KeySet.StealthAddress;
             }
             catch (Exception ex)
             {
@@ -1209,9 +1209,9 @@ namespace BAMWallet.HD
                     return new Tuple<object, string>(null, "Your stealth address does not control this payment");
                 }
 
-                session.WalletTransaction = new WalletTransaction
+                var tx = new WalletTransaction
                 {
-                    SenderAddress = session.WalletTransaction.SenderAddress,
+                    SenderAddress = session.KeySet.StealthAddress,
                     DateTime = DateTime.UtcNow,
                     Transaction = new Transaction
                     {
@@ -1228,10 +1228,10 @@ namespace BAMWallet.HD
                     IsVerified = true
                 };
 
-                var saved = Save(session, session.WalletTransaction);
+                var saved = Save(session, tx);
                 if (saved.Success)
                 {
-                    return new Tuple<object, string>(session.WalletTransaction, String.Empty);
+                    return new Tuple<object, string>(tx, String.Empty);
                 }
                 else
                 {
@@ -1357,10 +1357,10 @@ namespace BAMWallet.HD
                                 continue;
                             }
 
-                            session.WalletTransaction = new WalletTransaction
+                            var tx = new WalletTransaction
                             {
                                 Id = session.SessionId,
-                                SenderAddress = session.WalletTransaction.SenderAddress,
+                                SenderAddress = session.KeySet.StealthAddress,
                                 DateTime = DateTime.UtcNow,
                                 Transaction = new Transaction
                                 {
@@ -1378,7 +1378,7 @@ namespace BAMWallet.HD
                                 Delay = 5,
                                 IsVerified = true
                             };
-                            var saved = Save(session, session.WalletTransaction);
+                            var saved = Save(session, tx);
                             if (!saved.Success)
                             {
                                 _logger.Here().Error("Unable to save transaction: {@Transaction}", transaction.TxnId.ByteToHex());

@@ -10,13 +10,12 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-
+using BAMWallet.HD;
+using BAMWallet.Helper;
+using BAMWallet.Model;
 using ConsoleTables;
 using Kurukuru;
 using McMaster.Extensions.CommandLineUtils;
-
-using BAMWallet.HD;
-using BAMWallet.Helper;
 
 namespace CLi.ApplicationLayer.Commands.Wallet
 {
@@ -41,58 +40,55 @@ namespace CLi.ApplicationLayer.Commands.Wallet
 
                 Spinner.StartAsync("Looking up history ...", spinner =>
                 {
-                    var request = _walletService.History(session);
-
-                    if (!request.Success)
+                    var balanceResult = _walletService.History(session);
+                    if(balanceResult.Item1 is null)
                     {
                         _console.ForegroundColor = ConsoleColor.Red;
-                        _console.WriteLine("\nWallet history request failed.");
-
-                        if (request.NonSuccessMessage != null)
-                        {
-                            _console.WriteLine($"{request.NonSuccessMessage}");
-                        }
-
+                        spinner.Fail($"balanceResult.Item2");
                         _console.ForegroundColor = ConsoleColor.White;
                         return Task.CompletedTask;
                     }
-
-                    if (!request.Result.Any())
+                    else
                     {
-                        NoTxn();
+                        var balance = (balanceResult.Item1 as IOrderedEnumerable<BalanceSheet>);
+
+                        if (!balance.Any())
+                        {
+                            NoTxn();
+                            return Task.CompletedTask;
+                        }
+
+                        var table = new ConsoleTable(
+                            "DateTime",
+                            "Payment Id",
+                            "Memo",
+                            "Money In",
+                            "Money Out",
+                            "Reward",
+                            "Balance",
+                            "Verified",
+                            "Locked");
+
+                        foreach (var sheet in balance)
+                        {
+                            table.AddRow(
+                                sheet.Date,
+                                sheet.TxId,
+                                sheet.Memo,
+                                sheet.MoneyIn,
+                                sheet.MoneyOut,
+                                sheet.Reward,
+                                sheet.Balance,
+                                sheet.IsVerified.ToString(),
+                                sheet.IsLocked.ToString());
+                        }
+
+                        table.Configure(o => o.NumberAlignment = Alignment.Right);
+
+                        _console.WriteLine($"\n{table}");
+
                         return Task.CompletedTask;
                     }
-
-                    var table = new ConsoleTable(
-                        "DateTime",
-                        "Payment Id",
-                        "Memo",
-                        "Money In",
-                        "Money Out",
-                        "Reward",
-                        "Balance",
-                        "Verified",
-                        "Locked");
-
-                    foreach (var sheet in request.Result)
-                    {
-                        table.AddRow(
-                            sheet.Date,
-                            sheet.TxId,
-                            sheet.Memo,
-                            sheet.MoneyIn,
-                            sheet.MoneyOut,
-                            sheet.Reward,
-                            sheet.Balance,
-                            sheet.IsVerified.ToString(),
-                            sheet.IsLocked.ToString());
-                    }
-
-                    table.Configure(o => o.NumberAlignment = Alignment.Right);
-
-                    _console.WriteLine($"\n{table}");
-
-                    return Task.CompletedTask;
                 });
             }
             catch (Exception ex)

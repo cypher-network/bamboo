@@ -12,7 +12,7 @@ using LiteDB;
 
 namespace BAMWallet.HD
 {
-    public class Session : IEqualityComparer<Session>
+    public class Session
     {
         public SecureString Identifier { get; }
         public SecureString Passphrase { get; }
@@ -61,28 +61,6 @@ namespace BAMWallet.HD
                 throw new FileLoadException(string.Format("Wallet with ID: {0} not found!", identifier.ToUnSecureString()));
             }
             Database = Util.LiteRepositoryFactory(identifier, passphrase);
-        }
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="x"></param>
-        /// <param name="y"></param>
-        /// <returns></returns>
-        public bool Equals(Session x, Session y)
-        {
-            return x.Identifier == y.Identifier && x.Passphrase == y.Passphrase && x.SessionId == y.SessionId;
-        }
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="session"></param>
-        /// <returns></returns>
-        public int GetHashCode(Session session)
-        {
-            Session s = session;
-            return s.SessionId.GetHashCode();
         }
 
         private static bool IsPassPhraseValid(SecureString id, SecureString pass)
