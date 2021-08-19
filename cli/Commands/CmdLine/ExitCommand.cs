@@ -13,8 +13,6 @@ namespace Cli.Commands.Common
     [CommandDescriptor("exit", "Exit the wallet")]
     public class ExitCommand : Command
     {
-        ICommandService commandService;
-
         public ExitCommand(IServiceProvider serviceProvider)
             : base(typeof(ExitCommand), serviceProvider)
         {

@@ -35,7 +35,6 @@ namespace Cli.Commands.Common
         private readonly IServiceProvider _serviceProvider;
         private readonly IDictionary<string, Command> _commands;
         private readonly BlockingCollection<Command> _commandQueue = new BlockingCollection<Command>();
-        private readonly SyncCommand _syncCommand;
         private bool _hasExited;
         private State _loginState = State.LoggedOut;
         protected readonly TimingSettings _timingSettings;

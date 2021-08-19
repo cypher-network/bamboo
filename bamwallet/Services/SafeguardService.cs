@@ -41,7 +41,7 @@ namespace BAMWallet.Services
         {
             var safeGuardPath = SafeguardFilePath();
             var filePath = Directory.EnumerateFiles(safeGuardPath, "*.messagepack").Last();
-            return File.Open(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite); ;
+            return File.Open(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
         }
 
         /// <summary>

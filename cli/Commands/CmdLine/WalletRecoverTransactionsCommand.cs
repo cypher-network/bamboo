@@ -19,7 +19,7 @@ namespace Cli.Commands.CmdLine
             {
                 Spinner.StartAsync("Recovering transactions ...", spinner =>
                 {
-                    _walletService.RecoverTransactions(ActiveSession, 0);
+                    _walletService.RecoverTransactions(activeSession, 0);
                     return Task.CompletedTask;
                 }, Patterns.Pong);
             }

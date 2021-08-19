@@ -4,6 +4,7 @@
 using System;
 using BAMWallet.HD;
 using Cli.Commands.Common;
+using McMaster.Extensions.CommandLineUtils;
 namespace Cli.Commands.CmdLine
 {
     [CommandDescriptor("sync", "syncs wallet with chain")]
