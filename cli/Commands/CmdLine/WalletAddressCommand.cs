@@ -7,9 +7,8 @@
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
 
 using System;
-using Microsoft.Extensions.DependencyInjection;
 using BAMWallet.HD;
-using BAMWallet.Helper;
+using Cli.Commands.Common;
 using ConsoleTables;
 using McMaster.Extensions.CommandLineUtils;
 
@@ -18,20 +17,14 @@ namespace Cli.Commands.CmdLine
     [CommandDescriptor("address", "Find out your address")]
     class WalletAddressCommand : Command
     {
-        private readonly ICommandReceiver _walletService;
         public WalletAddressCommand(IServiceProvider serviceProvider)
-            : base(typeof(WalletAddressCommand), serviceProvider)
+            : base(typeof(WalletAddressCommand), serviceProvider, true)
         {
-            _walletService = serviceProvider.GetService<ICommandReceiver>();
         }
 
-        public override void Execute()
+        public override void Execute(Session activeSession = null)
         {
-            this.Login();
-            using var KeepLoginState = new RAIIGuard(Command.FreezeTimer, Command.UnfreezeTimer);
-            var session = ActiveSession;
-
-            var request = _walletService.Address(session);
+            var request = _walletService.Address(activeSession);
             if (request.Item1 is null)
             {
                 _console.ForegroundColor = ConsoleColor.Red;

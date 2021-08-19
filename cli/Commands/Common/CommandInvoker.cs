@@ -7,20 +7,20 @@
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
 
 using System;
-using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using McMaster.Extensions.CommandLineUtils;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using CLi.Helper;
-using Cli.Commands.CmdLine;
-using FuzzySharp;
 using BAMWallet.HD;
-using Cli;
-
+using BAMWallet.Model;
+using BAMWallet.Helper;
+using Cli.Commands.CmdLine;
+using CLi.Helper;
+using FuzzySharp;
+using McMaster.Extensions.CommandLineUtils;
 namespace Cli.Commands.Common
 {
     public class CommandInvoker : HostedService, ICommandService
@@ -37,8 +37,65 @@ namespace Cli.Commands.Common
         private readonly BlockingCollection<Command> _commandQueue = new BlockingCollection<Command>();
         private readonly SyncCommand _syncCommand;
         private bool _hasExited;
-        private Thread _t;
-        private State _commandServiceState;
+        private State _loginState = State.LoggedOut;
+        protected readonly TimingSettings _timingSettings;
+        private System.Timers.Timer _timeout = null;
+        Session _activeSession = null;
+
+        private void FreezeTimer()
+        {
+            _timeout.Stop();
+        }
+        private void UnfreezeTimer()
+        {
+            _timeout.Start();
+        }
+        private void OnTimeout(object source, System.Timers.ElapsedEventArgs e)
+        {
+            _console.ForegroundColor = ConsoleColor.Red;
+            _console.WriteLine("You have been logged out of the wallet due to inactivity. Please login again to use the wallet.");
+            _console.ForegroundColor = ConsoleColor.Cyan;
+            _console.Write("bamboo$ ");
+            _console.ForegroundColor = ConsoleColor.White;
+            Logout();
+            _console.ResetColor();
+        }
+
+        private void ReinitializeLogoutTimer()
+        {
+            if (_timeout != null)
+            {
+                _timeout.Elapsed -= OnTimeout;
+                _timeout.Stop();
+            }
+
+            _timeout = new System.Timers.Timer(TimeSpan.FromMinutes(_timingSettings.SessionTimeoutMins).TotalMilliseconds);
+            _timeout.Elapsed += OnTimeout;
+            _timeout.Start();
+        }
+
+        private void OnLogout()
+        {
+            if (_loginState != State.LoggedOut)
+            {
+                _loginState = State.LoggedOut;
+                RegisterLoggedOutCommands();
+            }
+            _timeout.Stop();
+            _activeSession = null;
+        }
+        private void OnLogin()
+        {
+            if (_loginState != State.LoggedIn)
+            {
+                _loginState = State.LoggedIn;
+                RegisterLoggedInCommands();
+            }
+            if(_loginState == State.LoggedIn)
+            {
+                ReinitializeLogoutTimer();
+            }
+        }
 
         public CommandInvoker(IConsole cnsl, IServiceProvider provider, ILogger<CommandInvoker> lgr, ICommandReceiver walletService)
         {
@@ -47,28 +104,8 @@ namespace Cli.Commands.Common
             _logger = lgr;
             _commands = new Dictionary<string, Command>();
             _console.CancelKeyPress += Console_CancelKeyPress;
-            _commandServiceState = State.LoggedOut;
             _hasExited = false;
             RegisterLoggedOutCommands();
-            Command.LoginStateChanged += (o, e) =>
-            {
-                if (e.LoginStateChangedFrom == Events.LogInStateChanged.LoginEvent.LoggedOut)
-                {
-                    if (_commandServiceState != State.LoggedIn)
-                    {
-                        _commandServiceState = State.LoggedIn;
-                        RegisterLoggedInCommands();
-                    }
-                }
-                else
-                {
-                    if (_commandServiceState != State.LoggedOut)
-                    {
-                        _commandServiceState = State.LoggedOut;
-                        RegisterLoggedOutCommands();
-                    }
-                }
-            };
             _syncCommand = new SyncCommand(walletService, provider);
         }
 
@@ -107,11 +144,6 @@ namespace Cli.Commands.Common
         private void Console_CancelKeyPress(object sender, ConsoleCancelEventArgs e)
         {
             ExitCleanly().GetAwaiter().GetResult();
-        }
-
-        public async Task Exit()
-        {
-            await ExitCleanly();
         }
 
         public void RegisterCommand(Command command)
@@ -202,7 +234,24 @@ namespace Cli.Commands.Common
 
                     if (cmd != null)
                     {
-                        cmd.Execute();
+                        if(cmd.RefreshLogin)
+                        {
+                            OnLogin();
+                        }
+                        using var freezeTimer = new RAIIGuard(FreezeTimer, UnfreezeTimer);
+                        cmd.Execute(_activeSession);
+                        if(cmd is LoginCommand)
+                        {
+                            _activeSession = (cmd as LoginCommand).ActiveSession;
+                        }
+                        if(cmd is LogoutCommand)
+                        {
+                            OnLogout();
+                        }
+                        if(cmd is ExitCommand)
+                        {
+                            _commandQueue.CompleteAdding();
+                        }
                     }
                 }
             });
@@ -283,10 +332,9 @@ namespace Cli.Commands.Common
 
         protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
-            await Task.Run(() =>
+            await Task.Run(async () =>
             {
-                _t = new Thread(async () => { await InteractiveCliLoop(); });
-                _t.Start();
+                await InteractiveCliLoop();
             });
         }
     }

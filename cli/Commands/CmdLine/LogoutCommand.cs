@@ -1,4 +1,4 @@
-﻿// Bamboo (c) by Tangram
+// Bamboo (c) by Tangram
 //
 // Bamboo is licensed under a
 // Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License.
@@ -8,18 +8,17 @@
 
 using System;
 using BAMWallet.HD;
-namespace Cli.Commands.Common
-{
-    [CommandDescriptor("exit", "Exit the wallet")]
-    public class ExitCommand : Command
-    {
-        ICommandService commandService;
+using Cli.Commands.Common;
 
-        public ExitCommand(IServiceProvider serviceProvider)
-            : base(typeof(ExitCommand), serviceProvider)
+namespace Cli.Commands.CmdLine
+{
+    [CommandDescriptor("logout", "Logs out and locks wallet.")]
+    class LogoutCommand : Command
+    {
+        public LogoutCommand(IServiceProvider serviceProvider)
+            : base(typeof(LogoutCommand), serviceProvider)
         {
         }
-
         public override void Execute(Session activeSession = null)
         {
         }

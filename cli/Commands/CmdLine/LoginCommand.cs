@@ -7,31 +7,30 @@
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
 
 using System;
-using McMaster.Extensions.CommandLineUtils;
 using BAMWallet.HD;
-using LiteDB;
 using Cli.Commands.Common;
+using LiteDB;
+using McMaster.Extensions.CommandLineUtils;
 
 namespace Cli.Commands.CmdLine
 {
     [CommandDescriptor("login", "Unlocks wallet and enables wallet commands.")]
-    class Login : Command
+    class LoginCommand : Command
     {
-        public Login(IServiceProvider serviceProvider)
-            : base(typeof(Login), serviceProvider)
+        private Session _session = null;
+        public LoginCommand(IServiceProvider serviceProvider)
+            : base(typeof(LoginCommand), serviceProvider, true)
         {
         }
 
-        public override void Execute()
+        public override void Execute(Session activeSession = null)
         {
             //check if wallet exists, if it does, save session, login and inform command service
             var identifier = Prompt.GetPasswordAsSecureString("Identifier:", ConsoleColor.Yellow);
             var passphrase = Prompt.GetPasswordAsSecureString("Passphrase:", ConsoleColor.Yellow);
             if (Session.AreCredentialsValid(identifier, passphrase))
             {
-                Session session = new Session(identifier, passphrase); //will throw if wallet doesn't exist
-                Command.ActiveSession = session;
-                Login();
+                ActiveSession = new Session(identifier, passphrase); //will throw if wallet doesn't exist
             }
             else
             {
@@ -40,6 +39,18 @@ namespace Cli.Commands.CmdLine
                 _console.ForegroundColor = ConsoleColor.Cyan;
                 _console.Write("bamboo$ ");
                 _console.ForegroundColor = ConsoleColor.White;
+            }
+        }
+
+        public Session ActiveSession
+        {
+            get
+            {
+                return _session;
+            }
+            private set
+            {
+                _session = value;
             }
         }
     }

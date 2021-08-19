@@ -9,38 +9,31 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
 using BAMWallet.HD;
-using BAMWallet.Helper;
 using BAMWallet.Model;
 using Kurukuru;
 using McMaster.Extensions.CommandLineUtils;
+using Cli.Commands.Common;
 
 namespace Cli.Commands.CmdLine
 {
     [CommandDescriptor("balance", "Get your wallet balance")]
     public class WalletBalanceCommand : Command
     {
-        private readonly ICommandReceiver _walletService;
         private Spinner _spinner;
-
         public WalletBalanceCommand(IServiceProvider serviceProvider)
             : base(typeof(WalletBalanceCommand), serviceProvider)
         {
-            _walletService = serviceProvider.GetService<ICommandReceiver>();
         }
 
-        public override void Execute()
+        public override void Execute(Session activeSession = null)
         {
-            this.Login();
-            using var KeepLoginState = new RAIIGuard(Command.FreezeTimer, Command.UnfreezeTimer);
             try
             {
                 Spinner.StartAsync("Checking balance ...", spinner =>
                 {
                     _spinner = spinner;
-                    var session = ActiveSession;
-                    var balanceResult = _walletService.History(session);
+                    var balanceResult = _walletService.History(activeSession);
                     if (balanceResult.Item1 is null)
                     {
                         spinner.Fail(balanceResult.Item2);
