@@ -7,29 +7,23 @@
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
 
 using System;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-
-using McMaster.Extensions.CommandLineUtils;
-
+using BAMWallet.Extensions;
 using BAMWallet.HD;
 using BAMWallet.Helper;
-using BAMWallet.Extensions;
+using Cli.Commands.Common;
+using McMaster.Extensions.CommandLineUtils;
 
 namespace Cli.Commands.CmdLine
 {
     [CommandDescriptor("create", "Create new wallet")]
     class WalletCreateCommand : Command
     {
-        private readonly ICommandReceiver _walletService;
-
         public WalletCreateCommand(IServiceProvider serviceProvider)
-            : base(typeof(WalletCreateCommand), serviceProvider)
+            : base(typeof(WalletCreateCommand), serviceProvider, true)
         {
-            _walletService = serviceProvider.GetService<ICommandReceiver>();
         }
 
-        public override void Execute()
+        public override void Execute(Session activeSession = null)
         {
             try
             {

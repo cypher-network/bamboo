@@ -8,28 +8,21 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using Microsoft.Extensions.DependencyInjection;
-
 using ConsoleTables;
 using McMaster.Extensions.CommandLineUtils;
-
 using BAMWallet.HD;
-
+using Cli.Commands.Common;
 namespace Cli.Commands.CmdLine
 {
     [CommandDescriptor("list", "Available wallets")]
     class WalletListCommand : Command
     {
-        private readonly ICommandReceiver _walletService;
-
         public WalletListCommand(IServiceProvider serviceProvider)
-            : base(typeof(WalletListCommand), serviceProvider)
+            : base(typeof(WalletListCommand), serviceProvider, true)
         {
-            _walletService = serviceProvider.GetService<ICommandReceiver>();
         }
 
-        public override void Execute()
+        public override void Execute(Session activeSession = null)
         {
             var request = _walletService.WalletList();
 

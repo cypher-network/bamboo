@@ -22,13 +22,13 @@ namespace Cli.Commands.CmdLine
     {
         private Spinner _spinner;
         public WalletBalanceCommand(IServiceProvider serviceProvider)
-            : base(typeof(WalletBalanceCommand), serviceProvider)
+            : base(typeof(WalletBalanceCommand), serviceProvider, true)
         {
         }
 
         public override void Execute(Session activeSession = null)
         {
-            try
+            if(activeSession != null)
             {
                 Spinner.StartAsync("Checking balance ...", spinner =>
                 {
@@ -48,10 +48,6 @@ namespace Cli.Commands.CmdLine
                     }
                     return Task.CompletedTask;
                 });
-            }
-            catch (Exception)
-            {
-                throw;
             }
         }
     }

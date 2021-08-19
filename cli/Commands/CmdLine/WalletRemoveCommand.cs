@@ -14,7 +14,8 @@ using Microsoft.Extensions.Logging;
 using BAMWallet.Extensions;
 using McMaster.Extensions.CommandLineUtils;
 using Constants = BAMWallet.HD.Constant;
-using CLi.ApplicationLayer.Events;
+using BAMWallet.HD;
+using Cli.Commands.Common;
 using CLi.Helper;
 
 namespace Cli.Commands.CmdLine
@@ -22,17 +23,15 @@ namespace Cli.Commands.CmdLine
     [CommandDescriptor("remove", "Removes a wallet and logs out if that wallet was used to login.")]
     class WalletRemoveCommand : Command
     {
-        private object _lock;
-        private bool _isSyncInProgress;
         private bool _isLogoutRequested;
         private string _idToDelete;
         private readonly ILogger _logger;
 
-        private bool IsLoggedInWithWallet(SecureString identifier)
+        private bool IsLoggedInWithWallet(SecureString identifier, Session activeSession)
         {
-            if (ActiveSession != null)
+            if (activeSession != null)
             {
-                return String.Equals(identifier.ToUnSecureString(), ActiveSession.Identifier.ToUnSecureString());
+                return String.Equals(identifier.ToUnSecureString(), activeSession.Identifier.ToUnSecureString());
             }
             else
             {
@@ -89,49 +88,38 @@ namespace Cli.Commands.CmdLine
             : base(typeof(WalletRemoveCommand), serviceProvider)
         {
             _logger = logger;
-            _isSyncInProgress = false;
             _isLogoutRequested = false;
             _idToDelete = String.Empty;
-            _lock = new object();
-            SyncCommand.OnSyncStateChanged += (o, e) =>
-            {
-                lock (_lock)
-                {
-                    _isSyncInProgress = (e.SyncStatus == SyncStateChanged.SyncState.SyncInProgress);
-                    if (!_isSyncInProgress && _isLogoutRequested)
-                    {
-                        Logout();
-                        DeleteWallet();
-                        _isLogoutRequested = false;
-                    }
-                }
-            };
         }
 
-        public override void Execute()
+        public override void Execute(Session activeSession = null)
         {
-            lock (_lock)
+            var identifier = Prompt.GetPasswordAsSecureString("Identifier:", ConsoleColor.Yellow);
+            var isDeletionConfirmed = Prompt.GetYesNo(string.Format("Are you sure you want to delete wallet with Identifier: {0}? (This action cannot be undone!)", identifier.ToUnSecureString()), false, ConsoleColor.Red);
+            if (isDeletionConfirmed)
             {
-                var identifier = Prompt.GetPasswordAsSecureString("Identifier:", ConsoleColor.Yellow);
-                var isDeletionConfirmed = Prompt.GetYesNo(string.Format("Are you sure you want to delete wallet with Identifier: {0}? (This action cannot be undone!)", identifier.ToUnSecureString()), false, ConsoleColor.Red);
-
-                if (isDeletionConfirmed)
+                _idToDelete = identifier.ToUnSecureString();
+                if (IsLoggedInWithWallet(identifier, activeSession))
                 {
-                    _idToDelete = identifier.ToUnSecureString();
-                    if (IsLoggedInWithWallet(identifier))
-                    {
-                        _isLogoutRequested = true;
-                        if (!_isSyncInProgress)
-                        {
-                            Logout();
-                            DeleteWallet();
-                        }
-                    }
-                    else
-                    {
-                        DeleteWallet();
-                    }
+                    Logout = true;
+                    DeleteWallet();
                 }
+                else
+                {
+                    DeleteWallet();
+                }
+            }
+        }
+
+        public bool Logout
+        {
+            get
+            {
+                return _isLogoutRequested;
+            }
+            private set
+            {
+                _isLogoutRequested = value;
             }
         }
     }

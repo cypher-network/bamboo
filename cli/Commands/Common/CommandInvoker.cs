@@ -40,7 +40,13 @@ namespace Cli.Commands.Common
         private State _loginState = State.LoggedOut;
         protected readonly TimingSettings _timingSettings;
         private System.Timers.Timer _timeout = null;
+        private readonly System.Timers.Timer _syncTimer = null;
         Session _activeSession = null;
+
+        private void OnSyncInternal(object source, System.Timers.ElapsedEventArgs e)
+        {
+            _commandQueue.Add(new SyncCommand(_serviceProvider));
+        }
 
         private void FreezeTimer()
         {
@@ -50,6 +56,7 @@ namespace Cli.Commands.Common
         {
             _timeout.Start();
         }
+
         private void OnTimeout(object source, System.Timers.ElapsedEventArgs e)
         {
             _console.ForegroundColor = ConsoleColor.Red;
@@ -57,7 +64,7 @@ namespace Cli.Commands.Common
             _console.ForegroundColor = ConsoleColor.Cyan;
             _console.Write("bamboo$ ");
             _console.ForegroundColor = ConsoleColor.White;
-            Logout();
+            OnLogout();
             _console.ResetColor();
         }
 
@@ -106,26 +113,29 @@ namespace Cli.Commands.Common
             _console.CancelKeyPress += Console_CancelKeyPress;
             _hasExited = false;
             RegisterLoggedOutCommands();
-            _syncCommand = new SyncCommand(walletService, provider);
+            _syncTimer = new System.Timers.Timer(TimeSpan.FromMinutes(_timingSettings.SyncIntervalMins).TotalMilliseconds);
+            _syncTimer.Elapsed += OnSyncInternal;
+            _syncTimer.AutoReset = true;
+            _syncTimer.Start();
         }
 
         private void RegisterLoggedOutCommands()
         {
             _commands.Clear();
-            RegisterCommand(new Login(_serviceProvider));
+            RegisterCommand(new LoginCommand(_serviceProvider));
             RegisterCommand(new WalletRemoveCommand(_serviceProvider, _logger));
             RegisterCommand(new WalletCreateCommand(_serviceProvider));
             RegisterCommand(new WalletCreateMnemonicCommand(_serviceProvider));
             RegisterCommand(new WalletListCommand(_serviceProvider));
             RegisterCommand(new WalletRestoreCommand(_serviceProvider));
             RegisterCommand(new WalletVersionCommand(_serviceProvider));
-            RegisterCommand(new ExitCommand(this, _serviceProvider));
+            RegisterCommand(new ExitCommand(_serviceProvider));
         }
 
         private void RegisterLoggedInCommands()
         {
             _commands.Clear();
-            RegisterCommand(new Logout(_serviceProvider));
+            RegisterCommand(new LogoutCommand(_serviceProvider));
             RegisterCommand(new WalletRemoveCommand(_serviceProvider, _logger));
             RegisterCommand(new WalletCreateCommand(_serviceProvider));
             RegisterCommand(new WalletCreateMnemonicCommand(_serviceProvider));
@@ -138,12 +148,12 @@ namespace Cli.Commands.Common
             RegisterCommand(new WalletRecoverTransactionsCommand(_serviceProvider));
             RegisterCommand(new WalletTransferCommand(_serviceProvider));
             RegisterCommand(new WalletTxHistoryCommand(_serviceProvider));
-            RegisterCommand(new ExitCommand(this, _serviceProvider));
+            RegisterCommand(new ExitCommand(_serviceProvider));
         }
 
         private void Console_CancelKeyPress(object sender, ConsoleCancelEventArgs e)
         {
-            ExitCleanly().GetAwaiter().GetResult();
+            StopCommandProcessing();
         }
 
         public void RegisterCommand(Command command)
@@ -175,48 +185,57 @@ namespace Cli.Commands.Common
             Console.SetCursorPosition(0, currentLineCursor);
         }
 
-        public async Task InteractiveCliLoop()
+        private async Task ProcessCmdLineInput()
         {
-            await StartAllHostedProviders();
-
-            ClearCurrentConsoleLine();
-
-            while (!_hasExited)
+            await Task.Run(() =>
             {
-                var args = Prompt.GetString("bamboo$", promptColor: ConsoleColor.Cyan)?.TrimEnd()?.Split(' ');
+                while (!_hasExited)
+                {
+                    var args = Prompt.GetString("bamboo$", promptColor: ConsoleColor.Cyan)?.TrimEnd()?.Split(' ');
 
-                if ((args == null) || (args.Length == 1 && string.IsNullOrEmpty(args[0])) || (args.Length > 1))
-                {
-                    continue;
-                }
-                if (args[0] == "--help" || args[0] == "?" || args[0] == "/?" || args[0] == "help")
-                {
-                    PrintHelp();
-                    continue;
-                }
-                if (!_commands.ContainsKey(args[0]))
-                {
-                    var bestMatch = Process.ExtractOne(args[0], _commands.Keys, cutoff: 60);
-                    if (null != bestMatch)
+                    if ((args == null) || (args.Length == 1 && string.IsNullOrEmpty(args[0])) || (args.Length > 1))
                     {
-                        _console.WriteLine("Command: {0} not found. Did you mean {1}?", args[0], bestMatch.Value);
+                        continue;
                     }
-                    else
+                    if (args[0] == "--help" || args[0] == "?" || args[0] == "/?" || args[0] == "help")
                     {
-                        _console.WriteLine("Command: {0} not found. Here is the list of available commands:", args[0]);
                         PrintHelp();
+                        continue;
                     }
-                    continue;
+                    if (!_commands.ContainsKey(args[0]))
+                    {
+                        var bestMatch = Process.ExtractOne(args[0], _commands.Keys, cutoff: 60);
+                        if (null != bestMatch)
+                        {
+                            _console.WriteLine("Command: {0} not found. Did you mean {1}?", args[0], bestMatch.Value);
+                        }
+                        else
+                        {
+                            _console.WriteLine("Command: {0} not found. Here is the list of available commands:", args[0]);
+                            PrintHelp();
+                        }
+                        continue;
+                    }
+                    try
+                    {
+                        Execute(args[0]);
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.LogException(_console, _logger, e);
+                    }
                 }
-                try
-                {
-                    Execute(args[0]);
-                }
-                catch (Exception e)
-                {
-                    Logger.LogException(_console, _logger, e);
-                }
-            }
+            });
+        }
+
+        private void StopCommandProcessing()
+        {
+            _hasExited = true;
+            _commandQueue.CompleteAdding();
+        }
+
+        private async Task ProcessCommands()
+        {
             await Task.Run(() =>
             {
                 while (!_commandQueue.IsCompleted)
@@ -244,30 +263,34 @@ namespace Cli.Commands.Common
                         {
                             _activeSession = (cmd as LoginCommand).ActiveSession;
                         }
-                        if(cmd is LogoutCommand)
+                        if((cmd is LogoutCommand) || ((cmd is WalletRemoveCommand) && (cmd as WalletRemoveCommand).Logout))
                         {
                             OnLogout();
                         }
                         if(cmd is ExitCommand)
                         {
-                            _commandQueue.CompleteAdding();
+                            StopCommandProcessing();
                         }
                     }
                 }
             });
+        }
 
+        public async Task InteractiveCliLoop()
+        {
+            await StartAllHostedProviders();
+            ClearCurrentConsoleLine();
+            Task inputProcessor = ProcessCmdLineInput();
+            Task cmdProcessor = ProcessCommands();
+
+            await Task.WhenAll(inputProcessor, cmdProcessor);
             await ExitCleanly();
         }
 
         private async Task ExitCleanly()
         {
-            _commandQueue.CompleteAdding();
-            _hasExited = true;
-
             _console.WriteLine("Exiting...");
-
             await StopAllHostedProviders();
-
             Environment.Exit(0);
         }
 

@@ -7,45 +7,34 @@
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
 
 using System;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-
+using BAMWallet.HD;
+using Cli.Commands.Common;
 using McMaster.Extensions.CommandLineUtils;
 using NBitcoin;
-
-using BAMWallet.HD;
-
 namespace Cli.Commands.CmdLine
 {
     [CommandDescriptor("seed", "Creates a new seed and passphrase")]
     class WalletCreateMnemonicCommand : Command
     {
-        private readonly ICommandReceiver _walletService;
-
         public WalletCreateMnemonicCommand(IServiceProvider serviceProvider)
-            : base(typeof(WalletCreateMnemonicCommand), serviceProvider)
+            : base(typeof(WalletCreateMnemonicCommand), serviceProvider, true)
         {
-            _walletService = serviceProvider.GetService<ICommandReceiver>();
         }
 
-        public override void Execute()
+        public override void Execute(Session activeSession = null)
         {
             _console.ForegroundColor = ConsoleColor.Magenta;
-
             _console.WriteLine("\nSeed phrase\n");
 
-            Options(out Language lang, out WordCount wCount, 3);
+            Options(out WordCount wCount, 3);
 
-            var seed = _walletService.CreateSeed(lang, wCount);
-
+            var seed = _walletService.CreateSeed(Language.English, wCount);
             _console.ForegroundColor = ConsoleColor.Magenta;
-
             _console.WriteLine("");
             _console.WriteLine("Passphrase");
 
-            Options(out lang, out wCount, 1);
-
-            var passphrase = _walletService.CreateSeed(lang, wCount);
+            Options(out wCount, 1);
+            var passphrase = _walletService.CreateSeed(Language.English, wCount);
 
             _console.WriteLine("Seed phrase: " + string.Join(" ", seed));
             _console.WriteLine("Passphrase:  " + string.Join(" ", passphrase));
@@ -56,22 +45,10 @@ namespace Cli.Commands.CmdLine
         /// <summary>
         ///
         /// </summary>
-        /// <param name="lang"></param>
         /// <param name="wCount"></param>
-        private void Options(out Language lang, out WordCount wCount, int defaultAnswer)
+        /// <param name="defaultAnswer"></param>
+        private void Options(out WordCount wCount, int defaultAnswer)
         {
-            _console.WriteLine("\nLanguage:\n");
-            _console.WriteLine("English              [0]");
-            _console.WriteLine("Japanese             [1]");
-            _console.WriteLine("Spanish              [2]");
-            _console.WriteLine("ChineseSimplified    [3]");
-            _console.WriteLine("ChineseTraditional   [4]");
-            _console.WriteLine("French               [5]");
-            _console.WriteLine("PortugueseBrazil     [6]");
-            _console.WriteLine("Czech                [7]\n");
-
-            var language = Prompt.GetInt("Select language:", 0, ConsoleColor.Yellow);
-
             _console.ForegroundColor = ConsoleColor.Magenta;
 
             _console.WriteLine("\nWord Count:\n");
@@ -97,8 +74,6 @@ namespace Cli.Commands.CmdLine
                 default:
                     break;
             }
-
-            lang = (Language)language;
             wCount = (WordCount)wordCount;
         }
     }

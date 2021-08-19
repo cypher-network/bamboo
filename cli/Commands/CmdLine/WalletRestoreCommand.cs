@@ -7,28 +7,21 @@
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
 
 using System;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-
-using McMaster.Extensions.CommandLineUtils;
-
 using BAMWallet.HD;
 using BAMWallet.Helper;
-
+using Cli.Commands.Common;
+using McMaster.Extensions.CommandLineUtils;
 namespace Cli.Commands.CmdLine
 {
     [CommandDescriptor("restore", "Restore wallet from seed")]
     class WalletRestoreCommand : Command
     {
-        private readonly ICommandReceiver _walletService;
-
         public WalletRestoreCommand(IServiceProvider serviceProvider)
             : base(typeof(WalletRestoreCommand), serviceProvider)
         {
-            _walletService = serviceProvider.GetService<ICommandReceiver>();
         }
 
-        public override void Execute()
+        public override void Execute(Session activeSession = null)
         {
             using var seed = Prompt.GetPasswordAsSecureString("Seed:", ConsoleColor.Yellow);
             using var passphrase = Prompt.GetPasswordAsSecureString("Passphrase:", ConsoleColor.Yellow);

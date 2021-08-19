@@ -1,34 +1,28 @@
 using System;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-
 using Kurukuru;
-
+using Cli.Commands.Common;
 using BAMWallet.HD;
-using BAMWallet.Helper;
-
 namespace Cli.Commands.CmdLine
 {
     [CommandDescriptor("recover", "Recover wallet transactions")]
     public class WalletRecoverTransactionsCommand : Command
     {
-        private readonly ICommandReceiver _walletService;
-
         public WalletRecoverTransactionsCommand(IServiceProvider serviceProvider)
-            : base(typeof(WalletRecoverTransactionsCommand), serviceProvider)
+            : base(typeof(WalletRecoverTransactionsCommand), serviceProvider, true)
         {
-            _walletService = serviceProvider.GetService<ICommandReceiver>();
         }
 
-        public override void Execute()
+        public override void Execute(Session activeSession = null)
         {
-            this.Login();
-            using var KeepLoginState = new RAIIGuard(Command.FreezeTimer, Command.UnfreezeTimer);
-            Spinner.StartAsync("Recovering transactions ...", spinner =>
+            if(activeSession != null)
             {
-                _walletService.RecoverTransactions(ActiveSession, 0);
-                return Task.CompletedTask;
-            }, Patterns.Pong);
+                Spinner.StartAsync("Recovering transactions ...", spinner =>
+                {
+                    _walletService.RecoverTransactions(ActiveSession, 0);
+                    return Task.CompletedTask;
+                }, Patterns.Pong);
+            }
         }
     }
 }

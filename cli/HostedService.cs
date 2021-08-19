@@ -16,8 +16,7 @@ namespace Cli
     public abstract class HostedService : IHostedService, IDisposable
     {
         private Task _executingTask;
-        private readonly CancellationTokenSource _stoppingCts =
-                                                       new CancellationTokenSource();
+        private readonly CancellationTokenSource _stoppingCts = new CancellationTokenSource();
 
         protected abstract Task ExecuteAsync(CancellationToken stoppingToken);
 

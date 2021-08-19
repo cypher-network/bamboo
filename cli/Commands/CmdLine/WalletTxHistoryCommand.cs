@@ -9,85 +9,82 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
 using BAMWallet.HD;
 using BAMWallet.Helper;
 using BAMWallet.Model;
+using Cli.Commands.Common;
 using ConsoleTables;
 using Kurukuru;
 using McMaster.Extensions.CommandLineUtils;
-using Cli.Commands.Common;
-
 namespace Cli.Commands.CmdLine
 {
     [CommandDescriptor("history", "Show my transactions")]
     public class WalletTxHistoryCommand : Command
     {
         public WalletTxHistoryCommand(IServiceProvider serviceProvider)
-            : base(typeof(WalletTxHistoryCommand), serviceProvider)
+            : base(typeof(WalletTxHistoryCommand), serviceProvider, true)
         {
         }
 
-        public override void Execute()
+        public override void Execute(Session activeSession = null)
         {
-            this.Login();
-            using var KeepLoginState = new RAIIGuard(Command.FreezeTimer, Command.UnfreezeTimer);
             try
             {
-                var session = ActiveSession;
-
-                Spinner.StartAsync("Looking up history ...", spinner =>
+                if(activeSession != null)
                 {
-                    var balanceResult = _walletService.History(session);
-                    if (balanceResult.Item1 is null)
+                    Spinner.StartAsync("Looking up history ...", spinner =>
                     {
-                        _console.ForegroundColor = ConsoleColor.Red;
-                        spinner.Fail($"{balanceResult.Item2}");
-                        _console.ForegroundColor = ConsoleColor.White;
-                        return Task.CompletedTask;
-                    }
-                    else
-                    {
-                        var balance = (balanceResult.Item1 as IOrderedEnumerable<BalanceSheet>);
-
-                        if (!balance.Any())
+                        var balanceResult = _walletService.History(session);
+                        if (balanceResult.Item1 is null)
                         {
-                            NoTxn();
+                            _console.ForegroundColor = ConsoleColor.Red;
+                            spinner.Fail($"{balanceResult.Item2}");
+                            _console.ForegroundColor = ConsoleColor.White;
                             return Task.CompletedTask;
                         }
-
-                        var table = new ConsoleTable(
-                            "DateTime",
-                            "Payment Id",
-                            "Memo",
-                            "Money In",
-                            "Money Out",
-                            "Reward",
-                            "Balance",
-                            "Verified",
-                            "Locked");
-
-                        foreach (var sheet in balance)
+                        else
                         {
-                            table.AddRow(
-                                sheet.Date,
-                                sheet.TxId,
-                                sheet.Memo,
-                                sheet.MoneyIn,
-                                sheet.MoneyOut,
-                                sheet.Reward,
-                                sheet.Balance,
-                                sheet.IsVerified.ToString(),
-                                sheet.IsLocked.ToString());
+                            var balance = (balanceResult.Item1 as IOrderedEnumerable<BalanceSheet>);
+
+                            if (!balance.Any())
+                            {
+                                NoTxn();
+                                return Task.CompletedTask;
+                            }
+
+                            var table = new ConsoleTable(
+                                "DateTime",
+                                "Payment Id",
+                                "Memo",
+                                "Money In",
+                                "Money Out",
+                                "Reward",
+                                "Balance",
+                                "Verified",
+                                "Locked");
+
+                            foreach (var sheet in balance)
+                            {
+                                table.AddRow(
+                                    sheet.Date,
+                                    sheet.TxId,
+                                    sheet.Memo,
+                                    sheet.MoneyIn,
+                                    sheet.MoneyOut,
+                                    sheet.Reward,
+                                    sheet.Balance,
+                                    sheet.IsVerified.ToString(),
+                                    sheet.IsLocked.ToString());
+                            }
+
+                            table.Configure(o => o.NumberAlignment = Alignment.Right);
+
+                            _console.WriteLine($"\n{table}");
+
+                            return Task.CompletedTask;
                         }
-
-                        table.Configure(o => o.NumberAlignment = Alignment.Right);
-
-                        _console.WriteLine($"\n{table}");
-
-                        return Task.CompletedTask;
-                    }
-                });
+                    });
+                }
             }
             catch (Exception ex)
             {
@@ -100,8 +97,10 @@ namespace Cli.Commands.CmdLine
             _console.ForegroundColor = ConsoleColor.Red;
             _console.WriteLine($"\nWallet has no transactions.\n");
             if (ex != null)
+            {
                 _console.WriteLine(ex.Message);
-            _console.ForegroundColor = ConsoleColor.White;
+                _console.ForegroundColor = ConsoleColor.White;
+            }
         }
     }
 }

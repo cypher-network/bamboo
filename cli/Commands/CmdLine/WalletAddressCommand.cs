@@ -24,17 +24,20 @@ namespace Cli.Commands.CmdLine
 
         public override void Execute(Session activeSession = null)
         {
-            var request = _walletService.Address(activeSession);
-            if (request.Item1 is null)
+            if(activeSession != null)
             {
-                _console.ForegroundColor = ConsoleColor.Red;
-                _console.WriteLine($"Address request failed : {request.Item2}");
-                _console.ForegroundColor = ConsoleColor.White;
-            }
+                var request = _walletService.Address(activeSession);
+                if (request.Item1 is null)
+                {
+                    _console.ForegroundColor = ConsoleColor.Red;
+                    _console.WriteLine($"Address request failed : {request.Item2}");
+                    _console.ForegroundColor = ConsoleColor.White;
+                }
 
-            var table = new ConsoleTable("Address");
-            table.AddRow(request.Item1 as string);
-            _console.WriteLine($"\n{table}");
+                var table = new ConsoleTable("Address");
+                table.AddRow(request.Item1 as string);
+                _console.WriteLine($"\n{table}");
+            }
         }
     }
 }
