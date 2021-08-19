@@ -7,12 +7,14 @@
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
 
 using System;
-namespace CLi.ApplicationLayer.Commands
+
+namespace Cli.Commands.Common
 {
-    public interface ICommand
+    internal class CommandDescriptorAttribute : Attribute
     {
-        string Name { get; set; }
-        string Description { get; set; }
-        void Execute();
+        public string Name { get; }
+        public string Description { get; }
+
+        public CommandDescriptorAttribute(string name, string description = "") => (Name, Description) = (name, description);
     }
 }

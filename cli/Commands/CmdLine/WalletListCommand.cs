@@ -16,17 +16,17 @@ using McMaster.Extensions.CommandLineUtils;
 
 using BAMWallet.HD;
 
-namespace CLi.ApplicationLayer.Commands.Wallet
+namespace Cli.Commands.CmdLine
 {
     [CommandDescriptor("list", "Available wallets")]
     class WalletListCommand : Command
     {
-        private readonly IWalletService _walletService;
+        private readonly ICommandReceiver _walletService;
 
         public WalletListCommand(IServiceProvider serviceProvider)
             : base(typeof(WalletListCommand), serviceProvider)
         {
-            _walletService = serviceProvider.GetService<IWalletService>();
+            _walletService = serviceProvider.GetService<ICommandReceiver>();
         }
 
         public override void Execute()

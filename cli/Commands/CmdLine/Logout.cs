@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 using CLi.ApplicationLayer.Events;
 
-namespace CLi.ApplicationLayer.Commands.Wallet
+namespace Cli.Commands.CmdLine
 {
     [CommandDescriptor("logout", "Logs out and locks wallet.")]
     class Logout : Command

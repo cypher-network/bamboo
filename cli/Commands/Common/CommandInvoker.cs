@@ -8,6 +8,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,14 +16,14 @@ using McMaster.Extensions.CommandLineUtils;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using CLi.Helper;
-using CLi.ApplicationLayer.Commands.Wallet;
-using CLi.ApplicationLayer.Commands.Vault;
+using Cli.Commands.CmdLine;
 using FuzzySharp;
 using BAMWallet.HD;
+using Cli;
 
-namespace CLi.ApplicationLayer.Commands
+namespace Cli.Commands.Common
 {
-    public class CommandService : HostedService, ICommandService
+    public class CommandInvoker : HostedService, ICommandService
     {
         enum State
         {
@@ -32,18 +33,19 @@ namespace CLi.ApplicationLayer.Commands
         private readonly IConsole _console;
         private readonly ILogger _logger;
         private readonly IServiceProvider _serviceProvider;
-        private readonly IDictionary<string, ICommand> _commands;
+        private readonly IDictionary<string, Command> _commands;
+        private readonly BlockingCollection<Command> _commandQueue = new BlockingCollection<Command>();
         private readonly SyncCommand _syncCommand;
         private bool _hasExited;
         private Thread _t;
         private State _commandServiceState;
 
-        public CommandService(IConsole cnsl, IServiceProvider provider, ILogger<CommandService> lgr, IWalletService walletService)
+        public CommandInvoker(IConsole cnsl, IServiceProvider provider, ILogger<CommandInvoker> lgr, ICommandReceiver walletService)
         {
             _serviceProvider = provider;
             _console = cnsl;
             _logger = lgr;
-            _commands = new Dictionary<string, ICommand>();
+            _commands = new Dictionary<string, Command>();
             _console.CancelKeyPress += Console_CancelKeyPress;
             _commandServiceState = State.LoggedOut;
             _hasExited = false;
@@ -112,31 +114,14 @@ namespace CLi.ApplicationLayer.Commands
             await ExitCleanly();
         }
 
-        public void RegisterCommand(ICommand command)
+        public void RegisterCommand(Command command)
         {
             _commands.Add(command.Name, command);
         }
 
-        private ICommand GetCommand(string arg)
-        {
-            if (_commands.ContainsKey(arg))
-            {
-                return _commands[arg];
-            }
-            return null;
-        }
-
         public void Execute(string arg)
         {
-            var command = GetCommand(arg);
-
-            if (command == null)
-            {
-                PrintHelp();
-                return;
-            }
-
-            command.Execute();
+            _commandQueue.Add(_commands[arg]);
         }
 
         private void PrintHelp()
@@ -200,12 +185,34 @@ namespace CLi.ApplicationLayer.Commands
                     Logger.LogException(_console, _logger, e);
                 }
             }
+            await Task.Run(() =>
+            {
+                while (!_commandQueue.IsCompleted)
+                {
+
+                    Command cmd = null;
+                    try
+                    {
+                        cmd = _commandQueue.Take();
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        //thrown when queue is completed
+                    }
+
+                    if (cmd != null)
+                    {
+                        cmd.Execute();
+                    }
+                }
+            });
 
             await ExitCleanly();
         }
 
         private async Task ExitCleanly()
         {
+            _commandQueue.CompleteAdding();
             _hasExited = true;
 
             _console.WriteLine("Exiting...");

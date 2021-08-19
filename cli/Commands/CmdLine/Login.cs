@@ -10,7 +10,9 @@ using System;
 using McMaster.Extensions.CommandLineUtils;
 using BAMWallet.HD;
 using LiteDB;
-namespace CLi.ApplicationLayer.Commands.Wallet
+using Cli.Commands.Common;
+
+namespace Cli.Commands.CmdLine
 {
     [CommandDescriptor("login", "Unlocks wallet and enables wallet commands.")]
     class Login : Command

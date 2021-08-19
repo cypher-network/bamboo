@@ -8,17 +8,17 @@ using System.Threading.Tasks;
 using BAMWallet.HD;
 using CLi.ApplicationLayer.Events;
 
-namespace CLi.ApplicationLayer.Commands.Wallet
+namespace Cli.Commands.CmdLine
 {
     [CommandDescriptor("sync", "syncs wallet with chain")]
     public class SyncCommand : Command
     {
-        private IWalletService _walletService;
+        private ICommandReceiver _walletService;
         private readonly Timer _syncTimer;
         public static bool IsSynchronizing { get; private set; }
         public static EventHandler<SyncStateChanged> OnSyncStateChanged;
 
-        public SyncCommand(IWalletService walletService, IServiceProvider serviceProvider)
+        public SyncCommand(ICommandReceiver walletService, IServiceProvider serviceProvider)
             : base(typeof(SyncCommand), serviceProvider)
         {
             _syncTimer = new Timer(TimeSpan.FromMinutes(_timingSettings.SyncIntervalMins).TotalMilliseconds);

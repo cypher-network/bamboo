@@ -16,18 +16,16 @@ using BAMWallet.Model;
 using ConsoleTables;
 using Kurukuru;
 using McMaster.Extensions.CommandLineUtils;
+using Cli.Commands.Common;
 
-namespace CLi.ApplicationLayer.Commands.Wallet
+namespace Cli.Commands.CmdLine
 {
     [CommandDescriptor("history", "Show my transactions")]
     public class WalletTxHistoryCommand : Command
     {
-        private readonly IWalletService _walletService;
-
         public WalletTxHistoryCommand(IServiceProvider serviceProvider)
             : base(typeof(WalletTxHistoryCommand), serviceProvider)
         {
-            _walletService = serviceProvider.GetService<IWalletService>();
         }
 
         public override void Execute()
@@ -44,7 +42,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
                     if (balanceResult.Item1 is null)
                     {
                         _console.ForegroundColor = ConsoleColor.Red;
-                        spinner.Fail($"balanceResult.Item2");
+                        spinner.Fail($"{balanceResult.Item2}");
                         _console.ForegroundColor = ConsoleColor.White;
                         return Task.CompletedTask;
                     }

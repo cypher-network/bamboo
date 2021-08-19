@@ -13,16 +13,16 @@ using BAMWallet.Helper;
 using ConsoleTables;
 using McMaster.Extensions.CommandLineUtils;
 
-namespace CLi.ApplicationLayer.Commands.Wallet
+namespace Cli.Commands.CmdLine
 {
     [CommandDescriptor("address", "Find out your address")]
     class WalletAddressCommand : Command
     {
-        private readonly IWalletService _walletService;
+        private readonly ICommandReceiver _walletService;
         public WalletAddressCommand(IServiceProvider serviceProvider)
             : base(typeof(WalletAddressCommand), serviceProvider)
         {
-            _walletService = serviceProvider.GetService<IWalletService>();
+            _walletService = serviceProvider.GetService<ICommandReceiver>();
         }
 
         public override void Execute()

@@ -16,18 +16,18 @@ using BAMWallet.Model;
 using Kurukuru;
 using McMaster.Extensions.CommandLineUtils;
 
-namespace CLi.ApplicationLayer.Commands.Wallet
+namespace Cli.Commands.CmdLine
 {
     [CommandDescriptor("balance", "Get your wallet balance")]
     public class WalletBalanceCommand : Command
     {
-        private readonly IWalletService _walletService;
+        private readonly ICommandReceiver _walletService;
         private Spinner _spinner;
 
         public WalletBalanceCommand(IServiceProvider serviceProvider)
             : base(typeof(WalletBalanceCommand), serviceProvider)
         {
-            _walletService = serviceProvider.GetService<IWalletService>();
+            _walletService = serviceProvider.GetService<ICommandReceiver>();
         }
 
         public override void Execute()

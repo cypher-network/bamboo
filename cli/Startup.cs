@@ -3,7 +3,7 @@ using BAMWallet.HD;
 using BAMWallet.Model;
 using BAMWallet.Rpc;
 using BAMWallet.Services;
-using CLi.ApplicationLayer.Commands;
+using Cli.Commands.Common;
 using McMaster.Extensions.CommandLineUtils;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -18,7 +18,7 @@ namespace Cli
     public class Startup
     {
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="env"></param>
         /// <param name="configuration"></param>
@@ -28,13 +28,13 @@ namespace Cli
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         public IConfiguration Configuration { get; private set; }
 
         /// <summary>
         ///
-        /// 
+        ///
         /// </summary>
         /// <param name="services"></param>
         public void ConfigureServices(IServiceCollection services)
@@ -56,14 +56,14 @@ namespace Cli
 
             services
                 .AddSingleton<ISafeguardDownloadingFlagProvider, SafeguardDownloadingFlagProvider>()
-                .AddHostedService<SafeguardService>().AddSingleton<IWalletService, WalletService>()
-                .AddSingleton<ICommandService, CommandService>()
-                .AddSingleton<IHostedService, CommandService>(sp => sp.GetService<ICommandService>() as CommandService)
+                .AddHostedService<SafeguardService>().AddSingleton<ICommandReceiver, CommandReceiver>()
+                .AddSingleton<ICommandService, CommandInvoker>()
+                .AddSingleton<IHostedService, CommandInvoker>(sp => sp.GetService<ICommandService>() as CommandInvoker)
                 .Add(new ServiceDescriptor(typeof(IConsole), PhysicalConsole.Singleton));
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="app"></param>
         /// <param name="lifetime"></param>

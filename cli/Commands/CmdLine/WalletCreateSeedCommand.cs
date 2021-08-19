@@ -15,17 +15,17 @@ using NBitcoin;
 
 using BAMWallet.HD;
 
-namespace CLi.ApplicationLayer.Commands.Wallet
+namespace Cli.Commands.CmdLine
 {
     [CommandDescriptor("seed", "Creates a new seed and passphrase")]
     class WalletCreateMnemonicCommand : Command
     {
-        private readonly IWalletService _walletService;
+        private readonly ICommandReceiver _walletService;
 
         public WalletCreateMnemonicCommand(IServiceProvider serviceProvider)
             : base(typeof(WalletCreateMnemonicCommand), serviceProvider)
         {
-            _walletService = serviceProvider.GetService<IWalletService>();
+            _walletService = serviceProvider.GetService<ICommandReceiver>();
         }
 
         public override void Execute()

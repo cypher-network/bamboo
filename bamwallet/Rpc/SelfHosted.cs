@@ -1,4 +1,4 @@
-﻿// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0. 
+﻿// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0.
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
 using System;
@@ -24,7 +24,7 @@ namespace BAMWallet.Rpc
         private class Startup
         {
             /// <summary>
-            /// 
+            ///
             /// </summary>
             /// <param name="configuration"></param>
             public Startup(IConfiguration configuration)
@@ -33,12 +33,12 @@ namespace BAMWallet.Rpc
             }
 
             /// <summary>
-            /// 
+            ///
             /// </summary>
             public IConfiguration Configuration { get; }
 
             /// <summary>
-            /// 
+            ///
             /// </summary>
             /// <param name="services"></param>
             public void ConfigureServices(IServiceCollection services)
@@ -79,7 +79,7 @@ namespace BAMWallet.Rpc
                     .Configure<NetworkSettings>(options => Configuration.GetSection("NetworkSettings").Bind(options))
                     .AddSingleton<ISafeguardDownloadingFlagProvider, SafeguardDownloadingFlagProvider>()
                     .AddHostedService<SafeguardService>()
-                    .AddSingleton<IWalletService, WalletService>();
+                    .AddSingleton<ICommandReceiver, CommandReceiver>();
 
                 services.AddLogging(loggingBuilder =>
                 {
@@ -88,7 +88,7 @@ namespace BAMWallet.Rpc
             }
 
             /// <summary>
-            /// 
+            ///
             /// </summary>
             /// <param name="app"></param>
             public void Configure(IApplicationBuilder app)
@@ -118,7 +118,7 @@ namespace BAMWallet.Rpc
         private readonly NetworkSettings _networkSettings;
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="networkSettings"></param>
         public SelfHosted(IOptions<NetworkSettings> networkSettings)
@@ -127,7 +127,7 @@ namespace BAMWallet.Rpc
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="stoppingToken"></param>
         /// <returns></returns>
@@ -140,7 +140,7 @@ namespace BAMWallet.Rpc
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <returns></returns>
         private IHostBuilder CreateWebHostBuilder() =>

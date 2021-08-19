@@ -7,17 +7,17 @@ using Kurukuru;
 using BAMWallet.HD;
 using BAMWallet.Helper;
 
-namespace CLi.ApplicationLayer.Commands.Wallet
+namespace Cli.Commands.CmdLine
 {
     [CommandDescriptor("recover", "Recover wallet transactions")]
     public class WalletRecoverTransactionsCommand : Command
     {
-        private readonly IWalletService _walletService;
+        private readonly ICommandReceiver _walletService;
 
         public WalletRecoverTransactionsCommand(IServiceProvider serviceProvider)
             : base(typeof(WalletRecoverTransactionsCommand), serviceProvider)
         {
-            _walletService = serviceProvider.GetService<IWalletService>();
+            _walletService = serviceProvider.GetService<ICommandReceiver>();
         }
 
         public override void Execute()

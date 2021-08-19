@@ -18,7 +18,7 @@ namespace BAMWallet.Rpc.Controllers
     [ApiController]
     public class WalletController
     {
-        private readonly IWalletService _walletService;
+        private readonly ICommandReceiver _walletService;
 
         private IActionResult GetHistory(Credentials credentials, bool last = false)
         {
@@ -33,7 +33,7 @@ namespace BAMWallet.Rpc.Controllers
             return last ? new OkObjectResult($"{balance.Last()}") : new OkObjectResult(balance);
         }
 
-        public WalletController(IWalletService walletService)
+        public WalletController(ICommandReceiver walletService)
         {
             _walletService = walletService;
         }

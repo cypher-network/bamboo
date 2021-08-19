@@ -7,14 +7,11 @@
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
 
 using Microsoft.Extensions.Hosting;
-using System.Threading.Tasks;
 
-namespace CLi.ApplicationLayer.Commands
+namespace Cli.Commands.Common
 {
     public interface ICommandService : IHostedService
     {
-        void RegisterCommand(ICommand command);
         void Execute(string arg);
-        Task Exit();
     }
 }

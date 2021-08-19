@@ -17,7 +17,7 @@ using Constants = BAMWallet.HD.Constant;
 using CLi.ApplicationLayer.Events;
 using CLi.Helper;
 
-namespace CLi.ApplicationLayer.Commands.Wallet
+namespace Cli.Commands.CmdLine
 {
     [CommandDescriptor("remove", "Removes a wallet and logs out if that wallet was used to login.")]
     class WalletRemoveCommand : Command

@@ -15,17 +15,17 @@ using McMaster.Extensions.CommandLineUtils;
 using BAMWallet.HD;
 using BAMWallet.Helper;
 
-namespace CLi.ApplicationLayer.Commands.Wallet
+namespace Cli.Commands.CmdLine
 {
     [CommandDescriptor("restore", "Restore wallet from seed")]
     class WalletRestoreCommand : Command
     {
-        private readonly IWalletService _walletService;
+        private readonly ICommandReceiver _walletService;
 
         public WalletRestoreCommand(IServiceProvider serviceProvider)
             : base(typeof(WalletRestoreCommand), serviceProvider)
         {
-            _walletService = serviceProvider.GetService<IWalletService>();
+            _walletService = serviceProvider.GetService<ICommandReceiver>();
         }
 
         public override void Execute()

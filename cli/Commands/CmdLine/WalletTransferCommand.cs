@@ -18,12 +18,12 @@ using BAMWallet.Model;
 using Kurukuru;
 using McMaster.Extensions.CommandLineUtils;
 
-namespace CLi.ApplicationLayer.Commands.Wallet
+namespace Cli.Commands.CmdLine
 {
     [CommandDescriptor("spend", "Spend some coins")]
     public class WalletTransferCommand : Command
     {
-        private readonly IWalletService _walletService;
+        private readonly ICommandReceiver _walletService;
         private readonly ILogger _logger;
 
         private Spinner _spinner;
@@ -31,7 +31,7 @@ namespace CLi.ApplicationLayer.Commands.Wallet
         public WalletTransferCommand(IServiceProvider serviceProvider)
             : base(typeof(WalletTransferCommand), serviceProvider)
         {
-            _walletService = serviceProvider.GetService<IWalletService>();
+            _walletService = serviceProvider.GetService<ICommandReceiver>();
             _logger = serviceProvider.GetService<ILogger<WalletTransferCommand>>();
         }
 

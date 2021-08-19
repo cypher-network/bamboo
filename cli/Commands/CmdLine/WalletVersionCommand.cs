@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 using McMaster.Extensions.CommandLineUtils;
 
-namespace CLi.ApplicationLayer.Commands.Wallet
+namespace Cli.Commands.CmdLine
 {
     [CommandDescriptor("version", "Running version")]
     public class WalletVersionCommand : Command

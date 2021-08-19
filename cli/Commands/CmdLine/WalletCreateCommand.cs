@@ -16,17 +16,17 @@ using BAMWallet.HD;
 using BAMWallet.Helper;
 using BAMWallet.Extensions;
 
-namespace CLi.ApplicationLayer.Commands.Wallet
+namespace Cli.Commands.CmdLine
 {
     [CommandDescriptor("create", "Create new wallet")]
     class WalletCreateCommand : Command
     {
-        private readonly IWalletService _walletService;
+        private readonly ICommandReceiver _walletService;
 
         public WalletCreateCommand(IServiceProvider serviceProvider)
             : base(typeof(WalletCreateCommand), serviceProvider)
         {
-            _walletService = serviceProvider.GetService<IWalletService>();
+            _walletService = serviceProvider.GetService<ICommandReceiver>();
         }
 
         public override void Execute()

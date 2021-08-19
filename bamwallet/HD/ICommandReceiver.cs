@@ -8,7 +8,7 @@ using System;
 
 namespace BAMWallet.HD
 {
-    public interface IWalletService
+    public interface ICommandReceiver
     {
         bool IsCommandExecutionInProgress { get; }
         string CreateWallet(SecureString seed, SecureString passphrase);

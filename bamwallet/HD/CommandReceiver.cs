@@ -29,7 +29,7 @@ using Constants = BAMWallet.HD.Constant;
 
 namespace BAMWallet.HD
 {
-    public class WalletService : IWalletService
+    public class CommandReceiver : ICommandReceiver
     {
         #region: CLASS_INTERNALS
         private const string HdPath = Constants.HD_PATH;
@@ -827,12 +827,12 @@ namespace BAMWallet.HD
         #region: PUBLIC_API
 
         #region: NON_DB_RELATED_FUNCTIONS
-        public WalletService(ISafeguardDownloadingFlagProvider safeguardDownloadingFlagProvider, IOptions<NetworkSettings> networkSettings, ILogger logger)
+        public CommandReceiver(ISafeguardDownloadingFlagProvider safeguardDownloadingFlagProvider, IOptions<NetworkSettings> networkSettings, ILogger logger)
         {
             _safeguardDownloadingFlagProvider = safeguardDownloadingFlagProvider;
             _networkSettings = networkSettings.Value;
             _network = _networkSettings.Environment == Constant.Mainnet ? NBitcoin.Network.Main : NBitcoin.Network.TestNet;
-            _logger = logger.ForContext("SourceContext", nameof(WalletService));
+            _logger = logger.ForContext("SourceContext", nameof(CommandReceiver));
             _client = new Client(networkSettings.Value, _logger);
             _commandExecutionCounter = 0;
         }
@@ -901,7 +901,7 @@ namespace BAMWallet.HD
         /// <returns></returns>
         public string CreateWallet(SecureString seed, SecureString passphrase)
         {
-            using var CommandExecutionGuard = new RAIIGuard(WalletService.IncrementCommandExecutionCount, WalletService.DecrementCommandExecutionCount);
+            using var CommandExecutionGuard = new RAIIGuard(CommandReceiver.IncrementCommandExecutionCount, CommandReceiver.DecrementCommandExecutionCount);
             Guard.Argument(seed, nameof(seed)).NotNull();
             Guard.Argument(passphrase, nameof(passphrase)).NotNull();
 
@@ -943,7 +943,7 @@ namespace BAMWallet.HD
         /// <returns></returns>
         public Tuple<object, string> Address(Session session)
         {
-            using var CommandExecutionGuard = new RAIIGuard(WalletService.IncrementCommandExecutionCount, WalletService.DecrementCommandExecutionCount);
+            using var CommandExecutionGuard = new RAIIGuard(CommandReceiver.IncrementCommandExecutionCount, CommandReceiver.DecrementCommandExecutionCount);
             string address = null;
             try
             {
@@ -965,7 +965,7 @@ namespace BAMWallet.HD
         /// <returns></returns>
         public Tuple<object, string> CreateTransaction(Session session, ref WalletTransaction transaction)
         {
-            using var CommandExecutionGuard = new RAIIGuard(WalletService.IncrementCommandExecutionCount, WalletService.DecrementCommandExecutionCount);
+            using var CommandExecutionGuard = new RAIIGuard(CommandReceiver.IncrementCommandExecutionCount, CommandReceiver.DecrementCommandExecutionCount);
             Guard.Argument(session.SessionId, nameof(session.SessionId)).NotDefault();
 
             while (_safeguardDownloadingFlagProvider.IsDownloading)
@@ -1181,7 +1181,7 @@ namespace BAMWallet.HD
         /// <returns></returns>
         public Tuple<object, string> ReceivePayment(Session session, string paymentId)
         {
-            using var CommandExecutionGuard = new RAIIGuard(WalletService.IncrementCommandExecutionCount, WalletService.DecrementCommandExecutionCount);
+            using var CommandExecutionGuard = new RAIIGuard(CommandReceiver.IncrementCommandExecutionCount, CommandReceiver.DecrementCommandExecutionCount);
             Guard.Argument(paymentId, nameof(paymentId)).NotNull().NotEmpty().NotWhiteSpace();
 
             try
@@ -1257,7 +1257,7 @@ namespace BAMWallet.HD
         /// <returns></returns>
         public Tuple<object, string> Send(Session session, ref WalletTransaction tx)
         {
-            using var CommandExecutionGuard = new RAIIGuard(WalletService.IncrementCommandExecutionCount, WalletService.DecrementCommandExecutionCount);
+            using var CommandExecutionGuard = new RAIIGuard(CommandReceiver.IncrementCommandExecutionCount, CommandReceiver.DecrementCommandExecutionCount);
             try
             {
                 var baseAddress = _client.GetBaseAddress();
@@ -1308,7 +1308,7 @@ namespace BAMWallet.HD
         /// <returns></returns>
         public Tuple<object, string> RecoverTransactions(Session session, int start)
         {
-            using var CommandExecutionGuard = new RAIIGuard(WalletService.IncrementCommandExecutionCount, WalletService.DecrementCommandExecutionCount);
+            using var CommandExecutionGuard = new RAIIGuard(CommandReceiver.IncrementCommandExecutionCount, CommandReceiver.DecrementCommandExecutionCount);
             Guard.Argument(start, nameof(start)).NotNegative();
             try
             {
