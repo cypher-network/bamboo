@@ -98,7 +98,7 @@ namespace Cli.Commands.Common
                 _loginState = State.LoggedIn;
                 RegisterLoggedInCommands();
             }
-            if(_loginState == State.LoggedIn)
+            if (_loginState == State.LoggedIn)
             {
                 ReinitializeLogoutTimer();
             }
@@ -253,21 +253,21 @@ namespace Cli.Commands.Common
 
                     if (cmd != null)
                     {
-                        if(cmd.RefreshLogin)
+                        if (cmd.RefreshLogin)
                         {
                             OnLogin();
                         }
                         using var freezeTimer = new RAIIGuard(FreezeTimer, UnfreezeTimer);
                         cmd.Execute(_activeSession);
-                        if(cmd is LoginCommand)
+                        if (cmd is LoginCommand)
                         {
                             _activeSession = (cmd as LoginCommand).ActiveSession;
                         }
-                        if((cmd is LogoutCommand) || ((cmd is WalletRemoveCommand) && (cmd as WalletRemoveCommand).Logout))
+                        if ((cmd is LogoutCommand) || ((cmd is WalletRemoveCommand) && (cmd as WalletRemoveCommand).Logout))
                         {
                             OnLogout();
                         }
-                        if(cmd is ExitCommand)
+                        if (cmd is ExitCommand)
                         {
                             StopCommandProcessing();
                         }

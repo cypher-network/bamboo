@@ -33,7 +33,7 @@ namespace Cli.Commands.CmdLine
 
         public override void Execute(Session activeSession = null)
         {
-            if(activeSession != null)
+            if (activeSession != null)
             {
                 var address = Prompt.GetString("Address:", null, ConsoleColor.Red);
                 var amount = Prompt.GetString("Amount:", null, ConsoleColor.Red);

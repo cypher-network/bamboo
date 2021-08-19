@@ -30,7 +30,7 @@ namespace Cli.Commands.CmdLine
         {
             try
             {
-                if(activeSession != null)
+                if (activeSession != null)
                 {
                     Spinner.StartAsync("Looking up history ...", spinner =>
                     {

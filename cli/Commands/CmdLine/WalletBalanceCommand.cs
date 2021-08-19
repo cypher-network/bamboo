@@ -28,7 +28,7 @@ namespace Cli.Commands.CmdLine
 
         public override void Execute(Session activeSession = null)
         {
-            if(activeSession != null)
+            if (activeSession != null)
             {
                 Spinner.StartAsync("Checking balance ...", spinner =>
                 {

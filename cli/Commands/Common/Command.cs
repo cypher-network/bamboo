@@ -22,8 +22,8 @@ namespace Cli.Commands.Common
 
         protected Command(Type commandType, IServiceProvider serviceProvider, bool refreshLogin = false)
         {
-             Name = commandType.GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name);
-             Description = commandType.GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description);
+            Name = commandType.GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name);
+            Description = commandType.GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description);
             _walletService = serviceProvider.GetService<ICommandReceiver>();
             _receiver = serviceProvider.GetService<ICommandService>();
             _console = serviceProvider.GetService<IConsole>();

@@ -33,7 +33,7 @@ namespace Cli.Commands.CmdLine
 
         public override void Execute(Session activeSession = null)
         {
-            if(activeSession != null)
+            if (activeSession != null)
             {
                 var paymentId = Prompt.GetString("PAYMENTID:", null, ConsoleColor.Green);
                 if (!string.IsNullOrEmpty(paymentId))

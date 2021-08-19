@@ -24,7 +24,7 @@ namespace Cli.Commands.CmdLine
 
         public override void Execute(Session activeSession = null)
         {
-            if(activeSession != null)
+            if (activeSession != null)
             {
                 var request = _walletService.Address(activeSession);
                 if (request.Item1 is null)
