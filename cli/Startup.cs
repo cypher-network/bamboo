@@ -81,7 +81,10 @@ namespace Cli
                     .AddSingleton(Log.Logger)
                     .AddSingleton<ISafeguardDownloadingFlagProvider, SafeguardDownloadingFlagProvider>()
                     .AddHostedService<SafeguardService>()
-                    .AddSingleton<ICommandReceiver, CommandReceiver>();
+                    .AddSingleton<ICommandReceiver, CommandReceiver>()
+                    .AddSingleton<ICommandService, CommandInvoker>()
+                    .AddSingleton<IHostedService, CommandInvoker>(sp => sp.GetService<ICommandService>() as CommandInvoker)
+                    .Add(new ServiceDescriptor(typeof(IConsole), PhysicalConsole.Singleton));
 
                 services.AddLogging(loggingBuilder =>
                 {
@@ -90,13 +93,14 @@ namespace Cli
             }
             else
             {
+                services.Add(new ServiceDescriptor(typeof(IConsole), PhysicalConsole.Singleton));
                 services
                     .AddSingleton<ISafeguardDownloadingFlagProvider, SafeguardDownloadingFlagProvider>()
                     .AddHostedService<SafeguardService>()
                     .AddSingleton<ICommandReceiver, CommandReceiver>()
                     .AddSingleton<ICommandService, CommandInvoker>()
-                    .AddSingleton<IHostedService, CommandInvoker>(sp => sp.GetService<ICommandService>() as CommandInvoker)
-                    .Add(new ServiceDescriptor(typeof(IConsole), PhysicalConsole.Singleton));
+                    .AddSingleton<IHostedService, CommandInvoker>(sp => sp.GetService<ICommandService>() as CommandInvoker);
+
             }
         }
 

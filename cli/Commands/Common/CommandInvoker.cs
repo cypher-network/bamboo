@@ -9,21 +9,22 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using BAMWallet.HD;
-using BAMWallet.Model;
 using BAMWallet.Helper;
+using BAMWallet.Model;
 using Cli.Commands.CmdLine;
 using CLi.Helper;
 using FuzzySharp;
 using McMaster.Extensions.CommandLineUtils;
+using Microsoft.Extensions.Hosting;
 namespace Cli.Commands.Common
 {
-    public class CommandInvoker : HostedService, ICommandService
+    public class CommandInvoker : IHostedService, ICommandService
     {
         enum State
         {
@@ -41,19 +42,30 @@ namespace Cli.Commands.Common
         private System.Timers.Timer _timeout = null;
         private readonly System.Timers.Timer _syncTimer = null;
         Session _activeSession = null;
+        AutoResetEvent _cmdFinishedEvent = new AutoResetEvent(true);
+        CancellationTokenSource _cmdProcessorCancellationSource = new CancellationTokenSource();
 
         private void OnSyncInternal(object source, System.Timers.ElapsedEventArgs e)
         {
-            _commandQueue.Add(new SyncCommand(_serviceProvider));
+            if (_loginState == State.LoggedIn)
+            {
+                _commandQueue.Add(new SyncCommand(_serviceProvider));
+            }
         }
 
         private void FreezeTimer()
         {
-            _timeout.Stop();
+            if (_loginState == State.LoggedIn)
+            {
+                _timeout.Stop();
+            }
         }
         private void UnfreezeTimer()
         {
-            _timeout.Start();
+            if (_loginState == State.LoggedIn)
+            {
+                _timeout.Start();
+            }
         }
 
         private void OnTimeout(object source, System.Timers.ElapsedEventArgs e)
@@ -111,7 +123,7 @@ namespace Cli.Commands.Common
             _commands = new Dictionary<string, Command>();
             _console.CancelKeyPress += Console_CancelKeyPress;
             _hasExited = false;
-            RegisterLoggedOutCommands();
+            _timingSettings = provider.GetService<IOptions<TimingSettings>>()?.Value ?? new();
             _syncTimer = new System.Timers.Timer(TimeSpan.FromMinutes(_timingSettings.SyncIntervalMins).TotalMilliseconds);
             _syncTimer.Elapsed += OnSyncInternal;
             _syncTimer.AutoReset = true;
@@ -163,6 +175,10 @@ namespace Cli.Commands.Common
         public void Execute(string arg)
         {
             _commandQueue.Add(_commands[arg]);
+            if(arg.Equals("exit", StringComparison.InvariantCultureIgnoreCase))
+            {
+                StopCommandProcessing();
+            }
         }
 
         private void PrintHelp()
@@ -176,61 +192,68 @@ namespace Cli.Commands.Common
             }
         }
 
-        public static void ClearCurrentConsoleLine()
-        {
-            int currentLineCursor = Console.CursorTop;
-            Console.SetCursorPosition(0, Console.CursorTop);
-            Console.Write(new string(' ', Console.WindowWidth));
-            Console.SetCursorPosition(0, currentLineCursor);
-        }
-
         private async Task ProcessCmdLineInput()
         {
-            await Task.Run(() =>
+            try
             {
-                while (!_hasExited)
+                await Task.Run(async () =>
                 {
-                    var args = Prompt.GetString("bamboo$", promptColor: ConsoleColor.Cyan)?.TrimEnd()?.Split(' ');
+                    await Task.Delay(500);
+                    while (!_hasExited)
+                    {
+                        _cmdFinishedEvent.WaitOne();
+                        var args = Prompt.GetString("bamboo$", promptColor: ConsoleColor.Cyan)?.TrimEnd()?.Split(' ');
 
-                    if ((args == null) || (args.Length == 1 && string.IsNullOrEmpty(args[0])) || (args.Length > 1))
-                    {
-                        continue;
-                    }
-                    if (args[0] == "--help" || args[0] == "?" || args[0] == "/?" || args[0] == "help")
-                    {
-                        PrintHelp();
-                        continue;
-                    }
-                    if (!_commands.ContainsKey(args[0]))
-                    {
-                        var bestMatch = Process.ExtractOne(args[0], _commands.Keys, cutoff: 60);
-                        if (null != bestMatch)
+                        if ((args == null) || (args.Length == 1 && string.IsNullOrEmpty(args[0])) || (args.Length > 1))
                         {
-                            _console.WriteLine("Command: {0} not found. Did you mean {1}?", args[0], bestMatch.Value);
+                            _cmdFinishedEvent.Set();
+                            continue;
+                        }
+                        if (args[0] == "--help" || args[0] == "?" || args[0] == "/?" || args[0] == "help")
+                        {
+                            PrintHelp();
+                            _cmdFinishedEvent.Set();
+                            continue;
+                        }
+                        if (!_commands.ContainsKey(args[0]))
+                        {
+                            var bestMatch = Process.ExtractOne(args[0], _commands.Keys, cutoff: 60);
+                            if (null != bestMatch)
+                            {
+                                _console.WriteLine("Command: {0} not found. Did you mean {1}?", args[0], bestMatch.Value);
+                            }
+                            else
+                            {
+                                _console.WriteLine("Command: {0} not found. Here is the list of available commands:", args[0]);
+                                PrintHelp();
+                            }
+                            _cmdFinishedEvent.Set();
+                            continue;
                         }
                         else
                         {
-                            _console.WriteLine("Command: {0} not found. Here is the list of available commands:", args[0]);
-                            PrintHelp();
+                            try
+                            {
+                                Execute(args[0]);
+                            }
+                            catch (Exception e)
+                            {
+                                Logger.LogException(_console, _logger, e);
+                            }
                         }
-                        continue;
                     }
-                    try
-                    {
-                        Execute(args[0]);
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.LogException(_console, _logger, e);
-                    }
-                }
-            });
+                }, _cmdProcessorCancellationSource.Token);
+            }
+            catch(TaskCanceledException)
+            {
+            }
         }
 
         private void StopCommandProcessing()
         {
             _hasExited = true;
             _commandQueue.CompleteAdding();
+            _cmdProcessorCancellationSource.Cancel();
         }
 
         private async Task ProcessCommands()
@@ -239,7 +262,6 @@ namespace Cli.Commands.Common
             {
                 while (!_commandQueue.IsCompleted)
                 {
-
                     Command cmd = null;
                     try
                     {
@@ -258,12 +280,14 @@ namespace Cli.Commands.Common
                         }
                         using var freezeTimer = new RAIIGuard(FreezeTimer, UnfreezeTimer);
                         cmd.Execute(_activeSession);
+                        _cmdFinishedEvent.Set();
                         if (cmd is LoginCommand)
                         {
                             _activeSession = (cmd as LoginCommand).ActiveSession;
                         }
                         if ((cmd is LogoutCommand) || ((cmd is WalletRemoveCommand) && (cmd as WalletRemoveCommand).Logout))
                         {
+                            _activeSession = null;
                             OnLogout();
                         }
                         if (cmd is ExitCommand)
@@ -274,89 +298,35 @@ namespace Cli.Commands.Common
                 }
             });
         }
-
         public async Task InteractiveCliLoop()
         {
-            await StartAllHostedProviders();
-            ClearCurrentConsoleLine();
+            RegisterLoggedOutCommands();
             Task inputProcessor = ProcessCmdLineInput();
             Task cmdProcessor = ProcessCommands();
 
             await Task.WhenAll(inputProcessor, cmdProcessor);
-            await ExitCleanly();
+            ExitCleanly();
         }
-
-        private async Task ExitCleanly()
+        private void ExitCleanly()
         {
             _console.WriteLine("Exiting...");
-            await StopAllHostedProviders();
             Environment.Exit(0);
         }
 
-        private IEnumerable<Type> FindAllHostedServiceTypes()
+        public Task StartAsync(CancellationToken cancellationToken)
         {
-            //  Concrete Service Types
-
-            var type = typeof(HostedService);
-            var concreteServiceTypes = AppDomain.CurrentDomain.GetAssemblies()
-                .SelectMany(s => s.GetTypes())
-                .Where(p => type.IsAssignableFrom(p) && p != GetType() && p != typeof(HostedService));
-
-            //  Find interfaces that implement IHostedService
-            foreach (var concreteServiceType in concreteServiceTypes)
-            {
-                var interfaces = concreteServiceType.GetInterfaces();
-
-                foreach (var inf in interfaces)
-                {
-                    if (inf == typeof(IHostedService))
-                    {
-                        continue;
-                    }
-
-                    var implements = inf.GetInterfaces().Any(x => x == typeof(IHostedService));
-
-                    if (implements)
-                    {
-                        yield return inf;
-                    }
-                }
-            }
-        }
-
-        private async Task StartAllHostedProviders()
-        {
-            var hostedProviders = FindAllHostedServiceTypes();
-
-            foreach (var hostedProvider in hostedProviders)
-            {
-                if (_serviceProvider.GetService(hostedProvider) is IHostedService serviceInstance)
-                {
-                    await serviceInstance.StartAsync(new CancellationToken());
-                }
-            }
-        }
-
-        private async Task StopAllHostedProviders()
-        {
-            var hostedProviders = FindAllHostedServiceTypes();
-
-            foreach (var hostedProvider in hostedProviders)
-            {
-                var serviceInstance = _serviceProvider.GetService(hostedProvider) as IHostedService;
-
-                if (serviceInstance != null)
-                {
-                    await serviceInstance.StopAsync(new CancellationToken());
-                }
-            }
-        }
-
-        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
-        {
-            await Task.Run(async () =>
+            Task.Run(async () =>
             {
                 await InteractiveCliLoop();
+            });
+            return Task.CompletedTask;
+        }
+
+        public async Task StopAsync(CancellationToken cancellationToken)
+        {
+            await Task.Run(() =>
+            {
+                StopCommandProcessing();
             });
         }
     }
