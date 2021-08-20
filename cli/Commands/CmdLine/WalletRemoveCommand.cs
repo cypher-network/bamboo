@@ -16,7 +16,7 @@ using McMaster.Extensions.CommandLineUtils;
 using Constants = BAMWallet.HD.Constant;
 using BAMWallet.HD;
 using Cli.Commands.Common;
-using CLi.Helper;
+using Cli.Helper;
 
 namespace Cli.Commands.CmdLine
 {

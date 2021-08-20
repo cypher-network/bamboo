@@ -22,7 +22,7 @@ namespace Cli.Commands.CmdLine
                 _console.WriteLine("Syncing wallet with chain ...");
                 _console.ForegroundColor = ConsoleColor.Cyan;
                 _console.Write("bamboo$ ");
-                _console.ForegroundColor = ConsoleColor.White;
+                _console.ForegroundColor = ConsoleColor.Gray;
                 _walletService.SyncWallet(activeSession);
             }
         }

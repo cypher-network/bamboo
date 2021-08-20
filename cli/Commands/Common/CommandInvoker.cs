@@ -18,7 +18,7 @@ using BAMWallet.HD;
 using BAMWallet.Helper;
 using BAMWallet.Model;
 using Cli.Commands.CmdLine;
-using CLi.Helper;
+using Cli.Helper;
 using FuzzySharp;
 using McMaster.Extensions.CommandLineUtils;
 using Microsoft.Extensions.Hosting;
@@ -39,8 +39,8 @@ namespace Cli.Commands.Common
         private bool _hasExited;
         private State _loginState = State.LoggedOut;
         protected readonly TimingSettings _timingSettings;
-        private System.Timers.Timer _timeout = null;
-        private readonly System.Timers.Timer _syncTimer = null;
+        private PausableTimer _timeout = null;
+        private readonly PausableTimer _syncTimer = null;
         Session _activeSession = null;
         AutoResetEvent _cmdFinishedEvent = new AutoResetEvent(true);
         CancellationTokenSource _cmdProcessorCancellationSource = new CancellationTokenSource();
@@ -53,30 +53,28 @@ namespace Cli.Commands.Common
             }
         }
 
-        private void FreezeTimer()
+        private void FreezeTimers()
         {
+
             if (_loginState == State.LoggedIn)
             {
-                _timeout.Stop();
+                _timeout.Pause();
+                _syncTimer.Pause();
+
             }
         }
-        private void UnfreezeTimer()
+        private void UnfreezeTimers()
         {
             if (_loginState == State.LoggedIn)
             {
-                _timeout.Start();
+                _timeout.Resume();
+                _syncTimer.Resume();
             }
         }
 
         private void OnTimeout(object source, System.Timers.ElapsedEventArgs e)
         {
-            _console.ForegroundColor = ConsoleColor.Red;
-            _console.WriteLine("You have been logged out of the wallet due to inactivity. Please login again to use the wallet.");
-            _console.ForegroundColor = ConsoleColor.Cyan;
-            _console.Write("bamboo$ ");
-            _console.ForegroundColor = ConsoleColor.White;
-            OnLogout();
-            _console.ResetColor();
+            _commandQueue.Add(new LogoutCommand(_serviceProvider, true));
         }
 
         private void ReinitializeLogoutTimer()
@@ -87,7 +85,7 @@ namespace Cli.Commands.Common
                 _timeout.Stop();
             }
 
-            _timeout = new System.Timers.Timer(TimeSpan.FromMinutes(_timingSettings.SessionTimeoutMins).TotalMilliseconds);
+            _timeout = new PausableTimer(TimeSpan.FromMinutes(_timingSettings.SessionTimeoutMins).TotalMilliseconds);
             _timeout.Elapsed += OnTimeout;
             _timeout.Start();
         }
@@ -124,7 +122,7 @@ namespace Cli.Commands.Common
             _console.CancelKeyPress += Console_CancelKeyPress;
             _hasExited = false;
             _timingSettings = provider.GetService<IOptions<TimingSettings>>()?.Value ?? new();
-            _syncTimer = new System.Timers.Timer(TimeSpan.FromMinutes(_timingSettings.SyncIntervalMins).TotalMilliseconds);
+            _syncTimer = new PausableTimer(TimeSpan.FromMinutes(_timingSettings.SyncIntervalMins).TotalMilliseconds);
             _syncTimer.Elapsed += OnSyncInternal;
             _syncTimer.AutoReset = true;
             _syncTimer.Start();
@@ -278,12 +276,20 @@ namespace Cli.Commands.Common
                         {
                             OnLogin();
                         }
-                        using var freezeTimer = new RAIIGuard(FreezeTimer, UnfreezeTimer);
-                        cmd.Execute(_activeSession);
+                        using var freezeTimers = new RAIIGuard(FreezeTimers, UnfreezeTimers);
+                        try
+                        {
+                            cmd.Execute(_activeSession);
+                        }
+                        catch(Exception ex)
+                        {
+                            Logger.LogException(_console, _logger, ex);
+                        }
                         _cmdFinishedEvent.Set();
                         if (cmd is LoginCommand)
                         {
                             _activeSession = (cmd as LoginCommand).ActiveSession;
+                            OnLogin();
                         }
                         if ((cmd is LogoutCommand) || ((cmd is WalletRemoveCommand) && (cmd as WalletRemoveCommand).Logout))
                         {

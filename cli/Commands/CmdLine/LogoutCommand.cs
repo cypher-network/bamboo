@@ -9,18 +9,29 @@
 using System;
 using BAMWallet.HD;
 using Cli.Commands.Common;
+using McMaster.Extensions.CommandLineUtils;
 
 namespace Cli.Commands.CmdLine
 {
     [CommandDescriptor("logout", "Logs out and locks wallet.")]
     class LogoutCommand : Command
     {
-        public LogoutCommand(IServiceProvider serviceProvider)
+        private bool _automaticLogout;
+        public LogoutCommand(IServiceProvider serviceProvider, bool automaticLogout = false)
             : base(typeof(LogoutCommand), serviceProvider)
         {
+            _automaticLogout = automaticLogout;
         }
         public override void Execute(Session activeSession = null)
         {
+            if(_automaticLogout)
+            {
+                _console.ForegroundColor = ConsoleColor.Red;
+                _console.WriteLine("You have been logged out of the wallet due to inactivity. Please login again to use the wallet.");
+                _console.ForegroundColor = ConsoleColor.Cyan;
+                _console.Write("bamboo$ ");
+                _console.ResetColor();
+            }
         }
     }
 }
