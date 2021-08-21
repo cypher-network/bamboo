@@ -187,7 +187,7 @@ namespace BAMWallet.Rpc.Controllers
 
             if (cmd.Result.Item1 is null)
             {
-                return new StatusCodeResult(StatusCodes.Status404NotFound);
+                return new BadRequestObjectResult(cmd.Result.Item2);
             }
             else
             {
@@ -195,93 +195,68 @@ namespace BAMWallet.Rpc.Controllers
             }
         }
 
-        // [HttpPost("receive", Name = "Receive")]
-        // public IActionResult Receive([FromBody] Receive receive)
-        // {
-        //     Guard.Argument(receive.Identifier, nameof(receive.Identifier)).NotNull().NotEmpty().NotWhiteSpace();
-        //     Guard.Argument(receive.Passphrase, nameof(receive.Passphrase)).NotNull().NotEmpty().NotWhiteSpace();
-        //     Guard.Argument(receive.PaymentId, nameof(receive.PaymentId)).NotNull().NotEmpty().NotWhiteSpace();
+        [HttpPost("receive", Name = "Receive")]
+        public IActionResult Receive([FromBody] Receive receive)
+        {
+            Guard.Argument(receive.Identifier, nameof(receive.Identifier)).NotNull().NotEmpty().NotWhiteSpace();
+            Guard.Argument(receive.Passphrase, nameof(receive.Passphrase)).NotNull().NotEmpty().NotWhiteSpace();
+            Guard.Argument(receive.PaymentId, nameof(receive.PaymentId)).NotNull().NotEmpty().NotWhiteSpace();
 
-        //     using var identifier = receive.Identifier.ToSecureString();
-        //     using var pass = receive.Passphrase.ToSecureString();
+            var session = GetSessionFromCredentials(new Credentials { Identifier = receive.Identifier, Passphrase = receive.Passphrase });
+            if (null == session)
+            {
+                return new BadRequestObjectResult("Invalid identifier or password!");
+            }
 
-        //     if (Session.AreCredentialsValid(identifier, pass))
-        //     {
-        //         var session = new Session(identifier, pass);
+            AutoResetEvent cmdFinishedEvent = new AutoResetEvent(false);
+            RpcWalletReceiveCommand cmd = new RpcWalletReceiveCommand(receive.PaymentId, _serviceProvider, ref cmdFinishedEvent, session);
+            SendCommandAndAwaitResponse(cmd);
 
-        //         var receivePaymentResult = _walletService.ReceivePayment(session, receive.PaymentId);
-        //         var balanceSheetResult = _walletService.History(session);
-        //         if (receivePaymentResult.Item1 is null)
-        //         {
-        //             return new BadRequestObjectResult(receivePaymentResult.Item2);
-        //         }
-        //         if (balanceSheetResult.Item1 is null)
-        //         {
-        //             return new BadRequestObjectResult(balanceSheetResult.Item2);
-        //         }
-        //         var lastSheet = (balanceSheetResult.Item1 as List<BalanceSheet>).Last();
-        //         return new OkObjectResult(new
-        //         {
-        //             memo = lastSheet.Memo,
-        //             received = lastSheet.MoneyIn,
-        //             balance = $"{lastSheet.Balance}"
-        //         });
-        //     }
-        //     return new BadRequestObjectResult("Invalid identifier or password!");
-        // }
+            if (cmd.Result.Item1 is null)
+            {
+                return new BadRequestObjectResult(cmd.Result.Item2);
+            }
+            else
+            {
+                return new OkObjectResult(cmd.Result.Item1);
+            }
+        }
 
-        // [HttpPost("spend", Name = "Spend")]
-        // public IActionResult Spend([FromBody] Spend spend)
-        // {
-        //     Guard.Argument(spend.Identifier, nameof(spend.Identifier)).NotNull().NotEmpty().NotWhiteSpace();
-        //     Guard.Argument(spend.Passphrase, nameof(spend.Passphrase)).NotNull().NotEmpty().NotWhiteSpace();
-        //     Guard.Argument(spend.Address, nameof(spend.Address)).NotNull().NotEmpty().NotWhiteSpace();
-        //     Guard.Argument(spend.Amount, nameof(spend.Amount)).Positive();
+        [HttpPost("spend", Name = "Spend")]
+        public IActionResult Spend([FromBody] Spend spend)
+        {
+            Guard.Argument(spend.Identifier, nameof(spend.Identifier)).NotNull().NotEmpty().NotWhiteSpace();
+            Guard.Argument(spend.Passphrase, nameof(spend.Passphrase)).NotNull().NotEmpty().NotWhiteSpace();
+            Guard.Argument(spend.Address, nameof(spend.Address)).NotNull().NotEmpty().NotWhiteSpace();
+            Guard.Argument(spend.Amount, nameof(spend.Amount)).Positive();
 
-        //     using var identifier = spend.Identifier.ToSecureString();
-        //     using var pass = spend.Passphrase.ToSecureString();
+            var session = GetSessionFromCredentials(new Credentials { Identifier = spend.Identifier, Passphrase = spend.Passphrase });
+            if (null == session)
+            {
+                return new BadRequestObjectResult("Invalid identifier or password!");
+            }
+            var senderAddress = session.KeySet.StealthAddress;
 
-        //     if (Session.AreCredentialsValid(identifier, pass))
-        //     {
-        //         var session = new Session(identifier, pass);
-        //         var senderAddress = session.KeySet.StealthAddress;
+            session.SessionType = SessionType.Coin;
+            var transaction = new WalletTransaction
+            {
+                Memo = spend.Memo,
+                Payment = spend.Amount.ConvertToUInt64(),
+                RecipientAddress = spend.Address,
+                WalletType = WalletType.Send,
+                SenderAddress = senderAddress,
+                IsVerified = false
+            };
 
-        //         session.SessionType = SessionType.Coin;
-        //         var transaction = new WalletTransaction
-        //         {
-        //             Memo = spend.Memo,
-        //             Payment = spend.Amount.ConvertToUInt64(),
-        //             RecipientAddress = spend.Address,
-        //             WalletType = WalletType.Send,
-        //             SenderAddress = senderAddress,
-        //             IsVerified = false
-        //         };
+            AutoResetEvent cmdFinishedEvent = new AutoResetEvent(false);
+            RpcSpendCommand cmd = new RpcSpendCommand(ref transaction, _serviceProvider, ref cmdFinishedEvent, session);
+            SendCommandAndAwaitResponse(cmd);
 
-        //         var createPaymentResult = _walletService.CreateTransaction(session, ref transaction);
-        //         if (createPaymentResult.Item1 is null)
-        //         {
-        //             return new BadRequestObjectResult(createPaymentResult.Item2);
-        //         }
-
-        //         var send = _walletService.Send(session, ref transaction);
-        //         if (send.Item1 is null)
-        //         {
-        //             return new BadRequestObjectResult(send.Item2);
-        //         }
-
-        //         var history = _walletService.History(session);
-        //         if (history.Item1 is null)
-        //         {
-        //             return new BadRequestObjectResult(history.Item2);
-        //         }
-
-        //         return new OkObjectResult(new
-        //         {
-        //             balance = $"{(history.Item1 as IOrderedEnumerable<BalanceSheet>).Last().Balance}",
-        //             paymentId = transaction.Transaction.TxnId.ByteToHex()
-        //         });
-        //     }
-        //     return new BadRequestObjectResult("Invalid identifier or password!");
-        // }
+            if (cmd.Result.Item1 is null)
+            {
+                return new BadRequestObjectResult(cmd.Result.Item2);
+            }
+            return new OkObjectResult(cmd.Result.Item1);
+        }
     }
 }
