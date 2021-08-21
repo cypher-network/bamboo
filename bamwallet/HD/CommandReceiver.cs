@@ -128,6 +128,7 @@ namespace BAMWallet.HD
                 transaction.Id = session.SessionId;
                 transaction.Spending = spending.Commitment;
                 transaction.Spent = change == 0;
+                transaction.Reward = session.SessionType == SessionType.Coinstake ? transaction.Reward : 0;
 
             }
             catch (Exception ex)

@@ -18,7 +18,16 @@ namespace BAMWallet.Helper
         public Exception Exception { get; private set; }
 
         /// <summary>
-        ///
+        /// 
+        /// </summary>
+        /// <param name="result"></param>
+        /// <returns></returns>
+        public static TaskResult<T> CreateSuccess(T result)
+        {
+            return new TaskResult<T> { Success = result != null, Result = result };
+        }
+        /// <summary>
+        /// 
         /// </summary>
         /// <param name="successMessage"></param>
         /// <returns></returns>
