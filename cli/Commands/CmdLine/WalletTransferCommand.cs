@@ -67,24 +67,27 @@ namespace Cli.Commands.CmdLine
                             {
                                 spinner.Fail(createTransactionResult.Item2);
                             }
-                            var sendResult = _walletService.Send(session, ref transaction);
-                            if (sendResult.Item1 is null)
-                            {
-                                spinner.Fail(sendResult.Item2);
-                            }
                             else
                             {
-                                var balanceResult = _walletService.History(session);
-                                if (balanceResult.Item1 is null)
+                                var sendResult = _walletService.Send(session, ref transaction);
+                                if (sendResult.Item1 is null)
                                 {
-                                    spinner.Fail(balanceResult.Item2);
+                                    spinner.Fail(sendResult.Item2);
                                 }
                                 else
                                 {
-                                    var message = $"Available Balance: {(balanceResult.Item1 as IOrderedEnumerable<BalanceSheet>).Last().Balance}";
-                                    message += $"\nPaymentID: {transaction.Transaction.TxnId.ByteToHex()}";
-                                    activeSession.SessionId = Guid.NewGuid();
-                                    spinner.Succeed(message);
+                                    var balanceResult = _walletService.History(session);
+                                    if (balanceResult.Item1 is null)
+                                    {
+                                        spinner.Fail(balanceResult.Item2);
+                                    }
+                                    else
+                                    {
+                                        var message = $"Available Balance: {(balanceResult.Item1 as IOrderedEnumerable<BalanceSheet>).Last().Balance}";
+                                        message += $"\nPaymentID: {transaction.Transaction.TxnId.ByteToHex()}";
+                                        activeSession.SessionId = Guid.NewGuid();
+                                        spinner.Succeed(message);
+                                    }
                                 }
                             }
                         }

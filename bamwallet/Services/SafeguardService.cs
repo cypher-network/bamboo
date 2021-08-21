@@ -14,6 +14,7 @@ using BAMWallet.Model;
 using MessagePack;
 using Microsoft.Extensions.Options;
 using Serilog;
+using System.Globalization;
 
 namespace BAMWallet.Services
 {
@@ -40,8 +41,10 @@ namespace BAMWallet.Services
         private static Stream GetSafeguardData()
         {
             var safeGuardPath = SafeguardFilePath();
-            var filePath = Directory.EnumerateFiles(safeGuardPath, "*.messagepack").Last();
-            return File.Open(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
+            var actualSafeGuardFile = Directory.EnumerateFiles(safeGuardPath, "*.messagepack").OrderBy(x =>
+                DateTime.ParseExact(Path.GetFileNameWithoutExtension(x), "dd-MM-yyyy", CultureInfo.InvariantCulture)
+            ).Last();
+            return File.Open(actualSafeGuardFile, FileMode.Open, FileAccess.Read);
         }
 
         /// <summary>
