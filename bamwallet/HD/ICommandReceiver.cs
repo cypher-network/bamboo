@@ -12,7 +12,7 @@ namespace BAMWallet.HD
     {
         bool IsCommandExecutionInProgress { get; }
         string CreateWallet(SecureString seed, SecureString passphrase);
-        string[] CreateSeed(Language language, WordCount wordCount);
+        string[] CreateSeed(WordCount wordCount);
         Tuple<object, string> WalletList();
         Tuple<object, string> History(Session session);
         Tuple<object, string> Address(Session session);

@@ -84,8 +84,7 @@ namespace BAMWallet.Rpc.Controllers
             {
                 return new BadRequestObjectResult(result.Item2);
             }
-            var address = (result.Item1 as string);
-            return new OkObjectResult(address);
+            return new OkObjectResult(result.Item1 as string);
         }
 
         [HttpPost("balance", Name = "Balance")]
@@ -99,60 +98,49 @@ namespace BAMWallet.Rpc.Controllers
             return GetHistory(session, true);
         }
 
-        // [HttpGet("create", Name = "Create")]
-        // public IActionResult Create(string seed = null, string passphrase = null)
-        // {
-        //     string[] seedDefault = _walletService.CreateSeed(Language.English, WordCount.TwentyFour);
-        //     string[] passPhraseDefault = _walletService.CreateSeed(Language.English, WordCount.Twelve);
-        //     string joinMmnemonic = string.Join(" ", seed ?? string.Join(' ', seedDefault));
-        //     string joinPassphrase = string.Join(" ", passphrase ?? string.Join(' ', passPhraseDefault));
-        //     string id = _walletService.CreateWallet(joinMmnemonic.ToSecureString(), joinPassphrase.ToSecureString());
-        //     var session = new Session(id.ToSecureString(), joinPassphrase.ToSecureString());
+        [HttpGet("create", Name = "Create")]
+        public IActionResult Create(string seed = null, string passphrase = null)
+        {
+            AutoResetEvent cmdFinishedEvent = new AutoResetEvent(false);
+            RpcCreateWalletCommand cmd = new RpcCreateWalletCommand(seed, passphrase, _serviceProvider, ref cmdFinishedEvent);
+            SendCommandAndAwaitResponse(cmd);
 
-        //     var addressResult = _walletService.Address(session);
-        //     if (addressResult.Item1 is null)
-        //     {
-        //         return new BadRequestObjectResult(addressResult.Item2 as string);
-        //     }
+            if (cmd.Result.Item1 is null)
+            {
+                return new BadRequestObjectResult(cmd.Result.Item2 as string);
+            }
 
-        //     return new OkObjectResult(new
-        //     {
-        //         path = Util.WalletPath(id),
-        //         identifier = id,
-        //         seed = joinMmnemonic,
-        //         passphrase = joinPassphrase,
-        //         address = addressResult.Item1 as string
-        //     });
-        // }
+            return new OkObjectResult(cmd.Result.Item1);
+        }
 
-        // [HttpGet("seed", Name = "CreateSeed")]
-        // public IActionResult CreateSeed(Language language = Language.English,
-        //     WordCount mnemonicWordCount = WordCount.TwentyFour,
-        //     WordCount passphraseWordCount = WordCount.Twelve)
-        // {
-        //     var seed = _walletService.CreateSeed(language, mnemonicWordCount);
-        //     var passphrase = _walletService.CreateSeed(language, passphraseWordCount);
+        [HttpGet("seed", Name = "CreateSeed")]
+        public IActionResult CreateSeed(WordCount mnemonicWordCount = WordCount.TwentyFour, WordCount passphraseWordCount = WordCount.Twelve)
+        {
+            AutoResetEvent cmdFinishedEvent = new AutoResetEvent(false);
+            RpcCreateSeedCommand cmd = new RpcCreateSeedCommand(mnemonicWordCount, passphraseWordCount, _serviceProvider, ref cmdFinishedEvent);
+            SendCommandAndAwaitResponse(cmd);
 
-        //     return new ObjectResult(new
-        //     {
-        //         seed,
-        //         passphrase
-        //     });
-        // }
+            if (cmd.Result.Item1 is null)
+            {
+                return new BadRequestObjectResult(cmd.Result.Item2 as string);
+            }
 
-        // // TODO: does this method expose too much (full path)? is this even required?
-        // [HttpGet("list", Name = "List")]
-        // public IActionResult List()
-        // {
-        //     var walletListResult = _walletService.WalletList();
+            return new ObjectResult(cmd.Result.Item1);
+        }
 
-        //     if (walletListResult.Item1 is null)
-        //     {
-        //         return new BadRequestObjectResult(walletListResult.Item2 as string);
-        //     }
+        [HttpGet("list", Name = "List")]
+        public IActionResult List()
+        {
+            AutoResetEvent cmdFinishedEvent = new AutoResetEvent(false);
+            RpcWalletListommand cmd = new RpcWalletListommand(_serviceProvider, ref cmdFinishedEvent);
+            SendCommandAndAwaitResponse(cmd);
 
-        //     return new OkObjectResult(walletListResult.Item1 as List<string>);
-        // }
+            if (cmd.Result.Item1 is null)
+            {
+                return new BadRequestObjectResult(cmd.Result.Item2 as string);
+            }
+            return new OkObjectResult(cmd.Result.Item1 as List<string>);
+        }
 
         [HttpPost("history", Name = "History")]
         public IActionResult History([FromBody] Credentials credentials)

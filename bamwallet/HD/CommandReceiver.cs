@@ -843,9 +843,9 @@ namespace BAMWallet.HD
         /// BIP39 seed.
         /// </summary>
         /// <returns></returns>
-        public string[] CreateSeed(Language language, WordCount wordCount)
+        public string[] CreateSeed(WordCount wordCount)
         {
-            var task = Task.Run(async () => await Wordlist.LoadWordList(language));
+            var task = Task.Run(async () => await Wordlist.LoadWordList(Language.English));
             task.Wait();
             var mnemo = new Mnemonic(task.Result, wordCount);
             return mnemo.Words;
