@@ -178,7 +178,7 @@ namespace Cli.Commands.Common
         public void Execute(string arg)
         {
             _commandQueue.Add(_commands[arg]);
-            if(arg.Equals("exit", StringComparison.InvariantCultureIgnoreCase))
+            if (arg.Equals("exit", StringComparison.InvariantCultureIgnoreCase))
             {
                 StopCommandProcessing();
             }
@@ -247,7 +247,7 @@ namespace Cli.Commands.Common
                     }
                 }, _cmdProcessorCancellationSource.Token);
             }
-            catch(TaskCanceledException)
+            catch (TaskCanceledException)
             {
             }
         }
@@ -286,7 +286,7 @@ namespace Cli.Commands.Common
                         {
                             cmd.Execute(_activeSession);
                         }
-                        catch(Exception ex)
+                        catch (Exception ex)
                         {
                             Logger.LogException(_console, _logger, ex);
                         }

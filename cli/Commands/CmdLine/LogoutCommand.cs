@@ -24,7 +24,7 @@ namespace Cli.Commands.CmdLine
         }
         public override void Execute(Session activeSession = null)
         {
-            if(_automaticLogout)
+            if (_automaticLogout)
             {
                 _console.ForegroundColor = ConsoleColor.Red;
                 _console.WriteLine("You have been logged out of the wallet due to inactivity. Please login again to use the wallet.");

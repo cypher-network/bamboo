@@ -12,9 +12,9 @@ using BAMWallet.HD;
 
 namespace Cli.Commands.Rpc
 {
-    class RpxWalletAddressCommand : RpcBaseCommand
+    class RpcWalletAddressCommand : RpcBaseCommand
     {
-        public RpxWalletAddressCommand(IServiceProvider serviceProvider, ref AutoResetEvent cmdFinishedEvent, Session session)
+        public RpcWalletAddressCommand(IServiceProvider serviceProvider, ref AutoResetEvent cmdFinishedEvent, Session session)
             : base(serviceProvider, ref cmdFinishedEvent, session)
         {
         }

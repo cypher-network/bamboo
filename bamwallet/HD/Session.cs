@@ -2,7 +2,6 @@
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Security;
 using BAMWallet.Extensions;

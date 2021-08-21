@@ -36,7 +36,8 @@ namespace Cli.Commands.Rpc
                 string id = _walletService.CreateWallet(joinMmnemonic.ToSecureString(), joinPassphrase.ToSecureString());
                 var session = new Session(id.ToSecureString(), joinPassphrase.ToSecureString());
 
-                Result = new Tuple<object, string>(new {
+                Result = new Tuple<object, string>(new
+                {
                     path = Util.WalletPath(id),
                     identifier = id,
                     seed = joinMmnemonic,

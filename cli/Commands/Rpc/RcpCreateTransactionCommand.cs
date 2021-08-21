@@ -5,36 +5,28 @@
 //
 // You should have received a copy of the license along with this
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
+
 using System;
 using System.Threading;
 using BAMWallet.HD;
-using NBitcoin;
+using BAMWallet.Model;
 
 namespace Cli.Commands.Rpc
 {
-    class RpcCreateSeedCommand : RpcBaseCommand
+    class RpcCreateTransactionCommand : RpcBaseCommand
     {
-        private WordCount _seedCount;
-        private WordCount _passCount;
-        public RpcCreateSeedCommand(WordCount seedCount, WordCount passCount, IServiceProvider serviceProvider, ref AutoResetEvent cmdFinishedEvent)
-            : base(serviceProvider, ref cmdFinishedEvent, null)
+        private WalletTransaction _transaction;
+        public RpcCreateTransactionCommand(ref WalletTransaction tx, IServiceProvider serviceProvider, ref AutoResetEvent cmdFinishedEvent, Session session)
+            : base(serviceProvider, ref cmdFinishedEvent, session)
         {
-            _seedCount = seedCount;
-            _passCount = passCount;
+            _transaction = tx;
         }
 
         public override void Execute(Session activeSession = null)
         {
             try
             {
-                var seed = _walletService.CreateSeed(_seedCount);
-                var passphrase = _walletService.CreateSeed(_passCount);
-
-                Result = new Tuple<object, string>(new
-                {
-                    seed,
-                    passphrase
-                }, String.Empty);
+                Result = _walletService.CreateTransaction(_session, ref _transaction);
             }
             catch (Exception ex)
             {

@@ -26,7 +26,7 @@ namespace Cli.Commands.Rpc
             Result = new Tuple<object, string>(null, "Command not executed.");
         }
 
-        public Tuple<object, string> Result { get; protected set;}
+        public Tuple<object, string> Result { get; protected set; }
 
         public void Wait()
         {

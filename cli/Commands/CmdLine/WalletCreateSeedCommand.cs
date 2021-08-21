@@ -28,13 +28,13 @@ namespace Cli.Commands.CmdLine
 
             Options(out WordCount wCount, 3);
 
-            var seed = _walletService.CreateSeed(Language.English, wCount);
+            var seed = _walletService.CreateSeed(wCount);
             _console.ForegroundColor = ConsoleColor.Magenta;
             _console.WriteLine("");
             _console.WriteLine("Passphrase");
 
             Options(out wCount, 1);
-            var passphrase = _walletService.CreateSeed(Language.English, wCount);
+            var passphrase = _walletService.CreateSeed(wCount);
 
             _console.WriteLine("Seed phrase: " + string.Join(" ", seed));
             _console.WriteLine("Passphrase:  " + string.Join(" ", passphrase));

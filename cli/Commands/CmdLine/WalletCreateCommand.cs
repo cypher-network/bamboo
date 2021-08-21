@@ -27,8 +27,8 @@ namespace Cli.Commands.CmdLine
         {
             try
             {
-                var seedDefault = _walletService.CreateSeed(NBitcoin.Language.English, NBitcoin.WordCount.TwentyFour);
-                var passPhraseDefault = _walletService.CreateSeed(NBitcoin.Language.English, NBitcoin.WordCount.Twelve);
+                var seedDefault = _walletService.CreateSeed(NBitcoin.WordCount.TwentyFour);
+                var passPhraseDefault = _walletService.CreateSeed(NBitcoin.WordCount.Twelve);
                 var joinMmnemonic = string.Join(" ", seedDefault);
                 var joinPassphrase = string.Join(" ", passPhraseDefault);
                 var id = _walletService.CreateWallet(joinMmnemonic.ToSecureString(), joinPassphrase.ToSecureString());
