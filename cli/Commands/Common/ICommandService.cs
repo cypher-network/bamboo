@@ -13,5 +13,6 @@ namespace Cli.Commands.Common
     public interface ICommandService : IHostedService
     {
         void Execute(string arg);
+        void EnqueueCommand(Command command);
     }
 }

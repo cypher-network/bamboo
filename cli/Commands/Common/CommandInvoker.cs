@@ -170,6 +170,11 @@ namespace Cli.Commands.Common
             _commands.Add(command.Name, command);
         }
 
+        public void EnqueueCommand(Command command)
+        {
+            _commandQueue.Add(command);
+        }
+
         public void Execute(string arg)
         {
             _commandQueue.Add(_commands[arg]);
