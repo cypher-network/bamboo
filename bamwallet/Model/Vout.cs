@@ -24,17 +24,9 @@ namespace BAMWallet.Model
         /// 
         /// </summary>
         /// <returns></returns>
-        public bool IsLockedOrInvalid(Key scan = null)
+        public bool IsLockedOrInvalid()
         {
-            if (T == CoinType.Payment)
-            {
-                return scan == null || Transaction.Amount(this, scan) == 0;
-            }
-
-            if (L == 0)
-            {
-                return true;
-            }
+            if (T != CoinType.Coinbase) return false;
 
             var lockTime = new LockTime(Utils.UnixTimeToDateTime(L));
             var script = S;
@@ -52,6 +44,7 @@ namespace BAMWallet.Model
             spending.Inputs.Add(new TxIn(tx.Outputs.AsCoins().First().Outpoint, new Script()));
             spending.Inputs[0].Sequence = 1;
             return !spending.Inputs.AsIndexedInputs().First().VerifyScript(tx.Outputs[0]);
+
         }
     }
 }
