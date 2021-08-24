@@ -117,7 +117,7 @@ namespace BAMWallet.HD
 
                 freeBalances.AddRange(balances
                     .Where(balance =>
-                        !balance.Commitment.IsLockedOrInvalid(scan) &&
+                        !balance.Commitment.IsLockedOrInvalid() &&
                         session.WalletTransaction.Payment <= balance.Total).OrderByDescending(x => x.Total));
 
                 if (!freeBalances.Any())
@@ -215,12 +215,6 @@ namespace BAMWallet.HD
             {
                 var (outPkPayment, stealthPayment) = StealthPayment(session.WalletTransaction.RecipientAddress);
                 var (outPkChange, stealthChange) = StealthPayment(session.WalletTransaction.SenderAddress);
-                var changeLockTime = session.SessionType switch
-                {
-                    SessionType.Coinstake => new LockTime(
-                        Utils.DateTimeToUnixTime(DateTimeOffset.UtcNow.AddMinutes(15))),
-                    _ => new LockTime(Utils.DateTimeToUnixTime(DateTimeOffset.UtcNow.AddMinutes(10)))
-                };
                 var coinstakeLockTime = new LockTime(Utils.DateTimeToUnixTime(DateTimeOffset.UtcNow.AddSeconds(15)));
                 var tx = new Transaction
                 {
@@ -241,8 +235,6 @@ namespace BAMWallet.HD
                                 Transaction.Message(session.WalletTransaction.Payment, 0, blinds[1],
                                     session.WalletTransaction.Memo)),
                             P = outPkPayment.ToBytes(),
-                            S = session.SessionType == SessionType.Coinstake? new Script(Op.GetPushOp(changeLockTime.Value), OpcodeType.OP_CHECKLOCKTIMEVERIFY)
-                                .ToString() : null,
                             T = session.SessionType == SessionType.Coin ? CoinType.Payment : CoinType.Coinstake
                         },
                         new Vout
@@ -250,13 +242,10 @@ namespace BAMWallet.HD
                             A = 0,
                             C = pcmOut[1],
                             E = stealthChange.Metadata.EphemKey.ToBytes(),
-                            L = changeLockTime.Value,
                             N = ScanPublicKey(session.WalletTransaction.SenderAddress).Encrypt(
                                 Transaction.Message(session.WalletTransaction.Change, session.WalletTransaction.Payment,
                                     blinds[2], session.WalletTransaction.Memo)),
                             P = outPkChange.ToBytes(),
-                            S = new Script(Op.GetPushOp(changeLockTime.Value), OpcodeType.OP_CHECKLOCKTIMEVERIFY)
-                                .ToString(),
                             T = CoinType.Change
                         }
                     },
@@ -423,7 +412,7 @@ namespace BAMWallet.HD
 
                     try
                     {
-                        var isLocked = transactions[i].IsLockedOrInvalid(scan);
+                        var isLocked = transactions[i].IsLockedOrInvalid();
                         if (isLocked) goto begin;
                     }
                     catch (Exception)
@@ -1200,7 +1189,7 @@ namespace BAMWallet.HD
 
                 foreach (var transaction in walletTransactions.Select(x => x.Transaction).OrderBy(d => d.Vtime.L))
                 {
-                    var isLocked = transaction.IsLockedOrInvalid(scan);
+                    var isLocked = transaction.IsLockedOrInvalid();
                     var walletTransaction = walletTransactions.First(x => x.Transaction.TxnId.Xor(transaction.TxnId));
 
                     var payment = transaction.Vout.Where(z => z.T is CoinType.Payment).ToArray();

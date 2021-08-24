@@ -193,13 +193,13 @@ namespace BAMWallet.Model
         /// 
         /// </summary>
         /// <returns></returns>
-        public bool IsLockedOrInvalid(Key scan)
+        public bool IsLockedOrInvalid()
         {
             return Vout.Length switch
             {
-                1 => Vout[0].IsLockedOrInvalid(scan),
-                2 => Vout[1].IsLockedOrInvalid(scan),
-                _ => Vout[0].IsLockedOrInvalid(scan)
+                1 => Vout[0].IsLockedOrInvalid(),
+                2 => Vout[1].IsLockedOrInvalid(),
+                _ => Vout[0].IsLockedOrInvalid()
             };
         }
     }
