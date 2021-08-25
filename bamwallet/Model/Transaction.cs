@@ -1,4 +1,4 @@
-﻿// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0. 
+﻿// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0.
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
 using System;
@@ -26,7 +26,7 @@ namespace BAMWallet.Model
         [Key(7)] public Vtime Vtime { get; set; }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <returns></returns>
         public byte[] ToHash()
@@ -35,7 +35,7 @@ namespace BAMWallet.Model
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <returns></returns>
         public byte[] ToStream()
@@ -93,7 +93,7 @@ namespace BAMWallet.Model
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <returns></returns>
         public byte[] Serialize()
@@ -102,7 +102,7 @@ namespace BAMWallet.Model
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="output"></param>
         /// <param name="scan"></param>
@@ -125,7 +125,7 @@ namespace BAMWallet.Model
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="output"></param>
         /// <param name="scan"></param>
@@ -148,7 +148,7 @@ namespace BAMWallet.Model
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="output"></param>
         /// <param name="scan"></param>
@@ -170,7 +170,7 @@ namespace BAMWallet.Model
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="amount"></param>
         /// <param name="paid"></param>
@@ -190,7 +190,7 @@ namespace BAMWallet.Model
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <returns></returns>
         public bool IsLockedOrInvalid()

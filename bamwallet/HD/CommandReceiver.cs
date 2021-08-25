@@ -100,7 +100,7 @@ namespace BAMWallet.HD
 
                 freeBalances.AddRange(balances
                     .Where(balance =>
-                        !balance.Commitment.IsLockedOrInvalid(scan) &&
+                        !balance.Commitment.IsLockedOrInvalid() &&
                         transaction.Payment <= balance.Total).OrderByDescending(x => x.Total));
 
                 if (!freeBalances.Any())
@@ -192,12 +192,6 @@ namespace BAMWallet.HD
             {
                 var (outPkPayment, stealthPayment) = StealthPayment(transaction.RecipientAddress);
                 var (outPkChange, stealthChange) = StealthPayment(transaction.SenderAddress);
-                var changeLockTime = session.SessionType switch
-                {
-                    SessionType.Coinstake => new LockTime(
-                        Utils.DateTimeToUnixTime(DateTimeOffset.UtcNow.AddMinutes(15))),
-                    _ => new LockTime(Utils.DateTimeToUnixTime(DateTimeOffset.UtcNow.AddMinutes(10)))
-                };
                 var coinstakeLockTime = new LockTime(Utils.DateTimeToUnixTime(DateTimeOffset.UtcNow.AddSeconds(15)));
                 var tx = new Transaction
                 {
@@ -225,7 +219,6 @@ namespace BAMWallet.HD
                             A = 0,
                             C = pcmOut[1],
                             E = stealthChange.Metadata.EphemKey.ToBytes(),
-                            L = changeLockTime.Value,
                             N = ScanPublicKey(transaction.SenderAddress).Encrypt(
                                 Transaction.Message(transaction.Change, transaction.Payment,
                                     blinds[2], transaction.Memo)),
