@@ -40,7 +40,7 @@ namespace Cli.Commands.Common
         private State _loginState = State.LoggedOut;
         protected readonly TimingSettings _timingSettings;
         private PausableTimer _timeout = null;
-        private readonly PausableTimer _syncTimer = null;
+        private PausableTimer _syncTimer = null;
         Session _activeSession = null;
         AutoResetEvent _cmdFinishedEvent = new AutoResetEvent(true);
         CancellationTokenSource _cmdProcessorCancellationSource = new CancellationTokenSource();
@@ -55,12 +55,10 @@ namespace Cli.Commands.Common
 
         private void FreezeTimers()
         {
-
             if (_loginState == State.LoggedIn)
             {
                 _timeout.Pause();
                 _syncTimer.Pause();
-
             }
         }
         private void UnfreezeTimers()
@@ -77,17 +75,30 @@ namespace Cli.Commands.Common
             _commandQueue.Add(new LogoutCommand(_serviceProvider, true));
         }
 
+        private void ReinitializeSyncTimer()
+        {
+            if(_syncTimer != null)
+            {
+                _syncTimer.Stop();
+                _syncTimer.Elapsed -= OnSyncInternal;
+            }
+            _syncTimer = new PausableTimer(TimeSpan.FromMinutes(_timingSettings.SyncIntervalMins).TotalMilliseconds, true);
+            _syncTimer.Elapsed += OnSyncInternal;
+            _syncTimer.Start();
+        }
+
         private void ReinitializeLogoutTimer()
         {
-            if (_timeout != null)
+            if(_timeout == null)
             {
-                _timeout.Elapsed -= OnTimeout;
-                _timeout.Stop();
+                _timeout = new PausableTimer(TimeSpan.FromMinutes(_timingSettings.SessionTimeoutMins).TotalMilliseconds);
+                _timeout.Elapsed += OnTimeout;
+                _timeout.Start();
             }
-
-            _timeout = new PausableTimer(TimeSpan.FromMinutes(_timingSettings.SessionTimeoutMins).TotalMilliseconds);
-            _timeout.Elapsed += OnTimeout;
-            _timeout.Start();
+            else
+            {
+                _timeout.Restart();
+            }
         }
 
         private void OnLogout()
@@ -98,17 +109,25 @@ namespace Cli.Commands.Common
                 RegisterLoggedOutCommands();
             }
             _timeout.Stop();
+            _syncTimer.Stop();
             _activeSession = null;
         }
+
+        private void RefreshTimeout()
+        {
+            if(_loginState == State.LoggedIn)
+            {
+                _timeout.Restart();
+            }
+        }
+
         private void OnLogin()
         {
             if (_loginState != State.LoggedIn)
             {
                 _loginState = State.LoggedIn;
                 RegisterLoggedInCommands();
-            }
-            if (_loginState == State.LoggedIn)
-            {
+                ReinitializeSyncTimer();
                 ReinitializeLogoutTimer();
             }
         }
@@ -122,10 +141,6 @@ namespace Cli.Commands.Common
             _console.CancelKeyPress += Console_CancelKeyPress;
             _hasExited = false;
             _timingSettings = provider.GetService<IOptions<TimingSettings>>()?.Value ?? new();
-            _syncTimer = new PausableTimer(TimeSpan.FromMinutes(_timingSettings.SyncIntervalMins).TotalMilliseconds);
-            _syncTimer.Elapsed += OnSyncInternal;
-            _syncTimer.AutoReset = true;
-            _syncTimer.Start();
         }
 
         private void RegisterLoggedOutCommands()
@@ -279,7 +294,7 @@ namespace Cli.Commands.Common
                     {
                         if (cmd.RefreshLogin)
                         {
-                            OnLogin();
+                            RefreshTimeout();
                         }
                         using var freezeTimers = new RAIIGuard(FreezeTimers, UnfreezeTimers);
                         try
@@ -290,11 +305,17 @@ namespace Cli.Commands.Common
                         {
                             Logger.LogException(_console, _logger, ex);
                         }
-                        _cmdFinishedEvent.Set();
+                        if(!(cmd is SyncCommand))
+                        {
+                            _cmdFinishedEvent.Set();
+                        }
                         if (cmd is LoginCommand)
                         {
                             _activeSession = (cmd as LoginCommand).ActiveSession;
-                            OnLogin();
+                            if(_activeSession != null)
+                            {
+                                OnLogin();
+                            }
                         }
                         if ((cmd is LogoutCommand) || ((cmd is WalletRemoveCommand) && (cmd as WalletRemoveCommand).Logout))
                         {

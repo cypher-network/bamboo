@@ -27,7 +27,7 @@ namespace Cli.Commands.Common
             _walletService = serviceProvider.GetService<ICommandReceiver>();
             _receiver = serviceProvider.GetService<ICommandService>();
             _console = serviceProvider.GetService<IConsole>();
-            _refreshLogin = false;
+            _refreshLogin = refreshLogin;
         }
 
         public abstract void Execute(Session activeSession = null);

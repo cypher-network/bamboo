@@ -36,9 +36,7 @@ namespace Cli.Commands.CmdLine
             {
                 _console.ForegroundColor = ConsoleColor.Red;
                 _console.WriteLine("Access denied. Cannot find a wallet with the given identifier and passphrase.");
-                _console.ForegroundColor = ConsoleColor.Cyan;
-                _console.Write("bamboo$ ");
-                _console.ForegroundColor = ConsoleColor.White;
+                _console.ForegroundColor = ConsoleColor.Gray;
             }
         }
 

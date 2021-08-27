@@ -4,7 +4,7 @@
 using System;
 using BAMWallet.HD;
 using Cli.Commands.Common;
-using McMaster.Extensions.CommandLineUtils;
+using System.Diagnostics;
 namespace Cli.Commands.CmdLine
 {
     [CommandDescriptor("sync", "syncs wallet with chain")]
@@ -19,11 +19,8 @@ namespace Cli.Commands.CmdLine
         {
             if (activeSession != null)
             {
-                _console.WriteLine("Syncing wallet with chain ...");
-                _console.ForegroundColor = ConsoleColor.Cyan;
-                _console.Write("bamboo$ ");
-                _console.ForegroundColor = ConsoleColor.Gray;
                 _walletService.SyncWallet(activeSession);
+                Debug.WriteLine("Syncing wallet with chain...");
             }
         }
     }
