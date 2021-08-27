@@ -2,34 +2,52 @@
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Security;
 using BAMWallet.Extensions;
-using LiteDB;
-using Newtonsoft.Json.Linq;
 using BAMWallet.Helper;
 using BAMWallet.Model;
+using LiteDB;
 
 namespace BAMWallet.HD
 {
-    public class Session : IEqualityComparer<Session>
+    public class Session
     {
         public SecureString Identifier { get; }
-        public JObject LastError { get; set; }
         public SecureString Passphrase { get; }
         public Guid SessionId { get; set; }
         public SessionType SessionType { get; set; }
-        public WalletTransaction WalletTransaction { get; set; }
         public LiteRepository Database { get; set; }
         public bool Syncing { get; set; }
+
+        /// <summary>
+        /// Multiple key sets not supported, thus we can simply return the only one keyset create during wallet creation.
+        /// </summary>
+        /// <returns>The one and only KeySet</returns>
+        public KeySet KeySet
+        {
+            get
+            {
+                return Database.Query<KeySet>().First();
+            }
+        }
 
         public bool IsValid
         {
             get
             {
-                return File.Exists(Util.WalletPath(Identifier.ToUnSecureString()));
+                return IsIdentifierValid(Identifier);
             }
+        }
+
+        public static bool AreCredentialsValid(SecureString identifier, SecureString passphrase)
+        {
+            return (IsIdentifierValid(identifier) && IsPassPhraseValid(identifier, passphrase));
+        }
+
+        private static bool IsIdentifierValid(SecureString identifier)
+        {
+            return File.Exists(Util.WalletPath(identifier.ToUnSecureString()));
         }
 
         public Session(SecureString identifier, SecureString passphrase)
@@ -44,26 +62,30 @@ namespace BAMWallet.HD
             Database = Util.LiteRepositoryFactory(identifier, passphrase);
         }
 
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="x"></param>
-        /// <param name="y"></param>
-        /// <returns></returns>
-        public bool Equals(Session x, Session y)
+        private static bool IsPassPhraseValid(SecureString id, SecureString pass)
         {
-            return x.Identifier == y.Identifier && x.Passphrase == y.Passphrase && x.SessionId == y.SessionId;
-        }
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="session"></param>
-        /// <returns></returns>
-        public int GetHashCode(Session session)
-        {
-            Session s = session;
-            return s.SessionId.GetHashCode();
+            var connectionString = new ConnectionString
+            {
+                Filename = Util.WalletPath(id.ToUnSecureString()),
+                Password = pass.ToUnSecureString(),
+                Connection = ConnectionType.Shared
+            };
+            using (var db = new LiteDatabase(connectionString))
+            {
+                var collection = db.GetCollection<KeySet>();
+                try
+                {
+                    if (collection.Count() == 1)
+                    {
+                        return true;
+                    }
+                }
+                catch (LiteException)
+                {
+                    return false;
+                }
+            }
+            return false;
         }
     }
 }

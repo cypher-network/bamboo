@@ -1,4 +1,4 @@
-﻿// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0. 
+﻿// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0.
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
 using System;
@@ -14,6 +14,7 @@ using BAMWallet.Model;
 using MessagePack;
 using Microsoft.Extensions.Options;
 using Serilog;
+using System.Globalization;
 
 namespace BAMWallet.Services
 {
@@ -34,18 +35,20 @@ namespace BAMWallet.Services
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <returns></returns>
         private static Stream GetSafeguardData()
         {
             var safeGuardPath = SafeguardFilePath();
-            var filePath = Directory.EnumerateFiles(safeGuardPath, "*.messagepack").Last();
-            return File.Open(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite); ;
+            var actualSafeGuardFile = Directory.EnumerateFiles(safeGuardPath, "*.messagepack").OrderBy(x =>
+                DateTime.ParseExact(Path.GetFileNameWithoutExtension(x), "dd-MM-yyyy", CultureInfo.InvariantCulture)
+            ).Last();
+            return File.Open(actualSafeGuardFile, FileMode.Open, FileAccess.Read);
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <returns></returns>
         public static Transaction[] GetTransactions()
@@ -57,34 +60,30 @@ namespace BAMWallet.Services
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="stoppingToken"></param>
         /// <returns></returns>
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             try
             {
                 stoppingToken.ThrowIfCancellationRequested();
-                var needData = NeedNewSafeguardData();
-                if (!needData) return;
-                _safeguardDownloadingFlagService.IsDownloading = true;
-
-                var baseAddress = _client.GetBaseAddress();
-                if (baseAddress == null)
+                if (NeedNewSafeguardData())
                 {
-                    throw new Exception("Cannot get base address");
-                }
+                    _safeguardDownloadingFlagService.IsDownloading = true;
 
-                var blocks = await _client.GetRangeAsync<Block>(baseAddress, _networkSettings.Routing.SafeguardTransactions, stoppingToken);
-                if (blocks != null)
-                {
-                    var fileStream = SafeguardData(GetDays());
-                    var buffer = MessagePackSerializer.Serialize(blocks, cancellationToken: stoppingToken);
-                    await fileStream.WriteAsync(buffer, stoppingToken);
-                    await fileStream.FlushAsync(stoppingToken);
-                    fileStream.Close();
-                    _safeguardDownloadingFlagService.IsDownloading = false;
+                    var baseAddress = _client.GetBaseAddress();
+                    var blocks = _client.GetRangeAsync<Block>(baseAddress, _networkSettings.Routing.SafeguardTransactions, stoppingToken);
+                    if (blocks != null)
+                    {
+                        var fileStream = SafeguardData(GetDays());
+                        var buffer = MessagePackSerializer.Serialize(blocks, cancellationToken: stoppingToken);
+                        fileStream.Write(buffer, 0, buffer.Count());
+                        fileStream.Flush();
+                        fileStream.Close();
+                        _safeguardDownloadingFlagService.IsDownloading = false;
+                    }
                 }
             }
             catch (TaskCanceledException)
@@ -98,10 +97,11 @@ namespace BAMWallet.Services
             {
                 _safeguardDownloadingFlagService.IsDownloading = false;
             }
+            return Task.FromResult<object>(null);
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <returns></returns>
         private static bool NeedNewSafeguardData()
@@ -114,7 +114,7 @@ namespace BAMWallet.Services
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <returns></returns>
         private static DateTime GetDays()
@@ -123,7 +123,7 @@ namespace BAMWallet.Services
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="date"></param>
         /// <returns></returns>
@@ -147,7 +147,7 @@ namespace BAMWallet.Services
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <returns></returns>
         private static string SafeguardFilePath()
