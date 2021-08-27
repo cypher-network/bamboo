@@ -33,5 +33,13 @@ namespace Cli.Commands.CmdLine
                 _console.ResetColor();
             }
         }
+
+        public bool AutomaticLogout
+        {
+            get
+            {
+                return _automaticLogout;
+            }
+        }
     }
 }

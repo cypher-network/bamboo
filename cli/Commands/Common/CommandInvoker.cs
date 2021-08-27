@@ -305,7 +305,7 @@ namespace Cli.Commands.Common
                         {
                             Logger.LogException(_console, _logger, ex);
                         }
-                        if(!(cmd is SyncCommand))
+                        if(!(cmd is SyncCommand || (cmd is LogoutCommand && (cmd as LogoutCommand).AutomaticLogout == true)))
                         {
                             _cmdFinishedEvent.Set();
                         }
