@@ -17,10 +17,10 @@ namespace Cli.Helper
 
         private void OnTimeout(object source, System.Timers.ElapsedEventArgs e)
         {
-            lock(_lock)
+            lock (_lock)
             {
                 Elapsed?.Invoke(source, e);
-                if(_timer.AutoReset)
+                if (_timer.AutoReset)
                 {
                     Restart();
                 }
@@ -40,7 +40,7 @@ namespace Cli.Helper
 
         public void Start()
         {
-            lock(_lock)
+            lock (_lock)
             {
                 _timer.Start();
                 _stopWatch.Restart();
@@ -49,7 +49,7 @@ namespace Cli.Helper
 
         public void Stop()
         {
-            lock(_lock)
+            lock (_lock)
             {
                 _timer.Stop();
                 _stopWatch.Stop();
@@ -58,7 +58,7 @@ namespace Cli.Helper
 
         public void Pause()
         {
-            lock(_lock)
+            lock (_lock)
             {
                 if (!_paused && _timer.Enabled)
                 {
@@ -85,7 +85,7 @@ namespace Cli.Helper
 
         public void Resume()
         {
-            lock(_lock)
+            lock (_lock)
             {
                 if (_paused)
                 {
@@ -100,7 +100,7 @@ namespace Cli.Helper
                     }
                     else
                     {
-                        if(_timer.AutoReset)
+                        if (_timer.AutoReset)
                         {
                             _timer = new Timer(_interval);
                             _timer.AutoReset = true;

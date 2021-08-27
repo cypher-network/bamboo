@@ -77,7 +77,7 @@ namespace Cli.Commands.Common
 
         private void ReinitializeSyncTimer()
         {
-            if(_syncTimer != null)
+            if (_syncTimer != null)
             {
                 _syncTimer.Stop();
                 _syncTimer.Elapsed -= OnSyncInternal;
@@ -89,7 +89,7 @@ namespace Cli.Commands.Common
 
         private void ReinitializeLogoutTimer()
         {
-            if(_timeout == null)
+            if (_timeout == null)
             {
                 _timeout = new PausableTimer(TimeSpan.FromMinutes(_timingSettings.SessionTimeoutMins).TotalMilliseconds);
                 _timeout.Elapsed += OnTimeout;
@@ -115,7 +115,7 @@ namespace Cli.Commands.Common
 
         private void RefreshTimeout()
         {
-            if(_loginState == State.LoggedIn)
+            if (_loginState == State.LoggedIn)
             {
                 _timeout.Restart();
             }
@@ -305,14 +305,14 @@ namespace Cli.Commands.Common
                         {
                             Logger.LogException(_console, _logger, ex);
                         }
-                        if(!(cmd is SyncCommand || (cmd is LogoutCommand && (cmd as LogoutCommand).AutomaticLogout == true)))
+                        if (!(cmd is SyncCommand || (cmd is LogoutCommand && (cmd as LogoutCommand).AutomaticLogout == true)))
                         {
                             _cmdFinishedEvent.Set();
                         }
                         if (cmd is LoginCommand)
                         {
                             _activeSession = (cmd as LoginCommand).ActiveSession;
-                            if(_activeSession != null)
+                            if (_activeSession != null)
                             {
                                 OnLogin();
                             }
