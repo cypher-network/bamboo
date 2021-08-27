@@ -70,7 +70,7 @@ namespace Cli.Commands.CmdLine
                             else
                             {
                                 var sendResult = _walletService.Send(session, ref transaction);
-                                if (sendResult.Item1 is null)
+                                if (sendResult.Item1 is not true)
                                 {
                                     spinner.Fail(sendResult.Item2);
                                 }
