@@ -27,8 +27,7 @@ namespace Cli
         {
             var basePath = AppDomain.CurrentDomain.BaseDirectory;
             var appsettingsExists =
-                File.Exists(Path.Combine(basePath, Constant.AppSettingsFile)) ||
-                File.Exists(Path.Combine(basePath, Constant.AppSettingsFileDev));
+                File.Exists(Path.Combine(basePath, Constant.AppSettingsFile));
 
             if (args.FirstOrDefault(arg => arg == "--configure") != null)
             {
@@ -54,7 +53,6 @@ namespace Cli
             var config = new ConfigurationBuilder()
                 .SetBasePath(basePath)
                 .AddJsonFile(Constant.AppSettingsFile, true)
-                .AddJsonFile(Constant.AppSettingsFileDev, false)
                 .AddCommandLine(args)
                 .Build();
 
