@@ -28,7 +28,7 @@ namespace Cli.Commands.Rpc
         {
             try
             {
-                if(_commandReceiver.IsTransactionAllowed(_session))
+                if (_commandReceiver.IsTransactionAllowed(_session))
                 {
                     var createPaymentResult = _commandReceiver.CreateTransaction(_session, ref _transaction);
                     if (createPaymentResult.Item1 is null)

@@ -48,7 +48,7 @@ namespace Cli.Commands.CmdLine
 
                         try
                         {
-                            if(_commandReceiver.IsTransactionAllowed(activeSession))
+                            if (_commandReceiver.IsTransactionAllowed(activeSession))
                             {
                                 var session = activeSession;
 

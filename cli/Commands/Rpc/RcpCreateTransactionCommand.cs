@@ -27,7 +27,7 @@ namespace Cli.Commands.Rpc
             try
             {
                 //pseudo code
-                if(_commandReceiver.IsTransactionAllowed(_session))
+                if (_commandReceiver.IsTransactionAllowed(_session))
                 {
                     Result = _commandReceiver.CreateTransaction(_session, ref _transaction);
                 }
