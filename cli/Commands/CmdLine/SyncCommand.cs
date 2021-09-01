@@ -19,7 +19,7 @@ namespace Cli.Commands.CmdLine
         {
             if (activeSession != null)
             {
-                _walletService.SyncWallet(activeSession);
+                _commandReceiver.SyncWallet(activeSession);
                 Debug.WriteLine("Syncing wallet with chain...");
             }
         }

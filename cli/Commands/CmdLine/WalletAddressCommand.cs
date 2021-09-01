@@ -26,7 +26,7 @@ namespace Cli.Commands.CmdLine
         {
             if (activeSession != null)
             {
-                var request = _walletService.Address(activeSession);
+                var request = _commandReceiver.Address(activeSession);
                 if (request.Item1 is null)
                 {
                     _console.ForegroundColor = ConsoleColor.Red;

@@ -28,34 +28,41 @@ namespace Cli.Commands.Rpc
         {
             try
             {
-                var createPaymentResult = _walletService.CreateTransaction(_session, ref _transaction);
-                if (createPaymentResult.Item1 is null)
+                if(_commandReceiver.IsTransactionAllowed(_session))
                 {
-                    Result = new Tuple<object, string>(null, createPaymentResult.Item2);
-                }
-                else
-                {
-                    var send = _walletService.Send(_session, ref _transaction);
-                    if (send.Item1 is null)
+                    var createPaymentResult = _commandReceiver.CreateTransaction(_session, ref _transaction);
+                    if (createPaymentResult.Item1 is null)
                     {
-                        Result = new Tuple<object, string>(null, send.Item2);
+                        Result = new Tuple<object, string>(null, createPaymentResult.Item2);
                     }
                     else
                     {
-                        var history = _walletService.History(_session);
-                        if (history.Item1 is null)
+                        var send = _commandReceiver.Send(_session, ref _transaction);
+                        if (send.Item1 is null)
                         {
-                            Result = new Tuple<object, string>(null, history.Item2);
+                            Result = new Tuple<object, string>(null, send.Item2);
                         }
                         else
                         {
-                            Result = new Tuple<object, string>(new
+                            var history = _commandReceiver.History(_session);
+                            if (history.Item1 is null)
                             {
-                                balance = $"{(history.Item1 as IOrderedEnumerable<BalanceSheet>).Last().Balance}",
-                                paymentId = _transaction.Transaction.TxnId.ByteToHex()
-                            }, String.Empty);
+                                Result = new Tuple<object, string>(null, history.Item2);
+                            }
+                            else
+                            {
+                                Result = new Tuple<object, string>(new
+                                {
+                                    balance = $"{(history.Item1 as IOrderedEnumerable<BalanceSheet>).Last().Balance}",
+                                    paymentId = _transaction.Transaction.TxnId.ByteToHex()
+                                }, String.Empty);
+                            }
                         }
                     }
+                }
+                else
+                {
+                    Result = new Tuple<object, string>(null, "Transaction not allowed because a previous Transaction is pending");
                 }
             }
             catch (Exception ex)

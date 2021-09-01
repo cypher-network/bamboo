@@ -33,7 +33,7 @@ namespace Cli.Commands.CmdLine
                 Spinner.StartAsync("Checking balance ...", spinner =>
                 {
                     _spinner = spinner;
-                    var balanceResult = _walletService.History(activeSession);
+                    var balanceResult = _commandReceiver.History(activeSession);
                     if (balanceResult.Item1 is null)
                     {
                         spinner.Fail(balanceResult.Item2);

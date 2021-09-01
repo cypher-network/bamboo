@@ -23,7 +23,7 @@ namespace Cli.Commands.Rpc
         {
             try
             {
-                Result = _walletService.Address(_session);
+                Result = _commandReceiver.Address(_session);
             }
             catch (Exception ex)
             {

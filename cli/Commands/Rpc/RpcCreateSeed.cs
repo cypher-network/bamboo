@@ -27,8 +27,8 @@ namespace Cli.Commands.Rpc
         {
             try
             {
-                var seed = _walletService.CreateSeed(_seedCount);
-                var passphrase = _walletService.CreateSeed(_passCount);
+                var seed = _commandReceiver.CreateSeed(_seedCount);
+                var passphrase = _commandReceiver.CreateSeed(_passCount);
 
                 Result = new Tuple<object, string>(new
                 {

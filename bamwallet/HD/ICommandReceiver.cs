@@ -10,16 +10,16 @@ namespace BAMWallet.HD
 {
     public interface ICommandReceiver
     {
-        bool IsCommandExecutionInProgress { get; }
-        string CreateWallet(SecureString seed, SecureString passphrase);
-        string[] CreateSeed(WordCount wordCount);
+        string CreateWallet(in SecureString seed, in SecureString passphrase);
+        string[] CreateSeed(in WordCount wordCount);
         Tuple<object, string> WalletList();
-        Tuple<object, string> History(Session session);
-        Tuple<object, string> Address(Session session);
-        Tuple<object, string> Send(Session session, ref WalletTransaction transaction);
-        Tuple<object, string> ReceivePayment(Session session, string paymentId);
+        Tuple<object, string> History(in Session session);
+        Tuple<object, string> Address(in Session session);
+        Tuple<object, string> Send(in Session session, ref WalletTransaction transaction);
+        Tuple<object, string> ReceivePayment(in Session session, string paymentId);
         Tuple<object, string> CreateTransaction(Session session, ref WalletTransaction transaction);
-        Tuple<object, string> RecoverTransactions(Session session, int start);
-        void SyncWallet(Session session);
+        Tuple<object, string> RecoverTransactions(in Session session, int start);
+        void SyncWallet(in Session session);
+        bool IsTransactionAllowed(in Session session);
     }
 }
