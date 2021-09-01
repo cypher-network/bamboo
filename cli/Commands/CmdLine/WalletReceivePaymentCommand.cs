@@ -43,14 +43,14 @@ namespace Cli.Commands.CmdLine
                        this.spinner = spinner;
                        try
                        {
-                           var receivePaymentResult = _walletService.ReceivePayment(activeSession, paymentId);
+                           var receivePaymentResult = _commandReceiver.ReceivePayment(activeSession, paymentId);
                            if (receivePaymentResult.Item1 is null)
                            {
                                spinner.Fail(receivePaymentResult.Item2);
                            }
                            else
                            {
-                               var balanceResult = _walletService.History(activeSession);
+                               var balanceResult = _commandReceiver.History(activeSession);
                                if (balanceResult.Item1 is null)
                                {
                                    spinner.Fail(balanceResult.Item2);

@@ -26,7 +26,15 @@ namespace Cli.Commands.Rpc
         {
             try
             {
-                Result = _walletService.CreateTransaction(_session, ref _transaction);
+                //pseudo code
+                if (_commandReceiver.IsTransactionAllowed(_session))
+                {
+                    Result = _commandReceiver.CreateTransaction(_session, ref _transaction);
+                }
+                else
+                {
+                    Result = new Tuple<object, string>(null, "Transaction not allowed because a previous Transaction is pending");
+                }
             }
             catch (Exception ex)
             {

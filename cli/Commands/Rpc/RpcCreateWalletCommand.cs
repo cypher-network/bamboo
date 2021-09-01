@@ -29,11 +29,11 @@ namespace Cli.Commands.Rpc
         {
             try
             {
-                string[] seedDefault = _walletService.CreateSeed(WordCount.TwentyFour);
-                string[] passPhraseDefault = _walletService.CreateSeed(WordCount.Twelve);
+                string[] seedDefault = _commandReceiver.CreateSeed(WordCount.TwentyFour);
+                string[] passPhraseDefault = _commandReceiver.CreateSeed(WordCount.Twelve);
                 string joinMmnemonic = string.Join(" ", _seed ?? string.Join(' ', seedDefault));
                 string joinPassphrase = string.Join(" ", _pass ?? string.Join(' ', passPhraseDefault));
-                string id = _walletService.CreateWallet(joinMmnemonic.ToSecureString(), joinPassphrase.ToSecureString());
+                string id = _commandReceiver.CreateWallet(joinMmnemonic.ToSecureString(), joinPassphrase.ToSecureString());
                 var session = new Session(id.ToSecureString(), joinPassphrase.ToSecureString());
 
                 Result = new Tuple<object, string>(new

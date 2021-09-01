@@ -48,47 +48,54 @@ namespace Cli.Commands.CmdLine
 
                         try
                         {
-                            var session = activeSession;
+                            if (_commandReceiver.IsTransactionAllowed(activeSession))
+                            {
+                                var session = activeSession;
 
-                            session.SessionType = SessionType.Coin;
-                            var transaction = new WalletTransaction
-                            {
-                                Memo = memo,
-                                Payment = t.ConvertToUInt64(),
-                                RecipientAddress = address,
-                                WalletType = WalletType.Send,
-                                Delay = delay,
-                                IsVerified = false,
-                                SenderAddress = session.KeySet.StealthAddress
-                            };
-
-                            var createTransactionResult = _walletService.CreateTransaction(session, ref transaction);
-                            if (createTransactionResult.Item1 is null)
-                            {
-                                spinner.Fail(createTransactionResult.Item2);
-                            }
-                            else
-                            {
-                                var sendResult = _walletService.Send(session, ref transaction);
-                                if (sendResult.Item1 is not true)
+                                session.SessionType = SessionType.Coin;
+                                var transaction = new WalletTransaction
                                 {
-                                    spinner.Fail(sendResult.Item2);
+                                    Memo = memo,
+                                    Payment = t.ConvertToUInt64(),
+                                    RecipientAddress = address,
+                                    WalletType = WalletType.Send,
+                                    Delay = delay,
+                                    IsVerified = false,
+                                    SenderAddress = session.KeySet.StealthAddress
+                                };
+
+                                var createTransactionResult = _commandReceiver.CreateTransaction(session, ref transaction);
+                                if (createTransactionResult.Item1 is null)
+                                {
+                                    spinner.Fail(createTransactionResult.Item2);
                                 }
                                 else
                                 {
-                                    var balanceResult = _walletService.History(session);
-                                    if (balanceResult.Item1 is null)
+                                    var sendResult = _commandReceiver.Send(session, ref transaction);
+                                    if (sendResult.Item1 is not true)
                                     {
-                                        spinner.Fail(balanceResult.Item2);
+                                        spinner.Fail(sendResult.Item2);
                                     }
                                     else
                                     {
-                                        var message = $"Available Balance: {(balanceResult.Item1 as IOrderedEnumerable<BalanceSheet>).Last().Balance}";
-                                        message += $"\nPaymentID: {transaction.Transaction.TxnId.ByteToHex()}";
-                                        activeSession.SessionId = Guid.NewGuid();
-                                        spinner.Succeed(message);
+                                        var balanceResult = _commandReceiver.History(session);
+                                        if (balanceResult.Item1 is null)
+                                        {
+                                            spinner.Fail(balanceResult.Item2);
+                                        }
+                                        else
+                                        {
+                                            var message = $"Available Balance: {(balanceResult.Item1 as IOrderedEnumerable<BalanceSheet>).Last().Balance}";
+                                            message += $"\nPaymentID: {transaction.Transaction.TxnId.ByteToHex()}";
+                                            activeSession.SessionId = Guid.NewGuid();
+                                            spinner.Succeed(message);
+                                        }
                                     }
                                 }
+                            }
+                            else
+                            {
+                                spinner.Fail("Transaction not allowed because a previous Transaction is pending");
                             }
                         }
                         catch (Exception ex)

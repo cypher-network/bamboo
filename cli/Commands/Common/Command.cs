@@ -16,7 +16,7 @@ namespace Cli.Commands.Common
     public abstract class Command
     {
         private bool _refreshLogin;
-        protected readonly ICommandReceiver _walletService;
+        protected readonly ICommandReceiver _commandReceiver;
         protected readonly ICommandService _receiver;
         protected readonly IConsole _console;
 
@@ -24,7 +24,7 @@ namespace Cli.Commands.Common
         {
             Name = commandType.GetAttributeValue((CommandDescriptorAttribute attr) => attr.Name);
             Description = commandType.GetAttributeValue((CommandDescriptorAttribute attr) => attr.Description);
-            _walletService = serviceProvider.GetService<ICommandReceiver>();
+            _commandReceiver = serviceProvider.GetService<ICommandReceiver>();
             _receiver = serviceProvider.GetService<ICommandService>();
             _console = serviceProvider.GetService<IConsole>();
             _refreshLogin = refreshLogin;

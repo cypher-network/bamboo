@@ -28,14 +28,14 @@ namespace Cli.Commands.Rpc
         {
             try
             {
-                var receivePaymentResult = _walletService.ReceivePayment(_session, _paymentId);
+                var receivePaymentResult = _commandReceiver.ReceivePayment(_session, _paymentId);
                 if (receivePaymentResult.Item1 is null)
                 {
                     Result = new Tuple<object, string>(null, receivePaymentResult.Item2);
                 }
                 else
                 {
-                    var balanceSheetResult = _walletService.History(_session);
+                    var balanceSheetResult = _commandReceiver.History(_session);
                     if (balanceSheetResult.Item1 is null)
                     {
                         Result = new Tuple<object, string>(null, balanceSheetResult.Item2);

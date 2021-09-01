@@ -26,7 +26,7 @@ namespace Cli.Commands.CmdLine
             using var seed = Prompt.GetPasswordAsSecureString("Seed:", ConsoleColor.Yellow);
             using var passphrase = Prompt.GetPasswordAsSecureString("Passphrase:", ConsoleColor.Yellow);
 
-            var id = _walletService.CreateWallet(seed, passphrase);
+            var id = _commandReceiver.CreateWallet(seed, passphrase);
             var path = Util.WalletPath(id);
 
             _console.WriteLine($"Wallet ID: {id}");

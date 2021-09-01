@@ -22,7 +22,7 @@ namespace Cli.Commands.Rpc
         {
             try
             {
-                var request = _walletService.WalletList();
+                var request = _commandReceiver.WalletList();
                 Result = new Tuple<object, string>(Result.Item1, Result.Item2);
             }
             catch (Exception ex)

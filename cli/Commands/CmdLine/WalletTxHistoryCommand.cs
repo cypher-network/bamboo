@@ -34,7 +34,7 @@ namespace Cli.Commands.CmdLine
                 {
                     Spinner.StartAsync("Looking up history ...", spinner =>
                     {
-                        var balanceResult = _walletService.History(activeSession);
+                        var balanceResult = _commandReceiver.History(activeSession);
                         if (balanceResult.Item1 is null)
                         {
                             _console.ForegroundColor = ConsoleColor.Red;

@@ -752,7 +752,7 @@ namespace BAMWallet.HD
         /// <param name="session"></param>
         /// <param name="id"></param>
         /// <returns></returns>
-        private TaskResult<bool> RollBackTransaction(Session session, Guid id)
+        private TaskResult<bool> RollBackTransaction(in Session session, Guid id)
         {
             Guard.Argument(id, nameof(id)).NotDefault();
             try
@@ -780,7 +780,7 @@ namespace BAMWallet.HD
         /// <param name="session"></param>
         /// <param name="taskResult"></param>
         /// <returns></returns>
-        private bool AlreadyReceivedPayment(string paymentId, Session session)
+        private bool AlreadyReceivedPayment(string paymentId, in Session session)
         {
             var walletTransactions = session.Database.Query<WalletTransaction>().ToList();
             return walletTransactions.FirstOrDefault(x => x.Transaction.TxnId.Xor(paymentId.HexToByte())) != null;
@@ -826,13 +826,11 @@ namespace BAMWallet.HD
             _commandExecutionCounter = 0;
         }
 
-        public bool IsCommandExecutionInProgress => _commandExecutionCounter > 0;
-
         /// <summary>
         /// BIP39 seed.
         /// </summary>
         /// <returns></returns>
-        public string[] CreateSeed(WordCount wordCount)
+        public string[] CreateSeed(in WordCount wordCount)
         {
             var task = Task.Run(async () => await Wordlist.LoadWordList(Language.English));
             task.Wait();
@@ -888,7 +886,7 @@ namespace BAMWallet.HD
         /// <param name="seed"></param>
         /// <param name="passphrase"></param>
         /// <returns></returns>
-        public string CreateWallet(SecureString seed, SecureString passphrase)
+        public string CreateWallet(in SecureString seed, in SecureString passphrase)
         {
             using var CommandExecutionGuard = new RAIIGuard(CommandReceiver.IncrementCommandExecutionCount, CommandReceiver.DecrementCommandExecutionCount);
             Guard.Argument(seed, nameof(seed)).NotNull();
@@ -926,11 +924,7 @@ namespace BAMWallet.HD
             }
         }
 
-        /// <summary>
-        ///
-        /// </summary>
-        /// <returns></returns>
-        public Tuple<object, string> Address(Session session)
+        public Tuple<object, string> Address(in Session session)
         {
             using var CommandExecutionGuard = new RAIIGuard(CommandReceiver.IncrementCommandExecutionCount, CommandReceiver.DecrementCommandExecutionCount);
             string address = null;
@@ -1057,7 +1051,7 @@ namespace BAMWallet.HD
         /// </summary>
         /// <param name="session"></param>
         /// <returns></returns>
-        public Tuple<object, string> History(Session session)
+        public Tuple<object, string> History(in Session session)
         {
             using var commandExecutionGuard = new RAIIGuard(IncrementCommandExecutionCount, DecrementCommandExecutionCount);
             var balanceSheets = new List<BalanceSheet>();
@@ -1162,13 +1156,23 @@ namespace BAMWallet.HD
             return new Tuple<object, string>(balanceSheets.OrderBy(x => x.Date), String.Empty);
         }
 
+        public bool IsTransactionAllowed(in Session session)
+        {
+            //will mark as verified all possible transaction/remove broken transactions
+            SyncWallet(session);
+            //if there are still non verified but in mempool transactions return false, else we're good to go
+            bool doesUnverifiedTransactionExist = session.Database.Query<WalletTransaction>().Where(x => !x.IsVerified)
+                .ToList().Any();
+            return (doesUnverifiedTransactionExist == false);
+        }
+
         /// <summary>
         ///
         /// </summary>
         /// <param name="session"></param>
         /// <param name="paymentId"></param>
         /// <returns></returns>
-        public Tuple<object, string> ReceivePayment(Session session, string paymentId)
+        public Tuple<object, string> ReceivePayment(in Session session, string paymentId)
         {
             using var CommandExecutionGuard = new RAIIGuard(CommandReceiver.IncrementCommandExecutionCount, CommandReceiver.DecrementCommandExecutionCount);
             Guard.Argument(paymentId, nameof(paymentId)).NotNull().NotEmpty().NotWhiteSpace();
@@ -1244,7 +1248,7 @@ namespace BAMWallet.HD
         /// </summary>
         /// <param name="session"></param>
         /// <returns></returns>
-        public Tuple<object, string> Send(Session session, ref WalletTransaction tx)
+        public Tuple<object, string> Send(in Session session, ref WalletTransaction tx)
         {
             using var CommandExecutionGuard = new RAIIGuard(CommandReceiver.IncrementCommandExecutionCount, CommandReceiver.DecrementCommandExecutionCount);
             try
@@ -1278,13 +1282,12 @@ namespace BAMWallet.HD
         ///
         /// </summary>
         /// <param name="session"></param>
-        public void SyncWallet(Session session)
+        public void SyncWallet(in Session session)
         {
             Guard.Argument(session, nameof(session)).NotNull();
             var walletTransactions = session.Database.Query<WalletTransaction>().Where(x => !x.IsVerified)
                 .ToList()
-                .OrderBy(d => d.DateTime)
-                .ToArray();
+                .OrderBy(d => d.DateTime);
 
             SyncTransactions(session, walletTransactions);
         }
@@ -1295,7 +1298,7 @@ namespace BAMWallet.HD
         /// <param name="session"></param>
         /// <param name="start"></param>
         /// <returns></returns>
-        public Tuple<object, string> RecoverTransactions(Session session, int start)
+        public Tuple<object, string> RecoverTransactions(in Session session, int start)
         {
             using var CommandExecutionGuard = new RAIIGuard(CommandReceiver.IncrementCommandExecutionCount, CommandReceiver.DecrementCommandExecutionCount);
             Guard.Argument(start, nameof(start)).NotNegative();
