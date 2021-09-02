@@ -1158,12 +1158,13 @@ namespace BAMWallet.HD
 
         public bool IsTransactionAllowed(in Session session)
         {
-            //will mark as verified all possible transaction/remove broken transactions
-            SyncWallet(session);
-            //if there are still non verified but in mempool transactions return false, else we're good to go
-            bool doesUnverifiedTransactionExist = session.Database.Query<WalletTransaction>().Where(x => !x.IsVerified)
-                .ToList().Any();
-            return (doesUnverifiedTransactionExist == false);
+            return true;
+            // //will mark as verified all possible transaction/remove broken transactions
+            // SyncWallet(session);
+            // //if there are still non verified but in mempool transactions return false, else we're good to go
+            // bool doesUnverifiedTransactionExist = session.Database.Query<WalletTransaction>().Where(x => !x.IsVerified)
+            //     .ToList().Any();
+            // return (doesUnverifiedTransactionExist == false);
         }
 
         /// <summary>
