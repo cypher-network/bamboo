@@ -1150,19 +1150,18 @@ namespace BAMWallet.HD
                 _logger.Here().Error(ex, "Error getting history");
                 return new Tuple<object, string>(null, ex.Message);
             }
-
+            
             return new Tuple<object, string>(balanceSheets.OrderBy(x => x.Date), String.Empty);
         }
 
         public bool IsTransactionAllowed(in Session session)
         {
-            return true;
-            // //will mark as verified all possible transaction/remove broken transactions
-            // SyncWallet(session);
-            // //if there are still non verified but in mempool transactions return false, else we're good to go
-            // bool doesUnverifiedTransactionExist = session.Database.Query<WalletTransaction>().Where(x => !x.IsVerified)
-            //     .ToList().Any();
-            // return (doesUnverifiedTransactionExist == false);
+            //will mark as verified all possible transaction/remove broken transactions
+            SyncWallet(session);
+            //if there are still non verified but in mempool transactions return false, else we're good to go
+            bool doesUnverifiedTransactionExist = session.Database.Query<WalletTransaction>().Where(x => !x.IsVerified)
+                .ToList().Any();
+            return (doesUnverifiedTransactionExist == false);
         }
 
         /// <summary>
