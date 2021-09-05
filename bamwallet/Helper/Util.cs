@@ -109,5 +109,41 @@ namespace BAMWallet.Helper
         {
             return new DateTimeOffset(GetAdjustedTime()).ToUnixTimeSeconds();
         }
+        
+        static DateTimeOffset unixRef = new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        
+        public static uint DateTimeToUnixTime(DateTimeOffset dt)
+        {
+            return (uint)DateTimeToUnixTimeLong(dt);
+        }
+
+        internal static ulong DateTimeToUnixTimeLong(DateTimeOffset dt)
+        {
+            dt = dt.ToUniversalTime();
+            if (dt < unixRef)
+                throw new ArgumentOutOfRangeException("The supplied datetime can't be expressed in unix timestamp");
+            var result = (dt - unixRef).TotalSeconds;
+            if (result > UInt32.MaxValue)
+                throw new ArgumentOutOfRangeException("The supplied datetime can't be expressed in unix timestamp");
+            return (ulong)result;
+        }
+
+        public static DateTimeOffset UnixTimeToDateTime(uint timestamp)
+        {
+            var span = TimeSpan.FromSeconds(timestamp);
+            return unixRef + span;
+        }
+        
+        public static DateTimeOffset UnixTimeToDateTime(ulong timestamp)
+        {
+            var span = TimeSpan.FromSeconds(timestamp);
+            return unixRef + span;
+        }
+        
+        public static DateTimeOffset UnixTimeToDateTime(long timestamp)
+        {
+            var span = TimeSpan.FromSeconds(timestamp);
+            return unixRef + span;
+        }
     }
 }

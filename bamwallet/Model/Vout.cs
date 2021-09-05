@@ -28,7 +28,7 @@ namespace BAMWallet.Model
         {
             if (T != CoinType.Coinbase) return false;
 
-            var lockTime = new LockTime(Utils.UnixTimeToDateTime(L));
+            var lockTime = new LockTime(Helper.Util.UnixTimeToDateTime(L));
             var script = S;
             var sc1 = new Script(Op.GetPushOp(lockTime.Value), OpcodeType.OP_CHECKLOCKTIMEVERIFY);
             var sc2 = new Script(script);

@@ -10,7 +10,6 @@ using Dawn;
 using Libsecp256k1Zkp.Net;
 using Microsoft.Extensions.Options;
 using NBitcoin;
-using NBitcoin.Stealth;
 using Newtonsoft.Json.Linq;
 using Serilog;
 using System;
@@ -22,6 +21,7 @@ using System.Net;
 using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
+using NBitcoin.Stealth;
 using Block = BAMWallet.Model.Block;
 using Transaction = BAMWallet.Model.Transaction;
 using Util = BAMWallet.Helper.Util;
@@ -192,7 +192,6 @@ namespace BAMWallet.HD
             {
                 var (outPkPayment, stealthPayment) = StealthPayment(transaction.RecipientAddress);
                 var (outPkChange, stealthChange) = StealthPayment(transaction.SenderAddress);
-                var coinstakeLockTime = new LockTime(Utils.DateTimeToUnixTime(DateTimeOffset.UtcNow.AddSeconds(15)));
                 var tx = new Transaction
                 {
                     Bp = new[] { new Bp { Proof = bp } },
@@ -207,7 +206,6 @@ namespace BAMWallet.HD
                             A = session.SessionType == SessionType.Coinstake ? transaction.Payment : 0,
                             C = pcmOut[0],
                             E = stealthPayment.Metadata.EphemKey.ToBytes(),
-                            L = session.SessionType == SessionType.Coinstake ? coinstakeLockTime.Value : 0,
                             N = ScanPublicKey(transaction.RecipientAddress).Encrypt(
                                 Transaction.Message(transaction.Payment, 0, blinds[1],
                                     transaction.Memo)),
@@ -234,7 +232,7 @@ namespace BAMWallet.HD
                     using var pedersen = new Pedersen();
 
                     var (outPkReward, stealthReward) = StealthPayment(transaction.SenderAddress);
-                    var rewardLockTime = new LockTime(Utils.DateTimeToUnixTime(DateTimeOffset.UtcNow.AddHours(21)));
+                    var rewardLockTime = new LockTime(Util.DateTimeToUnixTime(DateTimeOffset.UtcNow.AddHours(21)));
                     var blind = pedersen.BlindSwitch(transaction.Reward, secp256K1.CreatePrivateKey());
                     var commit = pedersen.Commit(transaction.Reward, blind);
                     var vOutput = tx.Vout.ToList();
