@@ -295,7 +295,7 @@ namespace BAMWallet.HD
                 }
 
                 var timer = new Stopwatch();
-                var t = (int)(walletTransaction.Delay * 2.7 * 1000);
+                var t =  (int)(walletTransaction.Delay * 4.5 * 1000);
                 timer.Start();
                 var nonce = Cryptography.Sloth.Eval(t, x);
                 timer.Stop();
@@ -314,8 +314,11 @@ namespace BAMWallet.HD
 
                 if (timer.Elapsed.Seconds < 5)
                 {
-                    walletTransaction.Delay++;
-                    GenerateTransactionTime(session, transaction, ref walletTransaction);
+                    return TaskResult<Transaction>.CreateFailure(JObject.FromObject(new
+                    {
+                        success = false,
+                        message = "Verified delayed function elapsed seconds is lower the than the default amount"
+                    }));
                 }
 
                 var lockTime = Util.GetAdjustedTimeAsUnixTimestamp() & ~timer.Elapsed.Seconds;
@@ -343,9 +346,10 @@ namespace BAMWallet.HD
         }
 
         /// <summary>
-        ///
+        /// 
         /// </summary>
         /// <param name="session"></param>
+        /// <param name="spending"></param>
         /// <param name="blinds"></param>
         /// <param name="sk"></param>
         /// <param name="nRows"></param>
