@@ -10,7 +10,6 @@ using Dawn;
 using Libsecp256k1Zkp.Net;
 using Microsoft.Extensions.Options;
 using NBitcoin;
-using NBitcoin.Stealth;
 using Newtonsoft.Json.Linq;
 using Serilog;
 using System;
@@ -22,6 +21,7 @@ using System.Net;
 using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
+using NBitcoin.Stealth;
 using Block = BAMWallet.Model.Block;
 using Transaction = BAMWallet.Model.Transaction;
 using Util = BAMWallet.Helper.Util;
@@ -192,7 +192,6 @@ namespace BAMWallet.HD
             {
                 var (outPkPayment, stealthPayment) = StealthPayment(transaction.RecipientAddress);
                 var (outPkChange, stealthChange) = StealthPayment(transaction.SenderAddress);
-                var coinstakeLockTime = new LockTime(Utils.DateTimeToUnixTime(DateTimeOffset.UtcNow.AddSeconds(15)));
                 var tx = new Transaction
                 {
                     Bp = new[] { new Bp { Proof = bp } },
@@ -207,7 +206,6 @@ namespace BAMWallet.HD
                             A = session.SessionType == SessionType.Coinstake ? transaction.Payment : 0,
                             C = pcmOut[0],
                             E = stealthPayment.Metadata.EphemKey.ToBytes(),
-                            L = session.SessionType == SessionType.Coinstake ? coinstakeLockTime.Value : 0,
                             N = ScanPublicKey(transaction.RecipientAddress).Encrypt(
                                 Transaction.Message(transaction.Payment, 0, blinds[1],
                                     transaction.Memo)),
@@ -234,7 +232,7 @@ namespace BAMWallet.HD
                     using var pedersen = new Pedersen();
 
                     var (outPkReward, stealthReward) = StealthPayment(transaction.SenderAddress);
-                    var rewardLockTime = new LockTime(Utils.DateTimeToUnixTime(DateTimeOffset.UtcNow.AddHours(21)));
+                    var rewardLockTime = new LockTime(Util.DateTimeToUnixTime(DateTimeOffset.UtcNow.AddHours(21)));
                     var blind = pedersen.BlindSwitch(transaction.Reward, secp256K1.CreatePrivateKey());
                     var commit = pedersen.Commit(transaction.Reward, blind);
                     var vOutput = tx.Vout.ToList();
@@ -297,7 +295,7 @@ namespace BAMWallet.HD
                 }
 
                 var timer = new Stopwatch();
-                var t = (int)(walletTransaction.Delay * 2.7 * 1000);
+                var t =  (int)(walletTransaction.Delay * 4.5 * 1000);
                 timer.Start();
                 var nonce = Cryptography.Sloth.Eval(t, x);
                 timer.Stop();
@@ -316,8 +314,11 @@ namespace BAMWallet.HD
 
                 if (timer.Elapsed.Seconds < 5)
                 {
-                    walletTransaction.Delay++;
-                    GenerateTransactionTime(session, transaction, ref walletTransaction);
+                    return TaskResult<Transaction>.CreateFailure(JObject.FromObject(new
+                    {
+                        success = false,
+                        message = "Verified delayed function elapsed seconds is lower the than the default amount"
+                    }));
                 }
 
                 var lockTime = Util.GetAdjustedTimeAsUnixTimestamp() & ~timer.Elapsed.Seconds;
@@ -345,9 +346,10 @@ namespace BAMWallet.HD
         }
 
         /// <summary>
-        ///
+        /// 
         /// </summary>
         /// <param name="session"></param>
+        /// <param name="spending"></param>
         /// <param name="blinds"></param>
         /// <param name="sk"></param>
         /// <param name="nRows"></param>
@@ -1152,19 +1154,18 @@ namespace BAMWallet.HD
                 _logger.Here().Error(ex, "Error getting history");
                 return new Tuple<object, string>(null, ex.Message);
             }
-
+            
             return new Tuple<object, string>(balanceSheets.OrderBy(x => x.Date), String.Empty);
         }
 
         public bool IsTransactionAllowed(in Session session)
         {
-            return true;
-            // //will mark as verified all possible transaction/remove broken transactions
-            // SyncWallet(session);
-            // //if there are still non verified but in mempool transactions return false, else we're good to go
-            // bool doesUnverifiedTransactionExist = session.Database.Query<WalletTransaction>().Where(x => !x.IsVerified)
-            //     .ToList().Any();
-            // return (doesUnverifiedTransactionExist == false);
+            //will mark as verified all possible transaction/remove broken transactions
+            SyncWallet(session);
+            //if there are still non verified but in mempool transactions return false, else we're good to go
+            bool doesUnverifiedTransactionExist = session.Database.Query<WalletTransaction>().Where(x => !x.IsVerified)
+                .ToList().Any();
+            return (doesUnverifiedTransactionExist == false);
         }
 
         /// <summary>
