@@ -18,13 +18,14 @@ using BAMWallet.HD;
 using BAMWallet.Helper;
 using BAMWallet.Model;
 using Cli.Commands.CmdLine;
+using CLi.Commands.CmdLine;
 using Cli.Helper;
 using FuzzySharp;
 using McMaster.Extensions.CommandLineUtils;
-using Microsoft.Extensions.Hosting;
+
 namespace Cli.Commands.Common
 {
-    public class CommandInvoker : IHostedService, ICommandService
+    public class CommandInvoker : ICommandService
     {
         enum State
         {
@@ -39,6 +40,7 @@ namespace Cli.Commands.Common
         private bool _hasExited;
         private State _loginState = State.LoggedOut;
         protected readonly TimingSettings _timingSettings;
+        private readonly NetworkSettings _networkSettings;
         private PausableTimer _timeout = null;
         private PausableTimer _syncTimer = null;
         Session _activeSession = null;
@@ -82,7 +84,7 @@ namespace Cli.Commands.Common
                 _syncTimer.Stop();
                 _syncTimer.Elapsed -= OnSyncInternal;
             }
-            _syncTimer = new PausableTimer(TimeSpan.FromMinutes(_timingSettings.SyncIntervalMins).TotalMilliseconds, true);
+            _syncTimer = new PausableTimer(TimeSpan.FromSeconds(_timingSettings.SyncIntervalSecs).TotalMilliseconds, true);
             _syncTimer.Elapsed += OnSyncInternal;
             _syncTimer.Start();
         }
@@ -141,6 +143,7 @@ namespace Cli.Commands.Common
             _console.CancelKeyPress += Console_CancelKeyPress;
             _hasExited = false;
             _timingSettings = provider.GetService<IOptions<TimingSettings>>()?.Value ?? new();
+            _networkSettings = provider.GetService<IOptions<NetworkSettings>>()?.Value ?? new();
         }
 
         private void RegisterLoggedOutCommands()
@@ -160,6 +163,7 @@ namespace Cli.Commands.Common
         {
             _commands.Clear();
             RegisterCommand(new LogoutCommand(_serviceProvider));
+            RegisterCommand(new WalletSyncCommand(_serviceProvider));
             RegisterCommand(new WalletRemoveCommand(_serviceProvider, _logger));
             RegisterCommand(new WalletCreateCommand(_serviceProvider));
             RegisterCommand(new WalletCreateMnemonicCommand(_serviceProvider));
@@ -216,7 +220,7 @@ namespace Cli.Commands.Common
             {
                 await Task.Run(async () =>
                 {
-                    await Task.Delay(500);
+                    await Task.Delay(100);
                     while (!_hasExited)
                     {
                         _cmdFinishedEvent.WaitOne();
@@ -246,7 +250,6 @@ namespace Cli.Commands.Common
                                 PrintHelp();
                             }
                             _cmdFinishedEvent.Set();
-                            continue;
                         }
                         else
                         {
@@ -330,15 +333,26 @@ namespace Cli.Commands.Common
                 }
             });
         }
+
         public async Task InteractiveCliLoop()
         {
             RegisterLoggedOutCommands();
-            Task inputProcessor = ProcessCmdLineInput();
-            Task cmdProcessor = ProcessCommands();
+            if (_networkSettings.RunSilently)
+            {
+                Task cmdProcessor = ProcessCommands();
+                await Task.WhenAll(cmdProcessor);
+            }
+            else
+            {
+                Task inputProcessor = ProcessCmdLineInput();
+                Task cmdProcessor = ProcessCommands();
 
-            await Task.WhenAll(inputProcessor, cmdProcessor);
+                await Task.WhenAll(inputProcessor, cmdProcessor);
+            }
+
             ExitCleanly();
         }
+        
         private void ExitCleanly()
         {
             _console.WriteLine("Exiting...");
@@ -347,10 +361,7 @@ namespace Cli.Commands.Common
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            Task.Run(async () =>
-            {
-                await InteractiveCliLoop();
-            });
+            Task.Run(async () => { await InteractiveCliLoop(); });
             return Task.CompletedTask;
         }
 

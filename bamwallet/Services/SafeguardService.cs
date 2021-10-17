@@ -2,6 +2,7 @@
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -20,17 +21,17 @@ namespace BAMWallet.Services
 {
     public class SafeguardService : BackgroundService
     {
+        private readonly IHostApplicationLifetime _applicationLifetime;
         private readonly ISafeguardDownloadingFlagProvider _safeguardDownloadingFlagService;
-        private readonly NetworkSettings _networkSettings;
         private readonly Client _client;
         private readonly ILogger _logger;
 
-        public SafeguardService(ISafeguardDownloadingFlagProvider safeguardDownloadingFlagService, IOptions<NetworkSettings> networkSettings, ILogger logger)
+        public SafeguardService(IHostApplicationLifetime lifeTime, ISafeguardDownloadingFlagProvider safeguardDownloadingFlagService,
+            IOptions<NetworkSettings> networkSettings, ILogger logger)
         {
+            _applicationLifetime = lifeTime;
             _safeguardDownloadingFlagService = safeguardDownloadingFlagService;
-            _networkSettings = networkSettings.Value;
             _logger = logger.ForContext("SourceContext", nameof(SafeguardService));
-
             _client = new Client(networkSettings.Value, _logger);
         }
 
@@ -54,9 +55,9 @@ namespace BAMWallet.Services
         public static Transaction[] GetTransactions()
         {
             var byteArray = Util.StreamToArray(GetSafeguardData());
-            var blocks = MessagePackSerializer.Deserialize<GenericList<Block>>(byteArray);
-            blocks.Data.Shuffle();
-            return blocks.Data.SelectMany(x => x.Txs).ToArray();
+            var blocks = MessagePackSerializer.Deserialize<List<Block>>(byteArray);
+            blocks.Shuffle();
+            return blocks.SelectMany(x => x.Txs).ToArray();
         }
 
         /// <summary>
@@ -69,35 +70,39 @@ namespace BAMWallet.Services
             try
             {
                 stoppingToken.ThrowIfCancellationRequested();
+                DeleteSafeguardData();
                 if (NeedNewSafeguardData())
                 {
-                    _safeguardDownloadingFlagService.IsDownloading = true;
-
-                    var baseAddress = _client.GetBaseAddress();
-                    var blocks = _client.GetRangeAsync<Block>(baseAddress, _networkSettings.Routing.SafeguardTransactions, stoppingToken);
-                    if (blocks != null)
+                    _safeguardDownloadingFlagService.TryDownloading = true;
+                    _client.HasRemoteAddress();
+                    var safeguardBlocksResponse =
+                        _client.Send<SafeguardBlocksResponse>(MessageCommand.GetSafeguardBlocks);
+                    if (safeguardBlocksResponse != null)
                     {
                         var fileStream = SafeguardData(GetDays());
-                        var buffer = MessagePackSerializer.Serialize(blocks, cancellationToken: stoppingToken);
-                        fileStream.Write(buffer, 0, buffer.Count());
+                        var buffer = MessagePackSerializer.Serialize(safeguardBlocksResponse.Blocks,
+                            cancellationToken: stoppingToken);
+                        fileStream.Write(buffer, 0, buffer.Length);
                         fileStream.Flush();
                         fileStream.Close();
-                        _safeguardDownloadingFlagService.IsDownloading = false;
+                        _safeguardDownloadingFlagService.TryDownloading = false;
+                    }
+                    else
+                    {
+                        throw new Exception("SafeGuard timed out. Connection to the node cannot be established");
                     }
                 }
             }
-            catch (TaskCanceledException)
+            catch (Exception ex) when (ex is not TaskCanceledException)
             {
-            }
-            catch (Exception ex)
-            {
-                _logger.Here().Error(ex, "SafeGuardService execution error");
+                _logger.Here().Fatal(ex, "SafeGuardService execution error");
             }
             finally
             {
-                _safeguardDownloadingFlagService.IsDownloading = false;
+                _safeguardDownloadingFlagService.TryDownloading = false;
             }
-            return Task.FromResult<object>(null);
+
+            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -113,6 +118,25 @@ namespace BAMWallet.Services
                     !filenameWithoutPath.Equals(d.ToString("dd-MM-yyyy")));
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        private static void DeleteSafeguardData()
+        {
+            var safeGuardPath = SafeguardFilePath();
+            try
+            {
+                if (Directory.Exists(safeGuardPath))
+                {
+                    Directory.Delete(safeGuardPath, true);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+        
         /// <summary>
         ///
         /// </summary>

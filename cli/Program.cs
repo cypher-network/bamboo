@@ -86,6 +86,10 @@ namespace Cli
                 await host.RunAsync();
                 await host.WaitForShutdownAsync();
             }
+            catch (TaskCanceledException)
+            {
+                
+            }
             catch (Exception ex)
             {
                 Log.Fatal(ex, "Host terminated unexpectedly");

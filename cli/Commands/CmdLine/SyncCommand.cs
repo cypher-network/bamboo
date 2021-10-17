@@ -5,6 +5,7 @@ using System;
 using BAMWallet.HD;
 using Cli.Commands.Common;
 using System.Diagnostics;
+
 namespace Cli.Commands.CmdLine
 {
     [CommandDescriptor("sync", "syncs wallet with chain")]
@@ -18,9 +19,10 @@ namespace Cli.Commands.CmdLine
         public override void Execute(Session activeSession = null)
         {
             if (activeSession != null)
-            {
+            {              
                 _commandReceiver.SyncWallet(activeSession);
                 Debug.WriteLine("Syncing wallet with chain...");
+
             }
         }
     }
