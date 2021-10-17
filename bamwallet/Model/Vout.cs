@@ -19,7 +19,7 @@ namespace BAMWallet.Model
         [Key(5)] public byte[] P { get; set; }
         [Key(6)] public string S { get; set; }
         [Key(7)] public CoinType T { get; set; }
-
+        [Key(8)] public byte[] D { get; set; }
         /// <summary>
         ///
         /// </summary>
@@ -44,7 +44,6 @@ namespace BAMWallet.Model
             spending.Inputs.Add(new TxIn(tx.Outputs.AsCoins().First().Outpoint, new Script()));
             spending.Inputs[0].Sequence = 1;
             return !spending.Inputs.AsIndexedInputs().First().VerifyScript(tx.Outputs[0]);
-
         }
     }
 }

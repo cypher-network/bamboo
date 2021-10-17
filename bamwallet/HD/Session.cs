@@ -17,32 +17,20 @@ namespace BAMWallet.HD
         public SecureString Passphrase { get; }
         public Guid SessionId { get; set; }
         public SessionType SessionType { get; set; }
-        public LiteRepository Database { get; set; }
+        public LiteRepository Database { get; }
         public bool Syncing { get; set; }
 
         /// <summary>
         /// Multiple key sets not supported, thus we can simply return the only one keyset create during wallet creation.
         /// </summary>
         /// <returns>The one and only KeySet</returns>
-        public KeySet KeySet
-        {
-            get
-            {
-                return Database.Query<KeySet>().First();
-            }
-        }
+        public KeySet KeySet => Database.Query<KeySet>().First();
 
-        public bool IsValid
-        {
-            get
-            {
-                return IsIdentifierValid(Identifier);
-            }
-        }
+        public bool IsValid => IsIdentifierValid(Identifier);
 
         public static bool AreCredentialsValid(SecureString identifier, SecureString passphrase)
         {
-            return (IsIdentifierValid(identifier) && IsPassPhraseValid(identifier, passphrase));
+            return IsIdentifierValid(identifier) && IsPassPhraseValid(identifier, passphrase);
         }
 
         private static bool IsIdentifierValid(SecureString identifier)
@@ -57,7 +45,7 @@ namespace BAMWallet.HD
             SessionId = Guid.NewGuid();
             if (!IsValid)
             {
-                throw new FileLoadException(string.Format("Wallet with ID: {0} not found!", identifier.ToUnSecureString()));
+                throw new FileLoadException($"Wallet with ID: {identifier.ToUnSecureString()} not found!");
             }
             Database = Util.LiteRepositoryFactory(identifier, passphrase);
         }
@@ -70,21 +58,20 @@ namespace BAMWallet.HD
                 Password = pass.ToUnSecureString(),
                 Connection = ConnectionType.Shared
             };
-            using (var db = new LiteDatabase(connectionString))
+            using var db = new LiteDatabase(connectionString);
+            var collection = db.GetCollection<KeySet>();
+            try
             {
-                var collection = db.GetCollection<KeySet>();
-                try
+                if (collection.Count() == 1)
                 {
-                    if (collection.Count() == 1)
-                    {
-                        return true;
-                    }
-                }
-                catch (LiteException)
-                {
-                    return false;
+                    return true;
                 }
             }
+            catch (LiteException)
+            {
+                return false;
+            }
+
             return false;
         }
     }

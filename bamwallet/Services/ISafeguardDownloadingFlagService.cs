@@ -5,6 +5,6 @@ namespace BAMWallet.Services
 {
     public interface ISafeguardDownloadingFlagProvider
     {
-        bool IsDownloading { get; set; }
+        bool TryDownloading { get; set; }
     }
 }

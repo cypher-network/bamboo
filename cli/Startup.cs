@@ -1,3 +1,6 @@
+// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0.
+// To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
+
 using System;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -72,10 +75,10 @@ namespace Cli
                 .AddHttpContextAccessor()
                 .AddSingleton(Log.Logger)
                 .AddSingleton<ISafeguardDownloadingFlagProvider, SafeguardDownloadingFlagProvider>()
-                .AddHostedService<SafeguardService>()
                 .AddSingleton<ICommandReceiver, CommandReceiver>()
                 .AddSingleton<ICommandService, CommandInvoker>()
                 .AddSingleton<IHostedService, CommandInvoker>(sp => sp.GetService<ICommandService>() as CommandInvoker)
+                .AddHostedService<SafeguardService>() // Order last so that this executes first
                 .Add(new ServiceDescriptor(typeof(IConsole), PhysicalConsole.Singleton));
 
             services.AddLogging(loggingBuilder => { loggingBuilder.ClearProviders(); });

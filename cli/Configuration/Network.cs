@@ -11,16 +11,16 @@ namespace Cli.Configuration
         private readonly IUserInterface _userInterface;
         private readonly UserInterfaceChoice _optionCancel = new(string.Empty);
         private readonly IList<IPService> _ipServices = IPServices.Services;
-        private readonly IPAddress _nodeTangramIPAddress = IPAddress.Parse("206.189.57.146");
+        private readonly IPAddress _nodeTangramIPAddress = IPAddress.Parse("167.99.81.173");
 
         public class ConfigurationClass
         {
             public string Environment { get; set; }
             public IPAddress WalletIPAddress { get; set; }
-            public IPAddress WalletIPAddressPublic { get; set; }
             public IPAddress NodeIPAddress { get; set; }
-            public ushort NodePort { get; set; } = 7000;
-            public ushort WalletPort { get; set; } = 8000;
+            public ushort NodePort { get; set; } = 48655;
+            public ushort WalletPort { get; set; } = 8001;
+            public bool RunSilently { get; set; }
         }
 
         public ConfigurationClass Configuration { get; } = new();
@@ -105,7 +105,7 @@ namespace Cli.Configuration
         #region node
         private bool StepNode()
         {
-            UserInterfaceChoice optionNodeTangram = new("Tangram Team-managed node (http://206.189.57.146:7000)");
+            UserInterfaceChoice optionNodeTangram = new("Tangram Team-managed node (http://167.99.81.173:48655)");
             UserInterfaceChoice optionNodeCustom = new("Custom node");
 
             var section = new UserInterfaceSection(
@@ -152,14 +152,12 @@ namespace Cli.Configuration
             if (choiceSameSystem.Equals(optionYes))
             {
                 Configuration.WalletIPAddress = IPAddress.Loopback;
-                Configuration.WalletIPAddressPublic = IPAddress.Loopback;
                 Configuration.NodeIPAddress = IPAddress.Loopback;
                 return StepNodePort();
             }
 
             if (choiceSameSystem.Equals(optionNo))
             {
-                Configuration.WalletIPAddressPublic = IPAddress.Parse("0.0.0.0");
                 return StepNodeIPAddress();
             }
 
@@ -186,7 +184,7 @@ namespace Cli.Configuration
         private bool StepNodePort()
         {
             var section = new TextInput<ushort>(
-                "Enter node API port (e.g. 7000)",
+                "Enter node API port (e.g. 48655)",
                 (string portString) => ushort.TryParse(portString, out _),
                 (string portString) => ushort.Parse(portString));
 
@@ -250,7 +248,6 @@ namespace Cli.Configuration
             if (success)
             {
                 Configuration.WalletIPAddress = IPAddress.Parse("0.0.0.0");
-                Configuration.WalletIPAddressPublic = ipAddress;
                 return StepWalletPort();
             }
 
@@ -277,7 +274,6 @@ namespace Cli.Configuration
                 {
                     var selectedIpAddressService = _ipServices
                         .First(service => service.ToString() == choiceIpAddressService.Text);
-                    Configuration.WalletIPAddressPublic = selectedIpAddressService.Read();
                     Configuration.WalletIPAddress = IPAddress.Parse("0.0.0.0");
                 }
                 catch (Exception)
@@ -292,22 +288,38 @@ namespace Cli.Configuration
         private bool StepWalletPort()
         {
             var section = new TextInput<ushort>(
-                "Enter wallet API port (e.g. 8000). The port must be different from the node's API port when running on the same system",
+                "Enter wallet API port (e.g. 8001). The port must be different from the node's API port when running on the same system",
                 (string portString) => ushort.TryParse(portString, out _),
                 (string portString) => ushort.Parse(portString));
-
             var success = _userInterface.Do(section, out var port);
-            if (success)
+            if (!success) return false;
+            if (Configuration.NodeIPAddress.Equals(IPAddress.Loopback) && port == Configuration.NodePort)
             {
-                if (Configuration.NodeIPAddress.Equals(IPAddress.Loopback) && port == Configuration.NodePort)
-                {
-                    return false;
-                }
-
-                Configuration.WalletPort = port;
+                return false;
             }
 
-            return success;
+            Configuration.WalletPort = port;
+            return StepWalletRunSilently();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        private bool StepWalletRunSilently()
+        {
+            UserInterfaceChoice optionYes = new("Yes");
+            UserInterfaceChoice optionNo = new("No");
+            var section = new UserInterfaceSection("Run wallet in silent mode",
+                "It's recommended to run the staking wallet in silent mode if you are running the wallet from a system service.",
+                new[] {optionYes, optionNo});
+            var choiceSameSystem = _userInterface.Do(section);
+            if (choiceSameSystem.Equals(optionYes))
+            {
+                Configuration.RunSilently = true;
+            }
+            
+            return false;
         }
 
         #endregion

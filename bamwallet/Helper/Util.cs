@@ -8,8 +8,10 @@ using System.IO;
 using System.Numerics;
 using System.Reflection;
 using System.Security;
+using System.Threading.Tasks;
 using LiteDB;
 using BAMWallet.Extensions;
+using Blake3;
 
 namespace BAMWallet.Helper
 {
@@ -18,6 +20,11 @@ namespace BAMWallet.Helper
         public static string AppDomainDirectory()
         {
             return AppDomain.CurrentDomain.BaseDirectory;
+        }
+        
+        public static byte[] RandomDealerIdentity()
+        {
+            return Hasher.Hash(Guid.NewGuid().ToByteArray()).HexToByte();
         }
 
         public static string WalletPath(string id)

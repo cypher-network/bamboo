@@ -66,7 +66,8 @@ namespace BAMWallet.Model
                     .Append(output.N)
                     .Append(output.P)
                     .Append(output.S ?? string.Empty)
-                    .Append(output.T.ToString());
+                    .Append(output.T.ToString())
+                    .Append(output.D ?? Array.Empty<byte>());
             }
 
             foreach (var rct in Rct)
@@ -88,7 +89,7 @@ namespace BAMWallet.Model
                     .Append(Vtime.S)
                     .Append(Vtime.W);
             }
-
+            
             return ts.ToArray();
         }
 

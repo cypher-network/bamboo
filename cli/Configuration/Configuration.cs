@@ -22,18 +22,20 @@ namespace Cli.Configuration
 
             Console.WriteLine();
             Console.WriteLine("Environment       : " + networkConfiguration.Configuration.Environment);
-            Console.WriteLine("Wallet API address: " + networkConfiguration.Configuration.WalletIPAddressPublic);
             Console.WriteLine("Wallet API port   : " + networkConfiguration.Configuration.WalletPort);
             Console.WriteLine("Node API address  : " + networkConfiguration.Configuration.NodeIPAddress);
             Console.WriteLine("Node API port     : " + networkConfiguration.Configuration.NodePort);
+            Console.WriteLine("Run silently     : " + networkConfiguration.Configuration.RunSilently);
             Console.WriteLine();
 
             var configTemplate = File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Configuration", "Templates", Constant.AppSettingsFile));
             var config = configTemplate
                 .Replace("<ENVIRONMENT>", networkConfiguration.Configuration.Environment)
-                .Replace("<WALLET_ENDPOINT_BIND>", $"http://{networkConfiguration.Configuration.WalletIPAddress}:{networkConfiguration.Configuration.WalletPort.ToString()}")
-                .Replace("<WALLET_ENDPOINT_PUBLIC>", $"http://{networkConfiguration.Configuration.WalletIPAddressPublic}:{networkConfiguration.Configuration.WalletPort.ToString()}")
-                .Replace("<NODE_ENDPOINT>", $"http://{networkConfiguration.Configuration.NodeIPAddress}:{networkConfiguration.Configuration.NodePort}");
+                .Replace("<WALLET_ENDPOINT_BIND>",
+                    $"http://{networkConfiguration.Configuration.WalletIPAddress}:{networkConfiguration.Configuration.WalletPort.ToString()}")
+                .Replace("<NODE_ENDPOINT>",
+                    $"http://{networkConfiguration.Configuration.NodeIPAddress}:{networkConfiguration.Configuration.NodePort}")
+                .Replace("<WALLET_RUN_SILENTLY>", $"http://{networkConfiguration.Configuration.RunSilently}");
 
             var configFileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Constant.AppSettingsFile);
             File.WriteAllText(configFileName, config);
