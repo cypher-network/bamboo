@@ -89,7 +89,7 @@ namespace BAMWallet.Model
                     .Append(Vtime.S)
                     .Append(Vtime.W);
             }
-            
+
             return ts.ToArray();
         }
 

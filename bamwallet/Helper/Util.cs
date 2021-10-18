@@ -21,7 +21,7 @@ namespace BAMWallet.Helper
         {
             return AppDomain.CurrentDomain.BaseDirectory;
         }
-        
+
         public static byte[] RandomDealerIdentity()
         {
             return Hasher.Hash(Guid.NewGuid().ToByteArray()).HexToByte();
@@ -116,9 +116,9 @@ namespace BAMWallet.Helper
         {
             return new DateTimeOffset(GetAdjustedTime()).ToUnixTimeSeconds();
         }
-        
+
         static DateTimeOffset unixRef = new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero);
-        
+
         public static uint DateTimeToUnixTime(DateTimeOffset dt)
         {
             return (uint)DateTimeToUnixTimeLong(dt);
@@ -140,13 +140,13 @@ namespace BAMWallet.Helper
             var span = TimeSpan.FromSeconds(timestamp);
             return unixRef + span;
         }
-        
+
         public static DateTimeOffset UnixTimeToDateTime(ulong timestamp)
         {
             var span = TimeSpan.FromSeconds(timestamp);
             return unixRef + span;
         }
-        
+
         public static DateTimeOffset UnixTimeToDateTime(long timestamp)
         {
             var span = TimeSpan.FromSeconds(timestamp);

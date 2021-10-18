@@ -20,7 +20,6 @@ using System.Linq;
 using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
-using LiteDB;
 using Microsoft.Extensions.Hosting;
 using NBitcoin.Stealth;
 using Transaction = BAMWallet.Model.Transaction;
@@ -242,7 +241,7 @@ namespace BAMWallet.HD
                             message = "Unable to generate the transaction delayed time"
                         }));
                     }
-                        
+
                     tx.Vtime = generateTransactionTime.Result;
                 }
                 else if (session.SessionType == SessionType.Coinstake)
@@ -298,7 +297,7 @@ namespace BAMWallet.HD
         private TaskResult<Vtime> GenerateTransactionTime(in byte[] hash, ref WalletTransaction walletTransaction)
         {
             Vtime vtime;
-            
+
             try
             {
                 var x = System.Numerics.BigInteger.Parse(hash.ByteToHex(),
@@ -307,9 +306,9 @@ namespace BAMWallet.HD
                 {
                     x = -x;
                 }
-                
+
                 var timer = new Stopwatch();
-                var t =  (int)(walletTransaction.Delay * 3.2 * 1000);
+                var t = (int)(walletTransaction.Delay * 3.2 * 1000);
                 timer.Start();
                 var nonce = Cryptography.Sloth.Eval(t, x);
                 timer.Stop();
@@ -379,65 +378,65 @@ namespace BAMWallet.HD
             using var pedersen = new Pedersen();
             var (spend, scan) = Unlock(session);
             var transactions = SafeguardService.GetTransactions().ToArray();
-            begin:
+        begin:
             transactions.Shuffle();
             for (var k = 0; k < nRows - 1; ++k)
-            for (var i = 0; i < nCols; ++i)
-            {
-                if (i == index)
+                for (var i = 0; i < nCols; ++i)
                 {
+                    if (i == index)
+                    {
+                        try
+                        {
+                            var message = Transaction.Message(spending, scan);
+                            var oneTimeSpendKey = spend.Uncover(scan, new PubKey(spending.E));
+                            sk[0] = oneTimeSpendKey.ToHex().HexToByte();
+                            blinds[0] = message.Blind;
+                            pcmIn[i + k * nCols] = pedersen.Commit(message.Amount, message.Blind);
+                            pkIn[i + k * nCols] = oneTimeSpendKey.PubKey.ToBytes();
+                            fixed (byte* mm = m, pk = pkIn[i + k * nCols])
+                            {
+                                Libsecp256k1Zkp.Net.Util.MemCpy(&mm[(i + k * nCols) * 33], pk, 33);
+                            }
+
+                            continue;
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.Here().Error("Unable to create main ring member");
+                            throw new Exception(ex.StackTrace);
+                        }
+                    }
+
                     try
                     {
-                        var message = Transaction.Message(spending, scan);
-                        var oneTimeSpendKey = spend.Uncover(scan, new PubKey(spending.E));
-                        sk[0] = oneTimeSpendKey.ToHex().HexToByte();
-                        blinds[0] = message.Blind;
-                        pcmIn[i + k * nCols] = pedersen.Commit(message.Amount, message.Blind);
-                        pkIn[i + k * nCols] = oneTimeSpendKey.PubKey.ToBytes();
+                        var isLocked = transactions[i].IsLockedOrInvalid();
+                        if (isLocked) goto begin;
+                    }
+                    catch (Exception)
+                    {
+                        _logger.Here().Error("Unable to check if locked or invalid");
+                        goto begin;
+                    }
+
+                    try
+                    {
+                        pcmIn[i + k * nCols] = transactions[i].Vout[0].C;
+                        pkIn[i + k * nCols] = transactions[i].Vout[0].P;
                         fixed (byte* mm = m, pk = pkIn[i + k * nCols])
                         {
                             Libsecp256k1Zkp.Net.Util.MemCpy(&mm[(i + k * nCols) * 33], pk, 33);
                         }
-
-                        continue;
                     }
                     catch (Exception ex)
                     {
-                        _logger.Here().Error("Unable to create main ring member");
+                        _logger.Here().Error("Unable to create ring member");
                         throw new Exception(ex.StackTrace);
                     }
                 }
 
-                try
-                {
-                    var isLocked = transactions[i].IsLockedOrInvalid();
-                    if (isLocked) goto begin;
-                }
-                catch (Exception)
-                {
-                    _logger.Here().Error("Unable to check if locked or invalid");
-                    goto begin;
-                }
-
-                try
-                {
-                    pcmIn[i + k * nCols] = transactions[i].Vout[0].C;
-                    pkIn[i + k * nCols] = transactions[i].Vout[0].P;
-                    fixed (byte* mm = m, pk = pkIn[i + k * nCols])
-                    {
-                        Libsecp256k1Zkp.Net.Util.MemCpy(&mm[(i + k * nCols) * 33], pk, 33);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.Here().Error("Unable to create ring member");
-                    throw new Exception(ex.StackTrace);
-                }
-            }
-
             return m;
         }
-        
+
         /// <summary>
         ///
         /// </summary>
@@ -468,7 +467,8 @@ namespace BAMWallet.HD
                 {
                     return TaskResult<ProofStruct>.CreateFailure(JObject.FromObject(new
                     {
-                        success = false, message = "Bulletproof Verify failed."
+                        success = false,
+                        message = "Bulletproof Verify failed."
                     }));
                 }
             }
@@ -476,7 +476,8 @@ namespace BAMWallet.HD
             {
                 return TaskResult<ProofStruct>.CreateFailure(JObject.FromObject(new
                 {
-                    success = false, message = ex.Message
+                    success = false,
+                    message = ex.Message
                 }));
             }
 
@@ -662,20 +663,20 @@ namespace BAMWallet.HD
                 if (command == MessageCommand.GetTransaction)
                 {
                     var transactionResponse =
-                        _client.Send<TransactionResponse>(command, new Parameter {Value = transactionId});
+                        _client.Send<TransactionResponse>(command, new Parameter { Value = transactionId });
                     return transactionResponse.Transaction is { };
                 }
 
                 if (command == MessageCommand.GetMemTransaction)
                 {
                     var memoryPoolTransactionResponse =
-                        _client.Send<MemoryPoolTransactionResponse>(command, new Parameter {Value = transactionId});
+                        _client.Send<MemoryPoolTransactionResponse>(command, new Parameter { Value = transactionId });
                     return memoryPoolTransactionResponse.Transaction is { };
                 }
             }
             catch (Exception)
             {
-               _logger.Here().Warning("Connection to the node cannot be established"); 
+                _logger.Here().Warning("Connection to the node cannot be established");
             }
             // If we get this far then the connection was dropped
             return true;
@@ -754,7 +755,7 @@ namespace BAMWallet.HD
 
             return TaskResult<bool>.CreateSuccess(true);
         }
-        
+
         /// <summary>
         ///
         /// </summary>
@@ -834,7 +835,6 @@ namespace BAMWallet.HD
             _logger = logger.ForContext("SourceContext", nameof(CommandReceiver));
             _client = new Client(networkSettings.Value, _logger);
             _commandExecutionCounter = 0;
-            if (!networkSettings.Value.Staking) return;
         }
 
         /// <summary>
@@ -880,7 +880,7 @@ namespace BAMWallet.HD
 
             return new Tuple<object, string>(null, "No wallets found!");
         }
-        
+
         #endregion
 
         public static void IncrementCommandExecutionCount()
@@ -930,7 +930,7 @@ namespace BAMWallet.HD
                 walletId.Dispose();
             }
         }
-        
+
         /// <summary>
         /// 
         /// </summary>
@@ -1001,8 +1001,8 @@ namespace BAMWallet.HD
             blinds[2] = pedersen.BlindSwitch(change, secp256K1.CreatePrivateKey());
             pcmOut[0] = pedersen.Commit(payment, blinds[1]);
             pcmOut[1] = pedersen.Commit(change, blinds[2]);
-            var commitSumBalance = pedersen.CommitSum(new List<byte[]> {pcmOut[0], pcmOut[1]}, new List<byte[]>());
-            if (!pedersen.VerifyCommitSum(new List<byte[]> {commitSumBalance}, new List<byte[]> {pcmOut[0], pcmOut[1]}))
+            var commitSumBalance = pedersen.CommitSum(new List<byte[]> { pcmOut[0], pcmOut[1] }, new List<byte[]>());
+            if (!pedersen.VerifyCommitSum(new List<byte[]> { commitSumBalance }, new List<byte[]> { pcmOut[0], pcmOut[1] }))
             {
                 return new Tuple<object, string>(null, "Verify commit sum failed.");
             }
@@ -1130,14 +1130,14 @@ namespace BAMWallet.HD
 
             return new Tuple<object, string>(balanceSheets.OrderBy(x => x.Date), String.Empty);
         }
-        
+
         // Function locks entire wallet instead of acting on the commitment level.
         public bool IsTransactionAllowed(in Session session)
         {
             //SyncWallet(session);
             //if there are still non verified but in mempool transactions return false, else we're good to go
             //bool doesUnverifiedTransactionExist = session.Database.Query<WalletTransaction>().Where(x => !x.IsVerified)
-                 //.ToList().Any(); 
+            //.ToList().Any(); 
             //return (doesUnverifiedTransactionExist == false);
             return true;
         }
@@ -1161,7 +1161,7 @@ namespace BAMWallet.HD
                 }
 
                 var transactionResponse = _client.Send<TransactionResponse>(MessageCommand.GetTransaction,
-                    new Parameter {Value = paymentId.HexToByte()});
+                    new Parameter { Value = paymentId.HexToByte() });
                 if (transactionResponse is null)
                 {
                     return new Tuple<object, string>(null, $"Failed to find transaction with paymentId: {paymentId}");
@@ -1169,9 +1169,9 @@ namespace BAMWallet.HD
 
                 var (spend, scan) = Unlock(session);
                 var outputs = (from v in transactionResponse.Transaction.Vout
-                    let uncover = spend.Uncover(scan, new PubKey(v.E))
-                    where uncover.PubKey.ToBytes().SequenceEqual(v.P)
-                    select v.Cast<Vout>()).ToList();
+                               let uncover = spend.Uncover(scan, new PubKey(v.E))
+                               where uncover.PubKey.ToBytes().SequenceEqual(v.P)
+                               select v.Cast<Vout>()).ToList();
                 if (false == outputs.Any())
                 {
                     return new Tuple<object, string>(null, "Your stealth address does not control this payment");
@@ -1222,7 +1222,7 @@ namespace BAMWallet.HD
             {
                 _client.HasRemoteAddress();
                 var newTransactionResponse = _client.Send<NewTransactionResponse>(MessageCommand.Transaction,
-                    new Parameter {Value = tx.Transaction.Serialize()});
+                    new Parameter { Value = tx.Transaction.Serialize() });
                 if (newTransactionResponse.OK)
                 {
                     return new Tuple<object, string>(true, string.Empty);
@@ -1269,12 +1269,12 @@ namespace BAMWallet.HD
             {
                 _client.HasRemoteAddress();
                 var walletTransactions = session.Database.Query<WalletTransaction>().OrderBy(x => x.DateTime).ToList();
-                var transactionBlockIndexResponse = _client.Send<TransactionBlockIndexResponse>(MessageCommand.GetTransactionBlockIndex, new Parameter { Value = walletTransactions.Last().Transaction.TxnId});
+                var transactionBlockIndexResponse = _client.Send<TransactionBlockIndexResponse>(MessageCommand.GetTransactionBlockIndex, new Parameter { Value = walletTransactions.Last().Transaction.TxnId });
                 if (transactionBlockIndexResponse is { })
                 {
-                    start = (int) transactionBlockIndexResponse.Index;
+                    start = (int)transactionBlockIndexResponse.Index;
                 }
-                
+
                 if (start == 0)
                 {
                     var wExists = session.Database.Query<WalletTransaction>().Exists();
@@ -1289,32 +1289,32 @@ namespace BAMWallet.HD
                         }
                     }
                 }
-                
+
                 var blockCountResponse = _client.Send<BlockCountResponse>(MessageCommand.GetBlockCount);
                 if (blockCountResponse is null) return new Tuple<object, string>(false, "Error recovering block count");
-                var height = (int) blockCountResponse.Count;
+                var height = (int)blockCountResponse.Count;
                 const int maxBlocks = 10;
                 var chunks = Enumerable.Repeat(maxBlocks, height / maxBlocks).ToList();
                 if (height % maxBlocks != 0) chunks.Add(height % maxBlocks);
                 foreach (var chunk in chunks)
                 {
                     var blocksResponse = _client.Send<BlocksResponse>(MessageCommand.GetBlocks,
-                        new Parameter {Value = start.ToByte()}, new Parameter {Value = chunk.ToByte()});
+                        new Parameter { Value = start.ToByte() }, new Parameter { Value = chunk.ToByte() });
                     if (blocksResponse.Blocks is { })
                     {
                         foreach (var transaction in blocksResponse.Blocks.SelectMany(x => x.Txs))
                         {
                             var (spend, scan) = Unlock(session);
                             var outputs = (from v in transaction.Vout
-                                let uncover = spend.Uncover(scan, new PubKey(v.E))
-                                where uncover.PubKey.ToBytes().Xor(v.P)
-                                select v.Cast<Vout>()).ToList();
+                                           let uncover = spend.Uncover(scan, new PubKey(v.E))
+                                           where uncover.PubKey.ToBytes().Xor(v.P)
+                                           select v.Cast<Vout>()).ToList();
                             if (outputs.Any() != true)
                                 continue;
 
-                                if (AlreadyReceivedPayment(transaction.TxnId.ByteToHex(), session))
-                                    continue;
-                            
+                            if (AlreadyReceivedPayment(transaction.TxnId.ByteToHex(), session))
+                                continue;
+
                             var tx = new WalletTransaction
                             {
                                 Id = session.SessionId,
@@ -1360,7 +1360,7 @@ namespace BAMWallet.HD
                 return new Tuple<object, string>(false, $"Error recovering transactions: {ex.Message}");
             }
         }
-        
+
         #endregion
     }
 }

@@ -312,13 +312,13 @@ namespace Cli.Configuration
             UserInterfaceChoice optionNo = new("No");
             var section = new UserInterfaceSection("Run wallet in silent mode",
                 "It's recommended to run the staking wallet in silent mode if you are running the wallet from a system service.",
-                new[] {optionYes, optionNo});
+                new[] { optionYes, optionNo });
             var choiceSameSystem = _userInterface.Do(section);
             if (choiceSameSystem.Equals(optionYes))
             {
                 Configuration.RunSilently = true;
             }
-            
+
             return false;
         }
 

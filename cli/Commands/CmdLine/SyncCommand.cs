@@ -19,7 +19,7 @@ namespace Cli.Commands.CmdLine
         public override void Execute(Session activeSession = null)
         {
             if (activeSession != null)
-            {              
+            {
                 _commandReceiver.SyncWallet(activeSession);
                 Debug.WriteLine("Syncing wallet with chain...");
 
