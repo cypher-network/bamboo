@@ -352,7 +352,7 @@ namespace Cli.Commands.Common
 
             ExitCleanly();
         }
-        
+
         private void ExitCleanly()
         {
             _console.WriteLine("Exiting...");

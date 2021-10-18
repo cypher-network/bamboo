@@ -88,7 +88,7 @@ namespace Cli
             }
             catch (TaskCanceledException)
             {
-                
+
             }
             catch (Exception ex)
             {

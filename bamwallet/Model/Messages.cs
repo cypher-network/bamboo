@@ -13,14 +13,14 @@ namespace BAMWallet.Model
     [MessagePackObject(true)]
     public record TransactionBlockIndexResponse(ulong Index);
     public record TransactionBlockIndexRequest(byte[] TransactionId);
-    
+
     /// <summary>
     /// 
     /// </summary>
     /// <param name="Count"></param>
     [MessagePackObject(true)]
     public record BlockCountResponse(long Count);
-    
+
     /// <summary>
     /// 
     /// </summary>
@@ -29,7 +29,7 @@ namespace BAMWallet.Model
     {
         [Key(0)] public List<Block> Blocks { get; set; }
     }
-    
+
     /// <summary>
     /// 
     /// </summary>
@@ -38,7 +38,7 @@ namespace BAMWallet.Model
     {
         [Key(0)] public Transaction Transaction { get; set; }
     }
-    
+
     /// <summary>
     /// 
     /// </summary>
@@ -47,7 +47,7 @@ namespace BAMWallet.Model
     {
         [Key(0)] public bool OK { get; set; }
     }
-    
+
     /// <summary>
     /// 
     /// </summary>
@@ -56,7 +56,7 @@ namespace BAMWallet.Model
     {
         [Key(0)] public Transaction Transaction { get; set; }
     }
-    
+
     /// <summary>
     /// 
     /// </summary>
@@ -65,7 +65,7 @@ namespace BAMWallet.Model
     {
         [Key(0)] public IList<Block> Blocks { get; set; }
     }
-    
+
     /// <summary>
     /// 
     /// </summary>
@@ -74,7 +74,7 @@ namespace BAMWallet.Model
     {
         [Key(0)] public Payment Payment { get; set; }
     }
-    
+
     /// <summary>
     /// 
     /// </summary>
@@ -84,7 +84,7 @@ namespace BAMWallet.Model
         [Key(0)] public Transaction Transaction { get; init; }
         [Key(1)] public string Message { get; init; }
     }
-    
+
     /// <summary>
     /// 
     /// </summary>

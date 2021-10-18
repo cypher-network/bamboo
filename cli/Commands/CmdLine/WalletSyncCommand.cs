@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 namespace CLi.Commands.CmdLine
 {
     [CommandDescriptor("sync", "syncs wallet with chain")]
-    public class WalletSyncCommand: Command
+    public class WalletSyncCommand : Command
     {
         private readonly ILogger _logger;
         private Spinner _spinner;

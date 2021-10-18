@@ -23,7 +23,7 @@ namespace BAMWallet.Rpc.Controllers
     {
         private readonly ICommandService _commandService;
         private readonly IServiceProvider _serviceProvider;
-        
+
         public WalletController(ICommandService commandService, IServiceProvider serviceProvider)
         {
             _commandService = commandService;
@@ -228,7 +228,8 @@ namespace BAMWallet.Rpc.Controllers
             var session =
                 GetSessionFromCredentials(new Credentials
                 {
-                    Identifier = receive.Identifier, Passphrase = receive.Passphrase
+                    Identifier = receive.Identifier,
+                    Passphrase = receive.Passphrase
                 });
             if (null == session)
             {
@@ -258,7 +259,7 @@ namespace BAMWallet.Rpc.Controllers
             Guard.Argument(spend.Amount, nameof(spend.Amount)).Positive();
             var session =
                 GetSessionFromCredentials(
-                    new Credentials {Identifier = spend.Identifier, Passphrase = spend.Passphrase});
+                    new Credentials { Identifier = spend.Identifier, Passphrase = spend.Passphrase });
             if (null == session)
             {
                 return new BadRequestObjectResult("Invalid identifier or password!");

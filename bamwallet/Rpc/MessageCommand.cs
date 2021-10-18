@@ -3,7 +3,7 @@
 
 namespace BAMWallet.Rpc
 {
-    public enum MessageCommand: byte
+    public enum MessageCommand : byte
     {
         GetBlocks = 0x14,
         GetBlockCount = 0x18,

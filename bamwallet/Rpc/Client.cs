@@ -15,7 +15,7 @@ namespace BAMWallet.Rpc
     public class Client
     {
         private const int SocketTryReceiveFromMilliseconds = 30000;
-        
+
         private readonly ILogger _logger;
         private readonly NetworkSettings _networkSettings;
 
@@ -54,7 +54,7 @@ namespace BAMWallet.Rpc
 
             return value;
         }
-        
+
         /// <summary>
         ///
         /// </summary>

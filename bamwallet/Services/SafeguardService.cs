@@ -136,7 +136,7 @@ namespace BAMWallet.Services
                 throw new Exception(ex.Message);
             }
         }
-        
+
         /// <summary>
         ///
         /// </summary>
