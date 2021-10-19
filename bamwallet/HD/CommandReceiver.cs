@@ -647,7 +647,8 @@ namespace BAMWallet.HD
         private bool TransactionDoesNotExist(Transaction transaction)
         {
             return DoesTransactionExistInEndpoint(transaction.TxnId, MessageCommand.GetTransaction) ||
-                   DoesTransactionExistInEndpoint(transaction.TxnId, MessageCommand.GetMemTransaction);
+                   DoesTransactionExistInEndpoint(transaction.TxnId, MessageCommand.GetMemTransaction) ||
+                   DoesTransactionExistInEndpoint(transaction.TxnId, MessageCommand.GetPosTransaction);
         }
 
         /// <summary>
@@ -672,6 +673,13 @@ namespace BAMWallet.HD
                     var memoryPoolTransactionResponse =
                         _client.Send<MemoryPoolTransactionResponse>(command, new Parameter { Value = transactionId });
                     return memoryPoolTransactionResponse.Transaction is { };
+                }
+
+                if (command == MessageCommand.GetPosTransaction)
+                {
+                    var posTransactionResponse =
+                        _client.Send<PoSPoolTransactionResponse>(command, new Parameter { Value = transactionId });
+                    return posTransactionResponse.Transaction is { };
                 }
             }
             catch (Exception)

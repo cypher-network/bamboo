@@ -11,7 +11,7 @@ namespace BAMWallet.Rpc
         GetTransaction = 0x20,
         Transaction = 0x21,
         GetSafeguardBlocks = 0x23,
-        GetPoSTransaction = 0x24,
+        GetPosTransaction = 0x24,
         GetTransactionBlockIndex = 0x25,
     }
 }
