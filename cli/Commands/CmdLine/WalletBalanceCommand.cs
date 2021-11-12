@@ -40,7 +40,7 @@ namespace Cli.Commands.CmdLine
                     }
                     else
                     {
-                        var lastSheet = (balanceResult.Item1 as IOrderedEnumerable<BalanceSheet>).Last();
+                        var lastSheet = (balanceResult.Item1 as IOrderedEnumerable<BalanceSheet>)!.Last();
                         _console.ForegroundColor = ConsoleColor.Green;
                         _console.WriteLine($"\n Balance: {lastSheet.Balance}");
                         _console.ForegroundColor = ConsoleColor.White;

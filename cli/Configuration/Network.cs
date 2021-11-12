@@ -18,9 +18,9 @@ namespace Cli.Configuration
             public string Environment { get; set; }
             public IPAddress WalletIPAddress { get; set; }
             public IPAddress NodeIPAddress { get; set; }
-            public ushort NodePort { get; set; } = 48655;
+            public ushort NodePort { get; set; } = 7946;
             public ushort WalletPort { get; set; } = 8001;
-            public bool RunSilently { get; set; }
+            public string NodePubKey { get; set; }
         }
 
         public ConfigurationClass Configuration { get; } = new();
@@ -184,7 +184,7 @@ namespace Cli.Configuration
         private bool StepNodePort()
         {
             var section = new TextInput<ushort>(
-                "Enter node API port (e.g. 48655)",
+                "Enter node API port (e.g. 7946)",
                 (string portString) => ushort.TryParse(portString, out _),
                 (string portString) => ushort.Parse(portString));
 
@@ -299,26 +299,23 @@ namespace Cli.Configuration
             }
 
             Configuration.WalletPort = port;
-            return StepWalletRunSilently();
+            return StepWalletNodePubKey();
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        private bool StepWalletRunSilently()
+        private bool StepWalletNodePubKey()
         {
-            UserInterfaceChoice optionYes = new("Yes");
-            UserInterfaceChoice optionNo = new("No");
-            var section = new UserInterfaceSection("Run wallet in silent mode",
-                "It's recommended to run the staking wallet in silent mode if you are running the wallet from a system service.",
-                new[] { optionYes, optionNo });
-            var choiceSameSystem = _userInterface.Do(section);
-            if (choiceSameSystem.Equals(optionYes))
-            {
-                Configuration.RunSilently = true;
-            }
-
+            var section = new TextInput<string>(
+                "Enter remote node public key. You can find the node's public key at (e.g. http://123.1.23.123:48655/peer)." +
+                " Replace (123.1.23.123) with the remote node's IP address that the wallet will connect to." +
+                " The public key provides bi-directional elliptic curve communication using X25519 cryptographic operations.",
+                pubkey => !string.IsNullOrEmpty(pubkey), pubkey => pubkey);
+            var success = _userInterface.Do(section, out var key);
+            if (!success) return false;
+            Configuration.NodePubKey = key;
             return false;
         }
 

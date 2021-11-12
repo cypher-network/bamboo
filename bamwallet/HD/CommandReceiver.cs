@@ -678,7 +678,7 @@ namespace BAMWallet.HD
                 if (command == MessageCommand.GetPosTransaction)
                 {
                     var posTransactionResponse =
-                        _client.Send<PoSPoolTransactionResponse>(command, new Parameter { Value = transactionId });
+                        _client.Send<PosPoolTransactionResponse>(command, new Parameter { Value = transactionId });
                     return posTransactionResponse.Transaction is { };
                 }
             }
@@ -1277,10 +1277,15 @@ namespace BAMWallet.HD
             {
                 _client.HasRemoteAddress();
                 var walletTransactions = session.Database.Query<WalletTransaction>().OrderBy(x => x.DateTime).ToList();
-                var transactionBlockIndexResponse = _client.Send<TransactionBlockIndexResponse>(MessageCommand.GetTransactionBlockIndex, new Parameter { Value = walletTransactions.Last().Transaction.TxnId });
-                if (transactionBlockIndexResponse is { })
+                if (walletTransactions.Count > 0)
                 {
-                    start = (int)transactionBlockIndexResponse.Index;
+                    var transactionBlockIndexResponse = _client.Send<TransactionBlockIndexResponse>(
+                        MessageCommand.GetTransactionBlockIndex,
+                        new Parameter {Value = walletTransactions.Last().Transaction.TxnId});
+                    if (transactionBlockIndexResponse is { })
+                    {
+                        start = (int) transactionBlockIndexResponse.Index;
+                    }
                 }
 
                 if (start == 0)
@@ -1293,36 +1298,32 @@ namespace BAMWallet.HD
                         {
                             var message = $"Unable to drop collection for {nameof(WalletTransaction)}";
                             _logger.Here().Error(message);
-                            return new Tuple<object, string>(false, message);
+                            return new Tuple<object, string>(null, message);
                         }
                     }
                 }
 
                 var blockCountResponse = _client.Send<BlockCountResponse>(MessageCommand.GetBlockCount);
-                if (blockCountResponse is null) return new Tuple<object, string>(false, "Error recovering block count");
-                var height = (int)blockCountResponse.Count;
+                if (blockCountResponse is null) return new Tuple<object, string>(null, "Error recovering block count");
+                var height = (int) blockCountResponse.Count;
                 const int maxBlocks = 10;
                 var chunks = Enumerable.Repeat(maxBlocks, height / maxBlocks).ToList();
                 if (height % maxBlocks != 0) chunks.Add(height % maxBlocks);
                 foreach (var chunk in chunks)
                 {
                     var blocksResponse = _client.Send<BlocksResponse>(MessageCommand.GetBlocks,
-                        new Parameter { Value = start.ToByte() }, new Parameter { Value = chunk.ToByte() });
+                        new Parameter {Value = start.ToByte()}, new Parameter {Value = chunk.ToByte()});
                     if (blocksResponse.Blocks is { })
                     {
                         foreach (var transaction in blocksResponse.Blocks.SelectMany(x => x.Txs))
                         {
                             var (spend, scan) = Unlock(session);
                             var outputs = (from v in transaction.Vout
-                                           let uncover = spend.Uncover(scan, new PubKey(v.E))
-                                           where uncover.PubKey.ToBytes().Xor(v.P)
-                                           select v.Cast<Vout>()).ToList();
-                            if (outputs.Any() != true)
-                                continue;
-
-                            if (AlreadyReceivedPayment(transaction.TxnId.ByteToHex(), session))
-                                continue;
-
+                                let uncover = spend.Uncover(scan, new PubKey(v.E))
+                                where uncover.PubKey.ToBytes().Xor(v.P)
+                                select v.Cast<Vout>()).ToList();
+                            if (outputs.Any() != true) continue;
+                            if (AlreadyReceivedPayment(transaction.TxnId.ByteToHex(), session)) continue;
                             var tx = new WalletTransaction
                             {
                                 Id = session.SessionId,
@@ -1360,12 +1361,12 @@ namespace BAMWallet.HD
                     start += chunk;
                 }
 
-                return new Tuple<object, string>(true, string.Empty);
+                return new Tuple<object, string>(true, null);
             }
             catch (Exception ex)
             {
                 _logger.Here().Error(ex, "Error recovering transactions");
-                return new Tuple<object, string>(false, $"Error recovering transactions: {ex.Message}");
+                return new Tuple<object, string>(null, $"Error recovering transactions: {ex.Message}");
             }
         }
 

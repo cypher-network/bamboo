@@ -52,7 +52,7 @@ namespace BAMWallet.Model
     /// 
     /// </summary>
     [MessagePackObject]
-    public record PoSPoolTransactionResponse
+    public record PosPoolTransactionResponse
     {
         [Key(0)] public Transaction Transaction { get; set; }
     }
