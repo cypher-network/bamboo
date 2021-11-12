@@ -6,7 +6,7 @@
     <RootNamespace>CLi</RootNamespace>
     <LangVersion>8</LangVersion>
     <Platforms>AnyCPU;x64</Platforms>
-    <AssemblyVersion>0.0.35.0</AssemblyVersion>
+    <AssemblyVersion>0.0.36.0</AssemblyVersion>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
     <InvariantGlobalization>true</InvariantGlobalization>
   </PropertyGroup>
