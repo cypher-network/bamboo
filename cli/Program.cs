@@ -7,8 +7,10 @@
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
 
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Threading.Tasks;
 using BAMWallet.HD;
 using Cli.UI;
@@ -60,7 +62,7 @@ namespace Cli
             if (!int.TryParse(configVersion.Value, out var configVersionNumber) ||
                 configVersionNumber < Constant.MinimumConfigVersion)
             {
-                await Console.Error.WriteLineAsync($"Configuration file outdated. Please delete appsettings.json and create a new one running 'clibamwallet --configure'");
+                await Console.Error.WriteLineAsync("Configuration file outdated. Please delete appsettings.json and create a new one running 'clibamwallet --configure'");
                 return 1;
             }
 
@@ -72,7 +74,7 @@ namespace Cli
             }
             else
             {
-                throw new Exception(string.Format($"No \"{Constant.ConfigSectionNameLog}\" section found in appsettings.json", Constant.ConfigSectionNameLog));
+                throw new Exception($"No \"{Constant.ConfigSectionNameLog}\" section found in appsettings.json");
             }
 
             try
@@ -86,9 +88,15 @@ namespace Cli
                 await host.RunAsync();
                 await host.WaitForShutdownAsync();
             }
-            catch (TaskCanceledException)
+            catch (ObjectDisposedException)
             {
-
+                // Ignore
+                return 1;
+            }
+            catch (TaskCanceledException ex)
+            {
+                Log.Fatal(ex, "Host terminated unexpectedly");
+                return 1;
             }
             catch (Exception ex)
             {
@@ -103,15 +111,37 @@ namespace Cli
             return 0;
         }
 
-        private static IHostBuilder CreateWebHostBuilder(string[] args, IConfiguration configuration) =>
-            Host.CreateDefaultBuilder(args)
-                .ConfigureWebHostDefaults(webBuilder =>
+        private static IHostBuilder CreateWebHostBuilder(string[] args, IConfiguration configuration) => Host
+            .CreateDefaultBuilder(args).ConfigureWebHostDefaults(webBuilder =>
+            {
+                var fileStream = new FileStream(".LOCK", FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
+                var walletEndpoint = configuration["NetworkSettings:WalletEndpoint"];
+                var endPoint = Helper.Utils.TryParseAddress(walletEndpoint);
+                var port = Helper.Utils.IsFreePort(endPoint.Port);
+                try
                 {
-                    var walletEndpoint = configuration["NetworkSettings:WalletEndpoint"];
-                    webBuilder
-                        .UseStartup<Startup>()
-                        .UseUrls(walletEndpoint)
-                        .UseSerilog();
-                });
+                    if (port == 0)
+                    {
+                        using var sr = new StreamReader(fileStream);
+                        var pid = Convert.ToInt32(sr.ReadLine());
+                        foreach (var process in Process.GetProcesses())
+                        {
+                            if (process.Id != pid) continue;
+                            process.Kill();
+                        }
+                    }
+                    else
+                    {
+                        using var sw = new StreamWriter(fileStream);
+                        sw.WriteLine(Environment.ProcessId);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex.Message);
+                }
+
+                webBuilder.UseStartup<Startup>().UseUrls(walletEndpoint).UseSerilog();
+            });
     }
 }
