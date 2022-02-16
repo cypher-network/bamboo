@@ -7,6 +7,7 @@
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,7 +24,6 @@ namespace Cli.Commands.CmdLine
     public class WalletReceivePaymentCommand : Command
     {
         private readonly ILogger _logger;
-        private Spinner spinner;
 
         public WalletReceivePaymentCommand(IServiceProvider serviceProvider)
             : base(typeof(WalletReceivePaymentCommand), serviceProvider, true)
@@ -31,40 +31,39 @@ namespace Cli.Commands.CmdLine
             _logger = serviceProvider.GetService<ILogger<WalletReceivePaymentCommand>>();
         }
 
-        public override void Execute(Session activeSession = null)
+        public override async Task Execute(Session activeSession = null)
         {
             if (activeSession != null)
             {
-                var paymentId = Prompt.GetString("PAYMENTID:", null, ConsoleColor.Green);
+                var paymentId = Prompt.GetString("TxID:", null, ConsoleColor.Green);
                 if (!string.IsNullOrEmpty(paymentId))
                 {
-                    Spinner.StartAsync("Receiving payment...", spinner =>
+                    await Spinner.StartAsync("Receiving payment...", spinner =>
                    {
-                       this.spinner = spinner;
                        try
                        {
-                           var receivePaymentResult = _commandReceiver.ReceivePayment(activeSession, paymentId);
-                           if (receivePaymentResult.Item1 is null)
+                           var (receive, errorReceive) = _commandReceiver.ReceivePayment(activeSession, paymentId);
+                           if (receive is null)
                            {
-                               spinner.Fail(receivePaymentResult.Item2);
+                               spinner.Fail(errorReceive);
                            }
                            else
                            {
-                               var balanceResult = _commandReceiver.History(activeSession);
-                               if (balanceResult.Item1 is null)
+                               var (balances, errorBalances) = _commandReceiver.History(activeSession);
+                               if (balances is null)
                                {
-                                   spinner.Fail(balanceResult.Item2);
+                                   spinner.Fail(errorBalances);
                                }
                                else
                                {
-                                   var lastSheet = (balanceResult.Item1 as IOrderedEnumerable<BalanceSheet>).Last();
-                                   spinner.Succeed($"Memo: {lastSheet.Memo}  Received: {lastSheet.MoneyIn}  Available Balance: {lastSheet.Balance}");
+                                   var lastSheet = (balances as IList<BalanceSheet>)!.Last();
+                                   spinner.Succeed($"Memo: {lastSheet.Memo}  Received: [{lastSheet.MoneyIn}]  Available Balance: [{lastSheet.Balance}]");
                                }
                            }
                        }
                        catch (Exception ex)
                        {
-                           _logger.LogError($"Message: {ex.Message}\n Stack: {ex.StackTrace}");
+                           _logger.LogError("Message: {@msg}\n Stack: {@trace}", ex.Message, ex.StackTrace);
                            throw;
                        }
                        return Task.CompletedTask;
