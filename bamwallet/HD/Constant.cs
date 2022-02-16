@@ -14,7 +14,7 @@ namespace BAMWallet.HD
         public const int GYin = 1000_000_000;
         public const long MicroAether = 1_000_000_000_000;
         public const long MilliAether = 1_000_000_000_000_000;
-        public const long Aether =  1_000_000_000_000_000_000;
+        public const long Aether = 1_000_000_000_000_000_000;
 
         public const string AppSettingsFile = "appsettings.json";
         public const string AppSettingsFileDev = "appsettings.Development.json";

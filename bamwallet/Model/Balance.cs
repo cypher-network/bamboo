@@ -7,14 +7,14 @@ using BAMWallet.Extensions;
 
 namespace BAMWallet.Model
 {
-    public class Balance: IEquatable<Balance>, IComparable<Balance>
+    public class Balance : IEquatable<Balance>, IComparable<Balance>
     {
         public DateTime DateTime { get; set; }
         public byte[] TxnId { get; set; }
         public ulong Total { get; set; }
         public Vout Commitment { get; set; }
         public WalletTransactionState State { get; set; }
-        
+
         /// <summary>
         /// 
         /// </summary>
@@ -46,7 +46,7 @@ namespace BAMWallet.Model
         {
             return HashCode.Combine(TxnId.ByteToHex());
         }
-        
+
         /// <summary>
         /// 
         /// </summary>
@@ -56,7 +56,7 @@ namespace BAMWallet.Model
         {
             return TxnId.SequenceEqual(other?.TxnId);
         }
-        
+
         /// <summary>
         /// 
         /// </summary>

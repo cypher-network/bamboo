@@ -31,7 +31,7 @@ public static class Crypto
             ? Array.Empty<byte>()
             : cipherText;
     }
-    
+
     /// <summary>
     /// 
     /// </summary>
@@ -51,7 +51,7 @@ public static class Crypto
             ? Array.Empty<byte>()
             : decryptedData;
     }
-    
+
     /// <summary>
     /// 
     /// </summary>
@@ -92,7 +92,7 @@ public static class Crypto
         Box.Keypair(pk, sk);
         return (pk, sk);
     }
-    
+
     /// <summary>
     /// 
     /// </summary>

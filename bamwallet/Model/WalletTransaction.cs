@@ -15,7 +15,7 @@ namespace BAMWallet.Model
         All = 0x04,
         Syncing = 0x99
     }
-    
+
     public class WalletTransaction
     {
         public ulong Balance { get; set; }

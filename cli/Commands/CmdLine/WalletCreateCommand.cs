@@ -85,7 +85,7 @@ namespace Cli.Commands.CmdLine
 
                     joinMmnemonic.ZeroString();
                     joinPassphrase.ZeroString();
-                    
+
                     _console.WriteLine();
 
                     return Task.CompletedTask;

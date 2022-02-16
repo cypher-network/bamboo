@@ -75,7 +75,7 @@ namespace BAMWallet.Model
     {
         [Key(0)] public Transaction Transaction { get; set; }
     }
-    
+
     /// <summary>
     /// 
     /// </summary>
