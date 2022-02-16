@@ -45,7 +45,7 @@ namespace Cli.Commands.CmdLine
                     return Task.CompletedTask;
                 }, Patterns.Pong);
             }
-            
+
         }
     }
 }

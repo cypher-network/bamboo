@@ -41,7 +41,7 @@ namespace Cli.Commands.CmdLine
             _console.WriteLine("Passphrase:  " + string.Join(" ", passphrase));
 
             _console.ForegroundColor = ConsoleColor.White;
-            
+
             return Task.CompletedTask;
         }
 

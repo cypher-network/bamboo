@@ -18,7 +18,7 @@ using McMaster.Extensions.CommandLineUtils;
 namespace CLi.Commands.CmdLine;
 
 [CommandDescriptor("stake", "Setup staking on your node")]
-public class WalletStakeCommand: Command
+public class WalletStakeCommand : Command
 {
     public WalletStakeCommand(IServiceProvider serviceProvider)
         : base(typeof(WalletStakeCommand), serviceProvider, true)

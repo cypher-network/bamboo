@@ -88,7 +88,7 @@ namespace Cli.Commands.CmdLine
 
         public override Task Execute(Session activeSession = null)
         {
-            var identifier =  Prompt.GetString("Wallet Name:", null, ConsoleColor.Yellow);
+            var identifier = Prompt.GetString("Wallet Name:", null, ConsoleColor.Yellow);
             var isDeletionConfirmed = Prompt.GetYesNo(
                 $"Are you sure you want to delete wallet with Identifier: {identifier}? (This action cannot be undone!)", false, ConsoleColor.Red);
             if (!isDeletionConfirmed) return Task.CompletedTask;

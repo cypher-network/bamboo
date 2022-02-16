@@ -11,13 +11,13 @@ public sealed class NngSingletonFactory
 {
     private static readonly Lazy<NngSingletonFactory> Lazy = new(() => new NngSingletonFactory());
     public static NngSingletonFactory Instance => Lazy.Value;
-    
+
     public NngSingletonFactory()
     {
         var managedAssemblyPath = Path.GetDirectoryName(GetType().Assembly.Location);
         var alc = new NngLoadContext(managedAssemblyPath);
         Factory = NngLoadContext.Init(alc);
     }
-    
+
     internal IAPIFactory<INngMsg> Factory { get; }
 }

@@ -21,7 +21,7 @@ namespace Cli.Commands.Rpc
         private readonly string _walletName;
         private readonly string _seed;
         private readonly string _pass;
-        
+
         public RpcCreateWalletCommand(string walletName, string seed, string passphrase, IServiceProvider serviceProvider, ref AutoResetEvent cmdFinishedEvent)
             : base(serviceProvider, ref cmdFinishedEvent, null)
         {

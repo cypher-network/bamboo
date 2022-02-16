@@ -47,7 +47,7 @@ namespace BAMWallet.Model
         /// <returns></returns>
         bool IsLockedOrInvalid();
     }
-    
+
     [MessagePackObject]
     public class Transaction : ITransaction
     {
@@ -69,7 +69,7 @@ namespace BAMWallet.Model
         {
             return Hasher.Hash(ToStream()).HexToByte();
         }
-        
+
         /// <summary>
         /// 
         /// </summary>

@@ -150,7 +150,7 @@ namespace BAMWallet.Helper
             var span = TimeSpan.FromSeconds(timestamp);
             return unixRef + span;
         }
-        
+
         public static byte[] Combine(params byte[][] arrays)
         {
             var ret = new byte[arrays.Sum(x => x.Length)];

@@ -48,9 +48,9 @@ namespace Cli.Commands.CmdLine
                         var change = balances.Where(x => x.Commitment.T == CoinType.Change).Sum(x => x.Total.DivWithGYin());
 
                         var balance = payment + coinstake + coinbase + change;
-                        
+
                         table.AddRow($"{payment:F9}", $"{coinstake:F9}", $"{coinbase:F9}", $"{change:F9}", $"{balance:F9}");
-                        
+
                         table.Configure(o => o.NumberAlignment = Alignment.Right);
                         _console.WriteLine($"\n{table}");
                         _console.WriteLine("\n");

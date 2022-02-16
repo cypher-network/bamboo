@@ -33,7 +33,7 @@ namespace Cli.Commands.CmdLine
                 _console.Write("bamboo$ ");
                 _console.ResetColor();
             }
-            
+
             return Task.CompletedTask;
         }
 

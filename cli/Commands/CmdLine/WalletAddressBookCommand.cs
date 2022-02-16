@@ -27,7 +27,7 @@ public class WalletAddressBookCommand : Command
     public override Task Execute(Session activeSession = null)
     {
         if (activeSession == null) return Task.CompletedTask;
-        
+
         _console.ForegroundColor = ConsoleColor.Green;
         _console.WriteLine("Please enter in an option:");
         _console.ForegroundColor = ConsoleColor.Gray;
@@ -35,7 +35,7 @@ public class WalletAddressBookCommand : Command
         _console.WriteLine("Add       [1]\n" + "Update    [2]\n" + "Remove    [3]\n" + "List      [4]");
         _console.ForegroundColor = ConsoleColor.White;
         var crud = Prompt.GetInt("Option:", 4, ConsoleColor.Magenta);
-        
+
         switch (crud)
         {
             case 1:
@@ -83,7 +83,7 @@ public class WalletAddressBookCommand : Command
             _console.ForegroundColor = ConsoleColor.White;
         }
     }
-    
+
     /// <summary>
     /// 
     /// </summary>
@@ -134,7 +134,7 @@ public class WalletAddressBookCommand : Command
         var result = _commandReceiver.AddAddressBook(activeSession, ref addressBook);
         _console.WriteLine(result.Item1 == null ? result.Item2 : $"Saved {name} to your address book.");
     }
-    
+
     /// <summary>
     /// 
     /// </summary>

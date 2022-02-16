@@ -34,7 +34,7 @@ namespace Cli.Commands.Rpc
             {
                 _cmdFinishedEvent.Set();
             }
-            
+
             return Task.CompletedTask;
         }
     }

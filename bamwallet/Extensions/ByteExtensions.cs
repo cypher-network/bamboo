@@ -52,7 +52,7 @@ namespace BAMWallet.Extensions
 
             return x == 0;
         }
-        
+
         public static byte[] WrapLengthPrefix(this byte[] message)
         {
             var lengthPrefix = BitConverter.GetBytes(message.Length);

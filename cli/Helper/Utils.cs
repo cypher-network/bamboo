@@ -35,7 +35,7 @@ public class Utils
         }
         return port;
     }
-    
+
     public static IPEndPoint TryParseAddress(string uriString)
     {
         IPEndPoint endPoint = null;

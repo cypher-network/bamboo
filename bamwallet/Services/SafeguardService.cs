@@ -77,7 +77,7 @@ namespace BAMWallet.Services
                     _client.HasRemoteAddress();
                     var safeguardBlocksResponse =
                         _client.Send<SafeguardBlocksResponse>(new Parameter
-                            { MessageCommand = MessageCommand.GetSafeguardBlocks });
+                        { MessageCommand = MessageCommand.GetSafeguardBlocks });
                     if (safeguardBlocksResponse != null)
                     {
                         var fileStream = SafeguardData(GetDays());

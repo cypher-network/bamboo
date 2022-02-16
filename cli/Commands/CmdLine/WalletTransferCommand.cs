@@ -66,7 +66,7 @@ namespace Cli.Commands.CmdLine
                             return;
                         }
                     }
-                    
+
                     await Spinner.StartAsync("Processing transaction ...", spinner =>
                     {
                         try
