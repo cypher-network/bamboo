@@ -8,6 +8,7 @@
 
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 using BAMWallet.HD;
 using BAMWallet.Model;
 
@@ -22,19 +23,11 @@ namespace Cli.Commands.Rpc
             _transaction = tx;
         }
 
-        public override void Execute(Session activeSession = null)
+        public override Task Execute(Session activeSession = null)
         {
             try
             {
-                //pseudo code
-                if (_commandReceiver.IsTransactionAllowed(_session))
-                {
-                    Result = _commandReceiver.CreateTransaction(_session, ref _transaction);
-                }
-                else
-                {
-                    Result = new Tuple<object, string>(null, "Transaction not allowed because a previous Transaction is pending");
-                }
+                Result = _commandReceiver.CreateTransaction(_session, ref _transaction);
             }
             catch (Exception ex)
             {
@@ -44,6 +37,8 @@ namespace Cli.Commands.Rpc
             {
                 _cmdFinishedEvent.Set();
             }
+            
+            return Task.CompletedTask;
         }
     }
 }

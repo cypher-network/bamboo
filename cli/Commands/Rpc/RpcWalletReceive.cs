@@ -10,6 +10,7 @@ using System;
 using System.Threading;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using BAMWallet.HD;
 using BAMWallet.Model;
 
@@ -24,7 +25,7 @@ namespace Cli.Commands.Rpc
             _paymentId = paymentId;
         }
 
-        public override void Execute(Session activeSession = null)
+        public override Task Execute(Session activeSession = null)
         {
             try
             {
@@ -60,6 +61,8 @@ namespace Cli.Commands.Rpc
             {
                 _cmdFinishedEvent.Set();
             }
+            
+            return Task.CompletedTask;
         }
     }
 }

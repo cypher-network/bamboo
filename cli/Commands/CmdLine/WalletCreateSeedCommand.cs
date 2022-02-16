@@ -7,13 +7,14 @@
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
 
 using System;
+using System.Threading.Tasks;
 using BAMWallet.HD;
 using Cli.Commands.Common;
 using McMaster.Extensions.CommandLineUtils;
 using NBitcoin;
 namespace Cli.Commands.CmdLine
 {
-    [CommandDescriptor("seed", "Creates a new seed and passphrase")]
+    [CommandDescriptor("seed", "Create new seed and passphrase")]
     class WalletCreateMnemonicCommand : Command
     {
         public WalletCreateMnemonicCommand(IServiceProvider serviceProvider)
@@ -21,7 +22,7 @@ namespace Cli.Commands.CmdLine
         {
         }
 
-        public override void Execute(Session activeSession = null)
+        public override Task Execute(Session activeSession = null)
         {
             _console.ForegroundColor = ConsoleColor.Magenta;
             _console.WriteLine("\nSeed phrase\n");
@@ -40,6 +41,8 @@ namespace Cli.Commands.CmdLine
             _console.WriteLine("Passphrase:  " + string.Join(" ", passphrase));
 
             _console.ForegroundColor = ConsoleColor.White;
+            
+            return Task.CompletedTask;
         }
 
         /// <summary>

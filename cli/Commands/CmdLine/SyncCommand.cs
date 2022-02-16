@@ -10,10 +10,15 @@ using System;
 using BAMWallet.HD;
 using Cli.Commands.Common;
 using System.Diagnostics;
+using System.Linq;
+using System.Threading.Tasks;
+using BAMWallet.Model;
+using Kurukuru;
+using McMaster.Extensions.CommandLineUtils;
 
 namespace Cli.Commands.CmdLine
 {
-    [CommandDescriptor("sync", "syncs wallet with chain")]
+    [CommandDescriptor("sync", "Syncs wallet with chain")]
     public class SyncCommand : Command
     {
         public SyncCommand(IServiceProvider serviceProvider)
@@ -21,13 +26,11 @@ namespace Cli.Commands.CmdLine
         {
         }
 
-        public override void Execute(Session activeSession = null)
+        public override async Task Execute(Session activeSession = null)
         {
             if (activeSession != null)
             {
-                _commandReceiver.SyncWallet(activeSession);
-                Debug.WriteLine("Syncing wallet with chain...");
-
+                await _commandReceiver.SyncWallet(activeSession);
             }
         }
     }

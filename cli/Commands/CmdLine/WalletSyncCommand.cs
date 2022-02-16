@@ -17,11 +17,10 @@ using Microsoft.Extensions.Logging;
 
 namespace CLi.Commands.CmdLine
 {
-    [CommandDescriptor("sync", "syncs wallet with chain")]
+    [CommandDescriptor("sync", "Syncs wallet with chain")]
     public class WalletSyncCommand : Command
     {
         private readonly ILogger _logger;
-        private Spinner _spinner;
 
         /// <summary>
         /// 
@@ -37,13 +36,12 @@ namespace CLi.Commands.CmdLine
         /// 
         /// </summary>
         /// <param name="activeSession"></param>
-        public override void Execute(Session activeSession = null)
+        public override async Task Execute(Session activeSession = null)
         {
             if (activeSession != null)
             {
-                Spinner.StartAsync("Syncing wallet ...", spinner =>
+                await Spinner.StartAsync("Syncing wallet ...", spinner =>
                 {
-                    _spinner = spinner;
                     try
                     {
                         _commandReceiver.SyncWallet(activeSession);
