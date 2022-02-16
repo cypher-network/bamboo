@@ -6,8 +6,8 @@ namespace BAMWallet.Extensions
 {
     public static class UlongExtension
     {
-        public static ulong MulWithNaT(this ulong value) => value * Constant.NanoTan;
+        public static ulong MulWithGYin(this ulong value) => value * Constant.GYin;
 
-        public static decimal DivWithNaT(this ulong value) => Convert.ToDecimal(value) / Constant.NanoTan;
+        public static decimal DivWithGYin(this ulong value) => Convert.ToDecimal(value) / Constant.GYin;
     }
 }

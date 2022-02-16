@@ -541,7 +541,7 @@ namespace BAMWallet.HD
             {
                 Date = dateTime.ToString("yyyy-MM-dd HH:mm"),
                 Memo = memo,
-                Balance = balance.DivWithNaT().ToString("F9"),
+                Balance = balance.DivWithGYin().ToString("F9"),
                 Outputs = outputs,
                 TxId = txId,
                 IsVerified = isVerified,
@@ -549,17 +549,17 @@ namespace BAMWallet.HD
             };
             if (sent != 0)
             {
-                balanceSheet.MoneyOut = $"-{sent.DivWithNaT():F9}";
+                balanceSheet.MoneyOut = $"-{sent.DivWithGYin():F9}";
             }
 
             if (received != 0)
             {
-                balanceSheet.MoneyIn = $"{received.DivWithNaT():F9}";
+                balanceSheet.MoneyIn = $"{received.DivWithGYin():F9}";
             }
 
             if (reward != 0)
             {
-                balanceSheet.Reward = $"{reward.DivWithNaT():F9}";
+                balanceSheet.Reward = $"{reward.DivWithGYin():F9}";
             }
 
             return balanceSheet;
