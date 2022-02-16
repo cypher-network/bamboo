@@ -3,7 +3,7 @@
   <PropertyGroup>
     <OutputType>Library</OutputType>
     <TargetFramework>net6.0</TargetFramework>
-    <LangVersion>8</LangVersion>
+    <LangVersion>10</LangVersion>
     <Platforms>AnyCPU;x64</Platforms>
     <RootNamespace>BAMWallet</RootNamespace>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
@@ -18,18 +18,18 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <LangVersion>9.0</LangVersion>
+    <LangVersion>10</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <LangVersion>9.0</LangVersion>
-    <OutputPath>bin\Release\net5.0</OutputPath>
-    <OutputPath>bin\Release\net5.0</OutputPath>
+    <LangVersion>10</LangVersion>
+    <OutputPath>bin\Release\net6.0</OutputPath>
+    <OutputPath>bin\Release\net6.0</OutputPath>
     <WarningLevel></WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <LangVersion>9.0</LangVersion>
+    <LangVersion>10</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <Folder Include="HD\" />
