@@ -951,26 +951,33 @@ namespace BAMWallet.HD
         /// <param name="session"></param>
         /// <param name="transaction"></param>
         /// <returns></returns>
-        public Tuple<object, string> CreateTransaction(Session session, ref WalletTransaction transaction)
+        public Tuple<object, string> AddAddressBook(Session session, ref AddressBook addressBook, bool update = false)
         {
-            using var commandExecutionGuard = new RAIIGuard(CommandReceiver.IncrementCommandExecutionCount,
-                CommandReceiver.DecrementCommandExecutionCount);
+            using var commandExecutionGuard = new RAIIGuard(IncrementCommandExecutionCount,
+                DecrementCommandExecutionCount);
             Guard.Argument(session.SessionId, nameof(session.SessionId)).NotDefault();
-            while (_safeguardDownloadingFlagProvider.TryDownloading)
+            Guard.Argument(addressBook, nameof(addressBook)).NotNull();
+            if (!IsBase58(addressBook.RecipientAddress))
             {
-                Thread.Sleep(100);
+                return new Tuple<object, string>(null, "Recipient address does not phrase to a base58 format.");
             }
 
-            var calculated = CalculateChange(session, transaction);
-            if (!calculated.Success)
+            var addressBooks = session.Database.Query<AddressBook>().OrderBy(x => x.Created).ToList();
+            if (addressBooks.Any())
             {
-                return new Tuple<object, string>(null, calculated.Exception.Message);
+                var book = addressBook;
+                var findAddressBook = addressBooks.FirstOrDefault(x => x.RecipientAddress == book.RecipientAddress || x.Name == book.Name);
+                if (findAddressBook != null)
+                {
+                    return new Tuple<object, string>(null,
+                        $"Recipient name: {addressBook.Name} with address: {addressBook.RecipientAddress} already exists.");
+                }
             }
-
-            using var secp256K1 = new Secp256k1();
-            using var pedersen = new Pedersen();
-            using var mlsag = new MLSAG();
-            var blinds = new Span<byte[]>(new byte[3][]);
+            
+            var saved = update ? Update(session, addressBook) : Save(session, addressBook);
+            return saved.Success
+                ? new Tuple<object, string>(addressBook, string.Empty)
+                : new Tuple<object, string>(null, saved.Exception.Message);
             var sk = new Span<byte[]>(new byte[2][]);
             const int nRows = 2; // last row sums commitments
             const int nCols = 22; // ring size
@@ -996,46 +1003,83 @@ namespace BAMWallet.HD
             if (!pedersen.VerifyCommitSum(new List<byte[]> { commitSumBalance }, new List<byte[]> { pcmOut[0], pcmOut[1] }))
             {
                 return new Tuple<object, string>(null, "Verify commit sum failed.");
-            }
+        }
 
-            var bulletChange = BulletProof(change, blinds[2], pcmOut[1]);
-            if (!bulletChange.Success)
-            {
-                return new Tuple<object, string>(null, bulletChange.Exception.Message);
-            }
-
-            var success = mlsag.Prepare(m, blindSum, pcmOut.Length, pcmOut.Length, nCols, nRows, pcmIn, pcmOut, blinds);
-            if (!success)
-            {
-                return new Tuple<object, string>(null, "MLSAG Prepare failed.");
-            }
-
-            sk[nRows - 1] = blindSum;
-            success = mlsag.Generate(ki, pc, ss, randSeed, preimage, nCols, nRows, index, sk, m);
-            if (!success)
-            {
-                return new Tuple<object, string>(null, "MLSAG Generate failed.");
-            }
-
-            success = mlsag.Verify(preimage, nCols, nRows, m, ki, pc, ss);
-            if (!success)
-            {
-                return new Tuple<object, string>(null, "MLSAG Verify failed.");
-            }
-
-            var offsets = Offsets(pcmIn, nCols);
-            var generateTransaction = GenerateTransaction(session, ref transaction, m, nCols, pcmOut, blinds, preimage,
-                pc, ki, ss, bulletChange.Result.proof, offsets);
-            if (!generateTransaction.Success)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="session"></param>
+        /// <param name="addressBook"></param>
+        /// <returns></returns>
+        public Tuple<object, string> FindAddressBook(Session session, ref AddressBook addressBook)
+        {
+            using var commandExecutionGuard = new RAIIGuard(IncrementCommandExecutionCount,
+                DecrementCommandExecutionCount);
+            Guard.Argument(session.SessionId, nameof(session.SessionId)).NotDefault();
+            Guard.Argument(addressBook, nameof(addressBook)).NotNull();
+            var addressBooks = session.Database.Query<AddressBook>().OrderBy(x => x.Created).ToList();
+            if (!addressBooks.Any())
             {
                 return new Tuple<object, string>(null,
-                    $"Unable to make the transaction. Inner error message {generateTransaction.NonSuccessMessage.message}");
+                    $"Recipient {addressBook.Name} does not exists.");
+            }
+            
+            var book = addressBook;
+            var findAddressBook = addressBooks.FirstOrDefault(x => x.RecipientAddress == book.RecipientAddress || x.Name == book.Name);
+            return findAddressBook != null
+                ? new Tuple<object, string>(findAddressBook, string.Empty)
+                : new Tuple<object, string>(null,
+                    $"Recipient not found.");
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="session"></param>
+        /// <param name="addressBook"></param>
+        /// <returns></returns>
+        public Tuple<object, string> RemoveAddressBook(Session session, ref AddressBook addressBook)
+        {
+            using var commandExecutionGuard = new RAIIGuard(IncrementCommandExecutionCount,
+                DecrementCommandExecutionCount);
+            Guard.Argument(session.SessionId, nameof(session.SessionId)).NotDefault();
+            Guard.Argument(addressBook, nameof(addressBook)).NotNull();
+            var addressBooks = session.Database.Query<AddressBook>().OrderBy(x => x.Created).ToList();
+            if (!addressBooks.Any())
+            {
+                return new Tuple<object, string>(null,
+                    $"Recipient name: {addressBook.Name} with address: {addressBook.RecipientAddress} already exists.");
             }
 
-            var saved = Save(session, transaction, false);
-            return !saved.Success
-                ? new Tuple<object, string>(null, "Unable to save the transaction.")
-                : new Tuple<object, string>(transaction, String.Empty);
+            var book = addressBook;
+            var findAddressBook =
+                addressBooks.FirstOrDefault(x => x.RecipientAddress == book.RecipientAddress || x.Name == book.Name);
+            if (findAddressBook is null)
+                return new Tuple<object, string>(null, $"Address book not found for {addressBook.Name}");
+            var deleted = session.Database.Delete<AddressBook>(findAddressBook.Id);
+            return deleted
+                ? new Tuple<object, string>(findAddressBook, $"Address book deleted for {findAddressBook.Name}")
+                : new Tuple<object, string>(null, $"Unable to delete address book for {addressBook.Name}");
+        }
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="session"></param>
+        /// <returns></returns>
+        public Tuple<object, string> ListAddressBook(Session session)
+        {
+            using var commandExecutionGuard = new RAIIGuard(IncrementCommandExecutionCount,
+                DecrementCommandExecutionCount);
+            Guard.Argument(session.SessionId, nameof(session.SessionId)).NotDefault();
+            var addressBooks = session.Database.Query<AddressBook>().OrderBy(x => x.Created).ToList();
+            if (!addressBooks.Any())
+            {
+                return new Tuple<object, string>(null,
+                    "No recipients found!");
+            }
+
+            return new Tuple<object, string>(addressBooks.ToArray(), string.Empty);
         }
 
         /// <summary>
@@ -1417,6 +1461,25 @@ namespace BAMWallet.HD
             }
         }
 
-        #endregion
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="address"></param>
+        /// <returns></returns>
+        public bool IsBase58(string address)
+        {
+            var base58CheckEncoder = new Base58CheckEncoder();
+            var isBase58 = base58CheckEncoder.IsMaybeEncoded(address);
+            try
+            {
+                base58CheckEncoder.DecodeData(address);
+            }
+            catch (Exception)
+            {
+                isBase58 = false;
+            }
+
+            return isBase58;
+        }
     }
 }
