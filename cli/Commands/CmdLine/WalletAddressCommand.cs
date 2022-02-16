@@ -7,6 +7,7 @@
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
 
 using System;
+using System.Threading.Tasks;
 using BAMWallet.HD;
 using Cli.Commands.Common;
 using ConsoleTables;
@@ -22,7 +23,7 @@ namespace Cli.Commands.CmdLine
         {
         }
 
-        public override void Execute(Session activeSession = null)
+        public override Task Execute(Session activeSession = null)
         {
             if (activeSession != null)
             {
@@ -38,6 +39,8 @@ namespace Cli.Commands.CmdLine
                 table.AddRow(request.Item1 as string);
                 _console.WriteLine($"\n{table}");
             }
+
+            return Task.CompletedTask;
         }
     }
 }

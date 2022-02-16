@@ -1,4 +1,4 @@
-﻿// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0.
+﻿// CypherNetwork BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0.
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
 using System;
@@ -45,7 +45,7 @@ namespace BAMWallet.Services
             var actualSafeGuardFile = Directory.EnumerateFiles(safeGuardPath, "*.messagepack").OrderBy(x =>
                 DateTime.ParseExact(Path.GetFileNameWithoutExtension(x), "dd-MM-yyyy", CultureInfo.InvariantCulture)
             ).Last();
-            return File.Open(actualSafeGuardFile, FileMode.Open, FileAccess.Read);
+            return new FileStream(actualSafeGuardFile, FileMode.Open, FileAccess.Read);
         }
 
         /// <summary>
@@ -76,7 +76,8 @@ namespace BAMWallet.Services
                     _safeguardDownloadingFlagService.TryDownloading = true;
                     _client.HasRemoteAddress();
                     var safeguardBlocksResponse =
-                        _client.Send<SafeguardBlocksResponse>(MessageCommand.GetSafeguardBlocks);
+                        _client.Send<SafeguardBlocksResponse>(new Parameter
+                            { MessageCommand = MessageCommand.GetSafeguardBlocks });
                     if (safeguardBlocksResponse != null)
                     {
                         var fileStream = SafeguardData(GetDays());

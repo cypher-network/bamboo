@@ -7,6 +7,7 @@
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
 
 using System;
+using System.Threading.Tasks;
 using Cli.Commands.Common;
 using BAMWallet.HD;
 
@@ -22,9 +23,10 @@ namespace Cli.Commands.CmdLine
         {
         }
 
-        public override void Execute(Session activeSession = null)
+        public override Task Execute(Session activeSession = null)
         {
             _console.WriteLine($"{BAMWallet.Helper.Util.GetAssemblyVersion()}");
+            return Task.CompletedTask;
         }
     }
 }

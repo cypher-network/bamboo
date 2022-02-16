@@ -52,5 +52,14 @@ namespace BAMWallet.Extensions
 
             return x == 0;
         }
+        
+        public static byte[] WrapLengthPrefix(this byte[] message)
+        {
+            var lengthPrefix = BitConverter.GetBytes(message.Length);
+            var ret = new byte[lengthPrefix.Length + message.Length];
+            lengthPrefix.CopyTo(ret, 0);
+            message.CopyTo(ret, lengthPrefix.Length);
+            return ret;
+        }
     }
 }

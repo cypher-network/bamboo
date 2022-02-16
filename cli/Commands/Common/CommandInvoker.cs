@@ -40,7 +40,6 @@ namespace Cli.Commands.Common
         private bool _hasExited;
         private State _loginState = State.LoggedOut;
         protected readonly TimingSettings _timingSettings;
-        private readonly NetworkSettings _networkSettings;
         private PausableTimer _timeout = null;
         private PausableTimer _syncTimer = null;
         Session _activeSession = null;
@@ -143,7 +142,6 @@ namespace Cli.Commands.Common
             _console.CancelKeyPress += Console_CancelKeyPress;
             _hasExited = false;
             _timingSettings = provider.GetService<IOptions<TimingSettings>>()?.Value ?? new();
-            _networkSettings = provider.GetService<IOptions<NetworkSettings>>()?.Value ?? new();
         }
 
         private void RegisterLoggedOutCommands()
@@ -164,6 +162,7 @@ namespace Cli.Commands.Common
             _commands.Clear();
             RegisterCommand(new LogoutCommand(_serviceProvider));
             RegisterCommand(new WalletSyncCommand(_serviceProvider));
+            RegisterCommand(new WalletStakeCommand(_serviceProvider));
             RegisterCommand(new WalletRemoveCommand(_serviceProvider, _logger));
             RegisterCommand(new WalletCreateCommand(_serviceProvider));
             RegisterCommand(new WalletCreateMnemonicCommand(_serviceProvider));
@@ -176,6 +175,7 @@ namespace Cli.Commands.Common
             RegisterCommand(new WalletRecoverTransactionsCommand(_serviceProvider));
             RegisterCommand(new WalletTransferCommand(_serviceProvider));
             RegisterCommand(new WalletTxHistoryCommand(_serviceProvider));
+            RegisterCommand(new WalletAddressBookCommand(_serviceProvider));
             RegisterCommand(new ExitCommand(_serviceProvider));
         }
 
@@ -337,19 +337,9 @@ namespace Cli.Commands.Common
         public async Task InteractiveCliLoop()
         {
             RegisterLoggedOutCommands();
-            if (_networkSettings.RunSilently)
-            {
-                Task cmdProcessor = ProcessCommands();
-                await Task.WhenAll(cmdProcessor);
-            }
-            else
-            {
-                Task inputProcessor = ProcessCmdLineInput();
-                Task cmdProcessor = ProcessCommands();
-
-                await Task.WhenAll(inputProcessor, cmdProcessor);
-            }
-
+            Task inputProcessor = ProcessCmdLineInput();
+            Task cmdProcessor = ProcessCommands();
+            await Task.WhenAll(inputProcessor, cmdProcessor);
             ExitCleanly();
         }
 

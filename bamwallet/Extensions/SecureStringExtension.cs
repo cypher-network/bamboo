@@ -7,7 +7,7 @@ namespace BAMWallet.Extensions
 {
     public static class SecureStringExtension
     {
-        public static string ToUnSecureString(this SecureString secureString)
+        public static string FromSecureString(this SecureString secureString)
         {
             IntPtr unmanagedString = IntPtr.Zero;
             try

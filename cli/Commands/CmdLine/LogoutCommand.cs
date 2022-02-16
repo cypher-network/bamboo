@@ -7,13 +7,14 @@
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
 
 using System;
+using System.Threading.Tasks;
 using BAMWallet.HD;
 using Cli.Commands.Common;
 using McMaster.Extensions.CommandLineUtils;
 
 namespace Cli.Commands.CmdLine
 {
-    [CommandDescriptor("logout", "Logs out and locks wallet.")]
+    [CommandDescriptor("logout", "Session ends and locks the wallet")]
     class LogoutCommand : Command
     {
         private bool _automaticLogout;
@@ -22,7 +23,7 @@ namespace Cli.Commands.CmdLine
         {
             _automaticLogout = automaticLogout;
         }
-        public override void Execute(Session activeSession = null)
+        public override Task Execute(Session activeSession = null)
         {
             if (_automaticLogout)
             {
@@ -32,6 +33,8 @@ namespace Cli.Commands.CmdLine
                 _console.Write("bamboo$ ");
                 _console.ResetColor();
             }
+            
+            return Task.CompletedTask;
         }
 
         public bool AutomaticLogout

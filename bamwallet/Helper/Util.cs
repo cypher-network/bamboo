@@ -1,10 +1,11 @@
-﻿// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0.
+﻿// CypherNetwork BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0.
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
+using System.Net;
 using System.Numerics;
 using System.Reflection;
 using System.Security;
@@ -58,18 +59,16 @@ namespace BAMWallet.Helper
             {
                 n--;
                 var k = rng.Next(n + 1);
-                var value = list[k];
-                list[k] = list[n];
-                list[n] = value;
+                (list[k], list[n]) = (list[n], list[k]);
             }
         }
 
-        public static LiteRepository LiteRepositoryFactory(SecureString identifier, SecureString passphrase)
+        public static LiteRepository LiteRepositoryFactory(string walletName, SecureString passphrase)
         {
             var connectionString = new ConnectionString
             {
-                Filename = WalletPath(identifier.ToUnSecureString()),
-                Password = passphrase.ToUnSecureString(),
+                Filename = WalletPath(walletName),
+                Password = passphrase.FromSecureString(),
                 Connection = ConnectionType.Shared
             };
 
@@ -86,7 +85,6 @@ namespace BAMWallet.Helper
         public static byte[] StreamToArray(Stream input)
         {
             using var ms = new MemoryStream();
-
             input.CopyTo(ms);
             return ms.ToArray();
         }
@@ -151,6 +149,19 @@ namespace BAMWallet.Helper
         {
             var span = TimeSpan.FromSeconds(timestamp);
             return unixRef + span;
+        }
+        
+        public static byte[] Combine(params byte[][] arrays)
+        {
+            var ret = new byte[arrays.Sum(x => x.Length)];
+            var offset = 0;
+            foreach (var data in arrays)
+            {
+                Buffer.BlockCopy(data, 0, ret, offset, data.Length);
+                offset += data.Length;
+            }
+
+            return ret;
         }
     }
 }

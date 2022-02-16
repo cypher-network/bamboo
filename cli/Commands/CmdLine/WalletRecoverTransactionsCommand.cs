@@ -1,8 +1,18 @@
+// Bamboo (c) by Tangram
+//
+// Bamboo is licensed under a
+// Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License.
+//
+// You should have received a copy of the license along with this
+// work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
+
 using System;
 using System.Threading.Tasks;
 using Kurukuru;
 using Cli.Commands.Common;
 using BAMWallet.HD;
+using McMaster.Extensions.CommandLineUtils;
+
 namespace Cli.Commands.CmdLine
 {
     [CommandDescriptor("recover", "Recover wallet transactions")]
@@ -13,13 +23,20 @@ namespace Cli.Commands.CmdLine
         {
         }
 
-        public override void Execute(Session activeSession = null)
+        public override async Task Execute(Session activeSession = null)
         {
-            if (activeSession != null)
+            if (activeSession == null) return;
+            var yesno = Prompt.GetYesNo("Restoring your wallet is an expensive operation that requires downloading large amounts of data.\n" +
+                                        "Please be specific when entering the block height where you know when the first transaction was received.\n" +
+                                        "If you don't know the specific block height then please follow the instruction here: https://tangrams.io \n" +
+                                        "Backup your wallet before starting or if restoring to a clean wallet then no backup is required.\n" +
+                                        "To continue, enter y or N to exit.", false, ConsoleColor.Yellow);
+            if (yesno)
             {
-                Spinner.StartAsync("Recovering transactions ...", spinner =>
+                var start = Prompt.GetInt("Recover from specific blockchain height:", 0, ConsoleColor.Magenta);
+                await Spinner.StartAsync("Recovering transactions ...", spinner =>
                 {
-                    var (recovered, message) = _commandReceiver.RecoverTransactions(activeSession, 0);
+                    var (recovered, message) = _commandReceiver.RecoverTransactions(activeSession, start);
                     if (recovered is null)
                     {
                         spinner.Fail(message);
@@ -28,6 +45,7 @@ namespace Cli.Commands.CmdLine
                     return Task.CompletedTask;
                 }, Patterns.Pong);
             }
+            
         }
     }
 }

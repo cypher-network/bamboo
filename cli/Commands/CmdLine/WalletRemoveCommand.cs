@@ -10,6 +10,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Security;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using BAMWallet.Extensions;
 using McMaster.Extensions.CommandLineUtils;
@@ -20,23 +21,16 @@ using Cli.Helper;
 
 namespace Cli.Commands.CmdLine
 {
-    [CommandDescriptor("remove", "Removes a wallet and logs out if that wallet was used to login.")]
+    [CommandDescriptor("remove", "Remove a wallet")]
     class WalletRemoveCommand : Command
     {
-        private bool _isLogoutRequested;
         private string _idToDelete;
         private readonly ILogger _logger;
 
-        private bool IsLoggedInWithWallet(SecureString identifier, Session activeSession)
+        private static bool IsLoggedInWithWallet(SecureString identifier, Session activeSession)
         {
-            if (activeSession != null)
-            {
-                return String.Equals(identifier.ToUnSecureString(), activeSession.Identifier.ToUnSecureString());
-            }
-            else
-            {
-                return false;
-            }
+            return activeSession != null &&
+                   string.Equals(identifier.FromSecureString(), activeSession.Identifier.FromSecureString());
         }
 
         private void DeleteWallet()
@@ -52,11 +46,11 @@ namespace Cli.Commands.CmdLine
                         if (Directory.Exists(walletsDir))
                         {
                             var files = Directory.GetFiles(walletsDir, Constants.WALLET_FILE_EXTENSION);
-                            bool deleted = false;
+                            var deleted = false;
                             if (files.Any())
                             {
-                                var walletFile = files.Where(x => String.Equals(Path.GetFileNameWithoutExtension(x), _idToDelete, StringComparison.CurrentCulture)).FirstOrDefault();
-                                if (!String.IsNullOrEmpty(walletFile))
+                                var walletFile = files.FirstOrDefault(x => string.Equals(Path.GetFileNameWithoutExtension(x), _idToDelete, StringComparison.CurrentCulture));
+                                if (!string.IsNullOrEmpty(walletFile))
                                 {
                                     File.Delete(walletFile);
                                     deleted = true;
@@ -71,7 +65,7 @@ namespace Cli.Commands.CmdLine
                             else
                             {
                                 _console.ForegroundColor = ConsoleColor.Green;
-                                _console.WriteLine("Wallet with id: {0} permenantly deleted.", _idToDelete);
+                                _console.WriteLine("Wallet with id: {0} permanently deleted.", _idToDelete);
                                 _console.ForegroundColor = ConsoleColor.White;
                             }
                         }
@@ -88,39 +82,30 @@ namespace Cli.Commands.CmdLine
             : base(typeof(WalletRemoveCommand), serviceProvider)
         {
             _logger = logger;
-            _isLogoutRequested = false;
-            _idToDelete = String.Empty;
+            Logout = false;
+            _idToDelete = string.Empty;
         }
 
-        public override void Execute(Session activeSession = null)
+        public override Task Execute(Session activeSession = null)
         {
-            var identifier = Prompt.GetPasswordAsSecureString("Identifier:", ConsoleColor.Yellow);
-            var isDeletionConfirmed = Prompt.GetYesNo(string.Format("Are you sure you want to delete wallet with Identifier: {0}? (This action cannot be undone!)", identifier.ToUnSecureString()), false, ConsoleColor.Red);
-            if (isDeletionConfirmed)
+            var identifier =  Prompt.GetString("Wallet Name:", null, ConsoleColor.Yellow);
+            var isDeletionConfirmed = Prompt.GetYesNo(
+                $"Are you sure you want to delete wallet with Identifier: {identifier}? (This action cannot be undone!)", false, ConsoleColor.Red);
+            if (!isDeletionConfirmed) return Task.CompletedTask;
+            _idToDelete = identifier;
+            if (IsLoggedInWithWallet(identifier.ToSecureString(), activeSession))
             {
-                _idToDelete = identifier.ToUnSecureString();
-                if (IsLoggedInWithWallet(identifier, activeSession))
-                {
-                    Logout = true;
-                    DeleteWallet();
-                }
-                else
-                {
-                    DeleteWallet();
-                }
+                Logout = true;
+                DeleteWallet();
             }
+            else
+            {
+                DeleteWallet();
+            }
+
+            return Task.CompletedTask;
         }
 
-        public bool Logout
-        {
-            get
-            {
-                return _isLogoutRequested;
-            }
-            private set
-            {
-                _isLogoutRequested = value;
-            }
-        }
+        public bool Logout { get; private set; }
     }
 }

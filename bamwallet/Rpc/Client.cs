@@ -1,28 +1,21 @@
-﻿// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0.
+﻿// CypherNetwork BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0.
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
 using System;
 using System.Linq;
-using System.Threading;
+using System.Threading.Tasks;
 using BAMWallet.Extensions;
 using BAMWallet.Helper;
 using MessagePack;
 using BAMWallet.Model;
-using NetMQ;
-using NetMQ.Sockets;
+using NitraLibSodium.Box;
+using nng;
 using Serilog;
 
 namespace BAMWallet.Rpc
 {
-    public class Client : IDisposable
+    public class Client
     {
-        // This should increase when running a vpn, tor or i2p ----------------+
-        private const int SocketTryReceiveFromMilliseconds = 2500;          // +
-        // +-------------------------------------------------------------------+
-        
-        private int _numberOfTriesLeft = 4;
-        private DealerSocket _dealerSocket;
-        
         private readonly ILogger _logger;
         private readonly NetworkSettings _networkSettings;
 
@@ -35,72 +28,71 @@ namespace BAMWallet.Rpc
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="command"></param>
         /// <param name="values"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public T Send<T>(MessageCommand command, params Parameter[] values)
+        public T Send<T>(params Parameter[] values)
         {
-            T value = default;
-            try
+            var tcs = new TaskCompletionSource<T>();
+            Task.Run(async () =>
             {
-                _dealerSocket = CreateSocket();
-                var message = new NetMQMessage();
-                message.Append(command.ToString());
-                message.Append(MessagePackSerializer.Serialize(values));
-                while (_numberOfTriesLeft > 0)
+                var numberOfTriesLeft = 4;
+                while (numberOfTriesLeft > 0)
                 {
-                    _numberOfTriesLeft--;
-                    if (_numberOfTriesLeft == 0)
+                    try
                     {
-                        _logger.Here().Error("[Client - ERROR] Server seems to be offline, abandoning!");
-                        break;
-                    }
-
-                    _dealerSocket.SendMultipartMessage(message);
-                    if (_dealerSocket.TryReceiveFrameString(TimeSpan.FromMilliseconds(SocketTryReceiveFromMilliseconds),
-                        out var msg, out _))
-                    {
-                        if (!string.IsNullOrEmpty(msg))
+                        numberOfTriesLeft--;
+                        if (numberOfTriesLeft == 0)
                         {
-                            value = MessagePackSerializer.Deserialize<T>(msg.HexToByte());
-                            _dealerSocket.Close();
+                            _logger.Here().Error("[Client - ERROR] Server seems to be offline, abandoning!");
+                            tcs.SetResult(default);
                             break;
                         }
+
+                        using var socket = NngSingletonFactory.Instance.Factory.RequesterOpen()
+                            .ThenDial($"tcp://{_networkSettings.RemoteNode}").Unwrap();
+                        using var ctx = socket.CreateAsyncContext(NngSingletonFactory.Instance.Factory).Unwrap();
+                        var (pk, sk) = Cryptography.Crypto.KeyPair();
+                        var cipher = Cryptography.Crypto.BoxSeal(MessagePackSerializer.Serialize(values),
+                            _networkSettings.RemoteNodePubKey.HexToByte().Skip(1).ToArray());
+                        var packet = Util.Combine(pk.WrapLengthPrefix(), cipher.WrapLengthPrefix());
+                        var nngMsg = NngSingletonFactory.Instance.Factory.CreateMessage();
+                        nngMsg.Append(packet);
+                        var nngResult = await ctx.Send(nngMsg);
+                        if (!nngResult.IsOk()) continue;
+                        const int prefixByteLength = 4;
+                        var nngUnwrapped = nngResult.Unwrap().AsSpan().ToArray();
+                        var message = Cryptography.Crypto.BoxSealOpen(
+                            nngUnwrapped.Skip(prefixByteLength + (int)Box.Publickeybytes() + prefixByteLength)
+                                .ToArray(), sk, pk);
+                        if (message.Length == 0)
+                        {
+                            _logger.Here()
+                                .Error(
+                                    "[Client - ERROR] Cipher failed to decrypt. Please Make sure that the remote public key is correct , abandoning!");
+                            tcs.SetResult(default);
+                            break;
+                        }
+
+                        var data = MessagePackSerializer.Deserialize<T>(message);
+                        tcs.SetResult(data);
+                        break;
                     }
-                    
-                    _dealerSocket.Disconnect($"tcp://{_networkSettings.RemoteNode}");
-                    _dealerSocket.Close();
-                    _dealerSocket.Dispose();
-                    _dealerSocket = CreateSocket();
+                    catch (NngException ex)
+                    {
+                        if (ex.Message != "EPROTO")
+                        {
+                            _logger.Here().Error(ex.Message);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Here().Error(ex.Message);
+                        tcs.SetResult(default);
+                    }
                 }
-            }
-            catch (Exception ex)
-            {
-                _logger.Here().Error(ex.Message);
-            }
-            finally
-            {
-                _numberOfTriesLeft = 4;
-            }
-
-            return value;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        private DealerSocket CreateSocket()
-        {
-            var clientPair = new NetMQCertificate();
-            var dealerSocket = new DealerSocket();
-            dealerSocket.Options.CurveServerKey = _networkSettings.RemoteNodePubKey.HexToByte().Skip(1).ToArray(); // X25519 32-byte key 
-            dealerSocket.Options.CurveCertificate = clientPair;
-            dealerSocket.Options.Identity = Util.RandomDealerIdentity();
-            dealerSocket.Connect($"tcp://{_networkSettings.RemoteNode}");
-            Thread.Sleep(100);
-            return dealerSocket;
+            });
+            return tcs.Task.Result;
         }
 
         /// <summary>
@@ -114,22 +106,5 @@ namespace BAMWallet.Rpc
             _logger.Here().Error("Remote node address not set in config");
             throw new Exception("Address not specified");
         }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public void Dispose()
-        {
-            try
-            {
-                _dealerSocket.Disconnect($"tcp://{_networkSettings.RemoteNode}");
-                _dealerSocket.Dispose();
-            }
-            catch (Exception)
-            {
-                // Ignore
-            }
-        }
     }
 }
-

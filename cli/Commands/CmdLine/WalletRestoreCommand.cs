@@ -7,13 +7,14 @@
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
 
 using System;
+using System.Threading.Tasks;
 using BAMWallet.HD;
 using BAMWallet.Helper;
 using Cli.Commands.Common;
 using McMaster.Extensions.CommandLineUtils;
 namespace Cli.Commands.CmdLine
 {
-    [CommandDescriptor("restore", "Restore wallet from seed")]
+    [CommandDescriptor("restore", "Restore wallet from seed and passphrase")]
     class WalletRestoreCommand : Command
     {
         public WalletRestoreCommand(IServiceProvider serviceProvider)
@@ -21,16 +22,23 @@ namespace Cli.Commands.CmdLine
         {
         }
 
-        public override void Execute(Session activeSession = null)
+        public override async Task Execute(Session activeSession = null)
         {
+            var walletName = Prompt.GetString("Specify new wallet name (e.g., MyWallet):", null, ConsoleColor.Red);
             using var seed = Prompt.GetPasswordAsSecureString("Seed:", ConsoleColor.Yellow);
             using var passphrase = Prompt.GetPasswordAsSecureString("Passphrase:", ConsoleColor.Yellow);
 
-            var id = _commandReceiver.CreateWallet(seed, passphrase);
+            var id = await _commandReceiver.CreateWallet(seed, passphrase, walletName);
             var path = Util.WalletPath(id);
 
-            _console.WriteLine($"Wallet ID: {id}");
+            _console.ForegroundColor = ConsoleColor.Yellow;
+            _console.WriteLine("Your wallet has been generated!\n");
+            _console.WriteLine("To start synchronizing with the daemon, login and the use the recover command.\n");
+            _console.ForegroundColor = ConsoleColor.White;
+            _console.ForegroundColor = ConsoleColor.Green;
+            _console.WriteLine($"Wallet Name: {id}");
             _console.WriteLine($"Wallet Path: {path}");
+            _console.ForegroundColor = ConsoleColor.White;
         }
     }
 }

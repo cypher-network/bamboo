@@ -7,6 +7,7 @@
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,11 +20,10 @@ using Kurukuru;
 using McMaster.Extensions.CommandLineUtils;
 namespace Cli.Commands.CmdLine
 {
-    [CommandDescriptor("spend", "Spend some coins")]
+    [CommandDescriptor("spend", "Spend some crypto")]
     public class WalletTransferCommand : Command
     {
         private readonly ILogger _logger;
-        private Spinner _spinner;
 
         public WalletTransferCommand(IServiceProvider serviceProvider)
             : base(typeof(WalletTransferCommand), serviceProvider, true)
@@ -31,71 +31,87 @@ namespace Cli.Commands.CmdLine
             _logger = serviceProvider.GetService<ILogger<WalletTransferCommand>>();
         }
 
-        public override void Execute(Session activeSession = null)
+        public override async Task Execute(Session activeSession = null)
         {
             if (activeSession != null)
             {
-                var address = Prompt.GetString("Address:", null, ConsoleColor.Red);
+                var address = Prompt.GetString("Address/Name:", null, ConsoleColor.Red);
                 var amount = Prompt.GetString("Amount:", null, ConsoleColor.Red);
                 var memo = Prompt.GetString("Memo:", null, ConsoleColor.Green);
-                var delay = Prompt.GetInt("Higher value ≈ faster transaction:", 5, ConsoleColor.Magenta);
-
+                var delay = Prompt.GetInt("Priority:", 6, ConsoleColor.Magenta);
                 if (decimal.TryParse(amount, out var t))
                 {
-                    Spinner.StartAsync("Processing payment ...", spinner =>
+                    if (!_commandReceiver.IsBase58(address))
                     {
-                        _spinner = spinner;
-
+                        var addressBook = new AddressBook { Name = address };
+                        var result = _commandReceiver.FindAddressBook(activeSession, ref addressBook);
+                        if (result.Item1 != null)
+                        {
+                            address = (result.Item1 as AddressBook)?.RecipientAddress;
+                            var yesno = Prompt.GetYesNo($"Address for {addressBook.Name}?\n(** {address?.ToUpper()} **)",
+                                false, ConsoleColor.Red);
+                            if (!yesno)
+                            {
+                                _console.ForegroundColor = ConsoleColor.Green;
+                                _console.WriteLine("Processing transaction cancelled!");
+                                _console.ForegroundColor = ConsoleColor.White;
+                                return;
+                            }
+                        }
+                        else
+                        {
+                            _console.ForegroundColor = ConsoleColor.Red;
+                            _console.WriteLine(result.Item2);
+                            _console.ForegroundColor = ConsoleColor.White;
+                            return;
+                        }
+                    }
+                    
+                    await Spinner.StartAsync("Processing transaction ...", spinner =>
+                    {
                         try
                         {
-                            if (_commandReceiver.IsTransactionAllowed(activeSession))
+                            activeSession.SessionType = SessionType.Coin;
+                            var transaction = new WalletTransaction
                             {
-                                var session = activeSession;
-
-                                session.SessionType = SessionType.Coin;
-                                var transaction = new WalletTransaction
-                                {
-                                    Memo = memo,
-                                    Payment = t.ConvertToUInt64(),
-                                    RecipientAddress = address,
-                                    WalletType = WalletType.Send,
-                                    Delay = delay,
-                                    IsVerified = false,
-                                    SenderAddress = session.KeySet.StealthAddress
-                                };
-
-                                var createTransactionResult = _commandReceiver.CreateTransaction(session, ref transaction);
-                                if (createTransactionResult.Item1 is null)
-                                {
-                                    spinner.Fail(createTransactionResult.Item2);
-                                }
-                                else
-                                {
-                                    var sendResult = _commandReceiver.Send(session, ref transaction);
-                                    if (sendResult.Item1 is not true)
-                                    {
-                                        spinner.Fail(sendResult.Item2);
-                                    }
-                                    else
-                                    {
-                                        var balanceResult = _commandReceiver.History(session);
-                                        if (balanceResult.Item1 is null)
-                                        {
-                                            spinner.Fail(balanceResult.Item2);
-                                        }
-                                        else
-                                        {
-                                            var message = $"Available Balance: {(balanceResult.Item1 as IOrderedEnumerable<BalanceSheet>).Last().Balance}";
-                                            message += $"\nPaymentID: {transaction.Transaction.TxnId.ByteToHex()}";
-                                            activeSession.SessionId = Guid.NewGuid();
-                                            spinner.Succeed(message);
-                                        }
-                                    }
-                                }
+                                Memo = memo,
+                                Payment = t.ConvertToUInt64(),
+                                RecipientAddress = address,
+                                WalletType = WalletType.Send,
+                                Delay = delay,
+                                IsVerified = false,
+                                SenderAddress = activeSession.KeySet.StealthAddress
+                            };
+                            var createTransactionResult =
+                                _commandReceiver.CreateTransaction(activeSession, ref transaction);
+                            if (createTransactionResult.Item1 is null)
+                            {
+                                spinner.Fail(createTransactionResult.Item2);
                             }
                             else
                             {
-                                spinner.Fail("Transaction not allowed because a previous Transaction is pending");
+                                var sendResult = _commandReceiver.SendTransaction(activeSession, ref transaction);
+                                if (sendResult.Item1 is not true)
+                                {
+                                    spinner.Fail(sendResult.Item2);
+                                }
+                                else
+                                {
+                                    var balanceResult = _commandReceiver.History(activeSession);
+                                    if (balanceResult.Item1 is null)
+                                    {
+                                        spinner.Fail(balanceResult.Item2);
+                                    }
+                                    else
+                                    {
+                                        var message =
+                                            $"Available Balance: [{(balanceResult.Item1 as IList<BalanceSheet>).Last().Balance}] " +
+                                            $"TxID: ({transaction.Transaction.TxnId.ByteToHex()}) " +
+                                            $"Tx size: [{transaction.Transaction.GetSize() / 1024}kB]";
+                                        activeSession.SessionId = Guid.NewGuid();
+                                        spinner.Succeed(message);
+                                    }
+                                }
                             }
                         }
                         catch (Exception ex)
@@ -104,6 +120,7 @@ namespace Cli.Commands.CmdLine
                             _logger.LogError(ex.StackTrace);
                             throw;
                         }
+
                         return Task.CompletedTask;
                     }, Patterns.Toggle3);
                 }

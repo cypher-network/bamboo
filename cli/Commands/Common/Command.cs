@@ -7,6 +7,7 @@
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
 
 using System;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using BAMWallet.Extensions;
 using BAMWallet.HD;
@@ -30,7 +31,7 @@ namespace Cli.Commands.Common
             _refreshLogin = refreshLogin;
         }
 
-        public abstract void Execute(Session activeSession = null);
+        public abstract Task Execute(Session activeSession = null);
 
         public string Name { get; set; }
         public string Description { get; set; }

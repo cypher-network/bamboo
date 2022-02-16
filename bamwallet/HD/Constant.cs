@@ -1,4 +1,4 @@
-﻿// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0.
+﻿// CypherNetwork BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0.
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
 namespace BAMWallet.HD
@@ -8,7 +8,13 @@ namespace BAMWallet.HD
         public const string Mainnet = "mainnet";
         public const string Testnet = "testnet";
 
-        public const int NanoTan = 1000_000_000;
+        public const int Yin = 1;
+        public const int KYin = 1000;
+        public const int MYin = 1000_000;
+        public const int GYin = 1000_000_000;
+        public const long MicroAether = 1_000_000_000_000;
+        public const long MilliAether = 1_000_000_000_000_000;
+        public const long Aether =  1_000_000_000_000_000_000;
 
         public const string AppSettingsFile = "appsettings.json";
         public const string AppSettingsFileDev = "appsettings.Development.json";

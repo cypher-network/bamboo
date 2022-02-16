@@ -1,4 +1,4 @@
-// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0.
+// CypherNetwork BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0.
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
 using System;
@@ -35,7 +35,7 @@ namespace BAMWallet.HD
 
         private static bool IsIdentifierValid(SecureString identifier)
         {
-            return File.Exists(Util.WalletPath(identifier.ToUnSecureString()));
+            return File.Exists(Util.WalletPath(identifier.FromSecureString()));
         }
 
         public Session(SecureString identifier, SecureString passphrase)
@@ -45,17 +45,17 @@ namespace BAMWallet.HD
             SessionId = Guid.NewGuid();
             if (!IsValid)
             {
-                throw new FileLoadException($"Wallet with ID: {identifier.ToUnSecureString()} not found!");
+                throw new FileLoadException($"Wallet with ID: {identifier.FromSecureString()} not found!");
             }
-            Database = Util.LiteRepositoryFactory(identifier, passphrase);
+            Database = Util.LiteRepositoryFactory(identifier.FromSecureString(), passphrase);
         }
 
         private static bool IsPassPhraseValid(SecureString id, SecureString pass)
         {
             var connectionString = new ConnectionString
             {
-                Filename = Util.WalletPath(id.ToUnSecureString()),
-                Password = pass.ToUnSecureString(),
+                Filename = Util.WalletPath(id.FromSecureString()),
+                Password = pass.FromSecureString(),
                 Connection = ConnectionType.Shared
             };
             using var db = new LiteDatabase(connectionString);

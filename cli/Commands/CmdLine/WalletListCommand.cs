@@ -8,6 +8,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using ConsoleTables;
 using McMaster.Extensions.CommandLineUtils;
 using BAMWallet.HD;
@@ -22,25 +23,25 @@ namespace Cli.Commands.CmdLine
         {
         }
 
-        public override void Execute(Session activeSession = null)
+        public override Task Execute(Session activeSession = null)
         {
-            var request = _commandReceiver.WalletList();
-
-            if (request.Item1 is null)
+            var (balances, message) = _commandReceiver.WalletList();
+            if (balances is null)
             {
                 _console.ForegroundColor = ConsoleColor.Red;
-                _console.WriteLine($"Wallet list request failed: {request.Item2}!");
+                _console.WriteLine($"Wallet list request failed: {message}!");
                 _console.ForegroundColor = ConsoleColor.White;
+                return Task.CompletedTask;
             }
 
             var table = new ConsoleTable("Path");
-
-            foreach (var key in request.Item1 as List<string>)
+            foreach (var balance in balances as List<string>)
             {
-                table.AddRow(key);
+                table.AddRow(balance);
             }
 
             _console.WriteLine($"\n{table}");
+            return Task.CompletedTask;
         }
     }
 }
