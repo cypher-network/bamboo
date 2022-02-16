@@ -1,4 +1,4 @@
-// CypherNetwork BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0.
+﻿// CypherNetwork BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0.
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
 using System;
@@ -29,7 +29,8 @@ namespace BAMWallet.Model
         public ulong Reward { get; set; }
         public string SenderAddress { get; set; }
         public bool Spent { get; set; }
-        public Vout Spending { get; set; }
+        public Vout[] Spending { get; set; }
+        public ulong[] SpendAmounts { get; set; }
         public Transaction Transaction { get; set; }
         public WalletType WalletType { get; set; }
         public int Delay { get; set; }

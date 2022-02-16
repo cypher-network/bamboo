@@ -1,10 +1,12 @@
-// CypherNetwork BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0.
+﻿// CypherNetwork BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0.
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
 using System.Security;
 using BAMWallet.Model;
 using NBitcoin;
 using System;
+using System.Threading.Tasks;
+using BAMWallet.Rpc;
 
 namespace BAMWallet.HD
 {
@@ -22,6 +24,9 @@ namespace BAMWallet.HD
         Task SyncWallet(in Session session);
         Task<MessageResponse<StakeCredentialsResponse>> SendStakeCredentials(in Session session,
             in StakeCredentialsRequest stakeCredentialsRequest, in byte[] privateKey, in byte[] token);
+        bool IsBase58(string address);
+        Tuple<object, string> NotFoundTransactions(in Session session);
+        Balance[] GetBalances(Session session);
         Tuple<object, string> AddAddressBook(Session session, ref AddressBook addressBook, bool update = false);
         Tuple<object, string> FindAddressBook(Session session, ref AddressBook addressBook);
         Tuple<object, string> RemoveAddressBook(Session session, ref AddressBook addressBook);

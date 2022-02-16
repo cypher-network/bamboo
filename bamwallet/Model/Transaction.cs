@@ -1,8 +1,7 @@
-// CypherNetwork BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0.
+﻿// CypherNetwork BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0.
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
 using System;
-using System.Linq;
 using BAMWallet.Extensions;
 using BAMWallet.Helper;
 using Blake3;
@@ -12,14 +11,51 @@ using NBitcoin;
 
 namespace BAMWallet.Model
 {
+    public interface ITransaction
+    {
+        Guid Id { get; set; }
+        byte[] TxnId { get; set; }
+        Bp[] Bp { get; set; }
+        int Ver { get; set; }
+        int Mix { get; set; }
+        Vin[] Vin { get; set; }
+        Vout[] Vout { get; set; }
+        RCT[] Rct { get; set; }
+        Vtime Vtime { get; set; }
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <returns></returns>
+        byte[] ToHash();
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <returns></returns>
+        byte[] ToStream();
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <returns></returns>
+        byte[] Serialize();
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <returns></returns>
+        bool IsLockedOrInvalid();
+    }
+    
     [MessagePackObject]
-    public class Transaction
+    public class Transaction : ITransaction
     {
         [IgnoreMember] [BsonId] public Guid Id { get; set; }
         [Key(0)] public byte[] TxnId { get; set; }
         [Key(1)] public Bp[] Bp { get; set; }
-        [Key(2)] public int Ver { get; set; }
-        [Key(3)] public int Mix { get; set; }
+        [Key(2)] public int Ver { get; set; } = 0x03;
+        [Key(3)] public int Mix { get; set; } = 22;
         [Key(4)] public Vin[] Vin { get; set; }
         [Key(5)] public Vout[] Vout { get; set; }
         [Key(6)] public RCT[] Rct { get; set; }
@@ -32,6 +68,15 @@ namespace BAMWallet.Model
         public byte[] ToHash()
         {
             return Hasher.Hash(ToStream()).HexToByte();
+        }
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public ushort GetSize()
+        {
+            return (ushort)ToStream().Length;
         }
 
         /// <summary>
