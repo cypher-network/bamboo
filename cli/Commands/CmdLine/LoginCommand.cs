@@ -7,14 +7,17 @@
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
 
 using System;
+using System.Threading.Tasks;
+using BAMWallet.Extensions;
 using BAMWallet.HD;
 using Cli.Commands.Common;
+using Kurukuru;
 using LiteDB;
 using McMaster.Extensions.CommandLineUtils;
 
 namespace Cli.Commands.CmdLine
 {
-    [CommandDescriptor("login", "Unlocks wallet and enables wallet commands.")]
+    [CommandDescriptor("login", "Provide your wallet name and passphrase")]
     class LoginCommand : Command
     {
         private Session _session = null;
@@ -23,14 +26,18 @@ namespace Cli.Commands.CmdLine
         {
         }
 
-        public override void Execute(Session activeSession = null)
+        public override async Task Execute(Session activeSession = null)
         {
             //check if wallet exists, if it does, save session, login and inform command service
-            var identifier = Prompt.GetPasswordAsSecureString("Identifier:", ConsoleColor.Yellow);
+            var identifier = Prompt.GetString("Wallet Name:", null, ConsoleColor.Yellow);
             var passphrase = Prompt.GetPasswordAsSecureString("Passphrase:", ConsoleColor.Yellow);
-            if (Session.AreCredentialsValid(identifier, passphrase))
+            if (Session.AreCredentialsValid(identifier.ToSecureString(), passphrase))
             {
-                ActiveSession = new Session(identifier, passphrase); //will throw if wallet doesn't exist
+                ActiveSession = new Session(identifier.ToSecureString(), passphrase); //will throw if wallet doesn't exist
+                await Spinner.StartAsync("Syncing wallet ...", async spinner =>
+                {
+                    await _commandReceiver.SyncWallet(ActiveSession);
+                });
             }
             else
             {

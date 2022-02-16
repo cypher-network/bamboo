@@ -5,8 +5,10 @@
 //
 // You should have received a copy of the license along with this
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
+
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 using BAMWallet.Extensions;
 using BAMWallet.HD;
 using BAMWallet.Helper;
@@ -16,16 +18,19 @@ namespace Cli.Commands.Rpc
 {
     class RpcCreateWalletCommand : RpcBaseCommand
     {
-        private string _seed;
-        private string _pass;
-        public RpcCreateWalletCommand(string seed, string passphrase, IServiceProvider serviceProvider, ref AutoResetEvent cmdFinishedEvent)
+        private readonly string _walletName;
+        private readonly string _seed;
+        private readonly string _pass;
+        
+        public RpcCreateWalletCommand(string walletName, string seed, string passphrase, IServiceProvider serviceProvider, ref AutoResetEvent cmdFinishedEvent)
             : base(serviceProvider, ref cmdFinishedEvent, null)
         {
+            _walletName = walletName;
             _seed = seed;
             _pass = passphrase;
         }
 
-        public override void Execute(Session activeSession = null)
+        public override async Task Execute(Session activeSession = null)
         {
             try
             {
@@ -33,7 +38,7 @@ namespace Cli.Commands.Rpc
                 string[] passPhraseDefault = _commandReceiver.CreateSeed(WordCount.Twelve);
                 string joinMmnemonic = string.Join(" ", _seed ?? string.Join(' ', seedDefault));
                 string joinPassphrase = string.Join(" ", _pass ?? string.Join(' ', passPhraseDefault));
-                string id = _commandReceiver.CreateWallet(joinMmnemonic.ToSecureString(), joinPassphrase.ToSecureString());
+                string id = await _commandReceiver.CreateWallet(joinMmnemonic.ToSecureString(), joinPassphrase.ToSecureString(), _walletName);
                 var session = new Session(id.ToSecureString(), joinPassphrase.ToSecureString());
 
                 Result = new Tuple<object, string>(new

@@ -59,18 +59,16 @@ namespace BAMWallet.Helper
             {
                 n--;
                 var k = rng.Next(n + 1);
-                var value = list[k];
-                list[k] = list[n];
-                list[n] = value;
+                (list[k], list[n]) = (list[n], list[k]);
             }
         }
 
-        public static LiteRepository LiteRepositoryFactory(SecureString identifier, SecureString passphrase)
+        public static LiteRepository LiteRepositoryFactory(string walletName, SecureString passphrase)
         {
             var connectionString = new ConnectionString
             {
-                Filename = WalletPath(identifier.ToUnSecureString()),
-                Password = passphrase.ToUnSecureString(),
+                Filename = WalletPath(walletName),
+                Password = passphrase.FromSecureString(),
                 Connection = ConnectionType.Shared
             };
 

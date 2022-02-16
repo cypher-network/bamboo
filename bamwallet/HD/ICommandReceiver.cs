@@ -10,7 +10,7 @@ namespace BAMWallet.HD
 {
     public interface ICommandReceiver
     {
-        string CreateWallet(in SecureString seed, in SecureString passphrase);
+        Task<string> CreateWallet(in SecureString seed, in SecureString passphrase, in string walletName);
         string[] CreateSeed(in WordCount wordCount);
         Tuple<object, string> WalletList();
         Tuple<object, string> History(in Session session);

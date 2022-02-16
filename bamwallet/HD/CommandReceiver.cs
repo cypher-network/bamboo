@@ -875,67 +875,70 @@ namespace BAMWallet.HD
                         if (files.Count != 0)
                         {
                             files.Sort();
-                            return new Tuple<object, string>(files, String.Empty);
+                            return new Tuple<object, string>(files, string.Empty);
                         }
                     }
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _logger.Here().Error(ex, "Error getting wallet list");
-                return new Tuple<object, string>(null, ex.Message);
+                // Ignore
             }
 
             return new Tuple<object, string>(null, "No wallets found!");
         }
 
-        #endregion
-
+        /// <summary>
+        /// 
+        /// </summary>
         public static void IncrementCommandExecutionCount()
         {
             ++_commandExecutionCounter;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public static void DecrementCommandExecutionCount()
         {
             --_commandExecutionCounter;
         }
 
         /// <summary>
-        ///
+        /// 
         /// </summary>
         /// <param name="seed"></param>
         /// <param name="passphrase"></param>
+        /// <param name="walletName"></param>
         /// <returns></returns>
-        public string CreateWallet(in SecureString seed, in SecureString passphrase)
+        public Task<string> CreateWallet(in SecureString seed, in SecureString passphrase, in string walletName)
         {
-            using var commandExecutionGuard = new RAIIGuard(CommandReceiver.IncrementCommandExecutionCount,
-                CommandReceiver.DecrementCommandExecutionCount);
+            using var commandExecutionGuard =
+                new RAIIGuard(IncrementCommandExecutionCount, DecrementCommandExecutionCount);
             Guard.Argument(seed, nameof(seed)).NotNull();
             Guard.Argument(passphrase, nameof(passphrase)).NotNull();
-            var walletId = NewId(16);
-            walletId.MakeReadOnly();
             seed.MakeReadOnly();
             passphrase.MakeReadOnly();
-            CreateHdRootKey(seed, passphrase, out var hdRoot);
-            var keySet = CreateKeySet(new KeyPath($"{HdPath}0"), hdRoot.PrivateKey.ToHex().HexToByte(),
-                hdRoot.ChainCode);
             try
             {
-                var db = Util.LiteRepositoryFactory(walletId, passphrase);
+                CreateHdRootKey(seed, passphrase, out var hdRoot);
+                var keySet = CreateKeySet(new KeyPath($"{HdPath}0"), hdRoot.PrivateKey.ToHex().HexToByte(),
+                    hdRoot.ChainCode);
+                var db = Util.LiteRepositoryFactory(walletName, passphrase);
                 db.Insert(keySet);
                 keySet.ChainCode.ZeroString();
                 keySet.RootKey.ZeroString();
-                return walletId.ToUnSecureString();
+                return Task.FromResult(walletName);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _logger.Here().Error(ex, "Error creating wallet");
+                //_logger.Here().Error(ex, "Error creating wallet");
                 throw new Exception("Failed to create wallet.");
             }
             finally
             {
-                walletId.Dispose();
+                seed.Dispose();
+                passphrase.Dispose();
             }
         }
 

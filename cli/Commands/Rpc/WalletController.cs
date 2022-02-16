@@ -1,4 +1,4 @@
-// Bamboo (c) by Tangram
+﻿// Bamboo (c) by Tangram
 //
 // Bamboo is licensed under a
 // Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License.
@@ -117,14 +117,15 @@ namespace BAMWallet.Rpc.Controllers
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="name"></param>
         /// <param name="seed"></param>
         /// <param name="passphrase"></param>
         /// <returns></returns>
         [HttpGet("create", Name = "Create")]
-        public IActionResult Create(string seed = null, string passphrase = null)
+        public IActionResult Create(string name, string seed = null, string passphrase = null)
         {
             AutoResetEvent cmdFinishedEvent = new AutoResetEvent(false);
-            RpcCreateWalletCommand cmd = new RpcCreateWalletCommand(seed, passphrase, _serviceProvider, ref cmdFinishedEvent);
+            RpcCreateWalletCommand cmd = new RpcCreateWalletCommand(name, seed, passphrase, _serviceProvider, ref cmdFinishedEvent);
             SendCommandAndAwaitResponse(cmd);
 
             return cmd.Result.Item1 is null
