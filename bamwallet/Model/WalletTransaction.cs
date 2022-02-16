@@ -6,6 +6,16 @@ using LiteDB;
 
 namespace BAMWallet.Model
 {
+    [Flags]
+    public enum WalletTransactionState
+    {
+        WaitingConfirmation = 0x01,
+        Confirmed = 0x02,
+        NotFound = 0x03,
+        All = 0x04,
+        Syncing = 0x99
+    }
+    
     public class WalletTransaction
     {
         public ulong Balance { get; set; }
@@ -24,5 +34,7 @@ namespace BAMWallet.Model
         public WalletType WalletType { get; set; }
         public int Delay { get; set; }
         public bool IsVerified { get; set; }
+        public WalletTransactionState State { get; set; }
+        public ulong BlockHeight { get; set; }
     }
 }

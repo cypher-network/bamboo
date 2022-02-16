@@ -66,21 +66,6 @@ namespace BAMWallet.HD
         }
 
         /// <summary>
-        ///
-        /// </summary>
-        /// <param name="bytes"></param>
-        /// <returns></returns>
-        private SecureString NewId(int bytes = 32)
-        {
-            using var secp256K1 = new Secp256k1();
-
-            var secureString = new SecureString();
-            foreach (var c in $"id_{secp256K1.RandomSeed(bytes).ByteToHex()}") secureString.AppendChar(c);
-
-            return secureString;
-        }
-
-        /// <summary>
         /// 
         /// </summary>
         /// <param name="session"></param>
@@ -444,7 +429,7 @@ namespace BAMWallet.HD
         /// <returns></returns>
         private static ExtKey MasterKey(KeySet keySet)
         {
-            return new(new Key(keySet.RootKey.HexToByte()), keySet.ChainCode.HexToByte());
+            return new ExtKey(new Key(keySet.RootKey.HexToByte()), keySet.ChainCode.HexToByte());
         }
 
         /// <summary>
@@ -515,13 +500,13 @@ namespace BAMWallet.HD
         {
             Guard.Argument(seed, nameof(seed)).NotNull();
             Guard.Argument(passphrase, nameof(passphrase)).NotNull();
-            var concatenateMnemonic = string.Join(" ", seed.ToUnSecureString());
-            hdRoot = new Mnemonic(concatenateMnemonic).DeriveExtKey(passphrase.ToUnSecureString());
+            var concatenateMnemonic = string.Join(" ", seed.FromSecureString());
+            hdRoot = new Mnemonic(concatenateMnemonic).DeriveExtKey(passphrase.FromSecureString());
             concatenateMnemonic.ZeroString();
         }
 
         /// <summary>
-        ///
+        /// 
         /// </summary>
         /// <param name="dateTime"></param>
         /// <param name="memo"></param>
@@ -612,82 +597,77 @@ namespace BAMWallet.HD
         /// </summary>
         /// <param name="session"></param>
         /// <param name="transactions"></param>
-        private void SyncTransactions(Session session, IEnumerable<WalletTransaction> transactions)
+        private void SyncTransactions(in Session session, IEnumerable<WalletTransaction> transactions)
         {
             var walletTransactions = transactions.ToList();
-            foreach (var transaction in walletTransactions.Select(walletTransaction => walletTransaction.Transaction))
+            foreach (var walletTransaction in walletTransactions.Where(walletTransaction =>
+                         walletTransaction.State == WalletTransactionState.WaitingConfirmation))
             {
-                if (TransactionDoesNotExist(transaction)) continue;
-                var rolledBack = RollBackTransaction(session, transaction.Id);
-                if (!rolledBack.Success)
+                var state = DoesTransactionExistInEndpoint(walletTransaction.Transaction.TxnId,
+                    walletTransaction.BlockHeight);
+                if (state is WalletTransactionState.Syncing) continue;
+                walletTransaction.State = state switch
                 {
-                    _logger.Here().Error(rolledBack.Exception.Message);
-                    // Continue syncing rest of the wallet
-                }
-            }
-
-            foreach (var transaction in walletTransactions.Where(walletTransaction => !walletTransaction.IsVerified))
-            {
-                if (!TransactionDoesNotExist(transaction.Transaction)) continue;
-                transaction.IsVerified = true;
-                var saved = Update(session, transaction);
+                    WalletTransactionState.WaitingConfirmation => WalletTransactionState.WaitingConfirmation,
+                    WalletTransactionState.NotFound => WalletTransactionState.NotFound,
+                    WalletTransactionState.Confirmed => WalletTransactionState.Confirmed,
+                    _ => walletTransaction.State
+                };
+                var saved = Update(session, walletTransaction);
                 if (!saved.Result)
                 {
-                    _logger.Error("Transaction is verified but cannot update transaction {@TxId}",
-                        transaction.Transaction.TxnId.HexToByte());
+                    _logger.Error("Transaction state is {@state} but cannot update transaction {@TxId}", state,
+                        walletTransaction.Transaction.TxnId.HexToByte());
                 }
             }
-        }
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="transaction"></param>
-        /// <returns></returns>
-        private bool TransactionDoesNotExist(Transaction transaction)
-        {
-            return DoesTransactionExistInEndpoint(transaction.TxnId, MessageCommand.GetTransaction) ||
-                   DoesTransactionExistInEndpoint(transaction.TxnId, MessageCommand.GetMemTransaction) ||
-                   DoesTransactionExistInEndpoint(transaction.TxnId, MessageCommand.GetPosTransaction);
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="transactionId"></param>
-        /// <param name="command"></param>
+        /// <param name="blockHeight"></param>
         /// <returns></returns>
-        private bool DoesTransactionExistInEndpoint(byte[] transactionId, MessageCommand command)
+        private WalletTransactionState DoesTransactionExistInEndpoint(byte[] transactionId, ulong blockHeight)
         {
             try
             {
-                if (command == MessageCommand.GetTransaction)
+                var blockCountResponse = _client.Send<BlockCountResponse>(new Parameter
                 {
-                    var transactionResponse =
-                        _client.Send<TransactionResponse>(command, new Parameter { Value = transactionId });
-                    return transactionResponse.Transaction is { };
-                }
+                    MessageCommand = MessageCommand.GetBlockCount
+                });
+                if (blockCountResponse.Count != 0)
+                {
+                    if ((ulong)blockCountResponse.Count > blockHeight)
+                    {
+                        var transactionResponse = _client.Send<TransactionBlockIndexResponse>(new Parameter
+                        {
+                            Value = transactionId, MessageCommand = MessageCommand.GetTransactionBlockIndex
+                        });
+                        if (transactionResponse.Index == 0)
+                        {
+                            return WalletTransactionState.NotFound;
+                        }
 
-                if (command == MessageCommand.GetMemTransaction)
-                {
-                    var memoryPoolTransactionResponse =
-                        _client.Send<MemoryPoolTransactionResponse>(command, new Parameter { Value = transactionId });
-                    return memoryPoolTransactionResponse.Transaction is { };
-                }
-
-                if (command == MessageCommand.GetPosTransaction)
-                {
-                    var posTransactionResponse =
-                        _client.Send<PosPoolTransactionResponse>(command, new Parameter { Value = transactionId });
-                    return posTransactionResponse.Transaction is { };
+                        if ((ulong)blockCountResponse.Count >=
+                            transactionResponse.Index + _networkSettings.NumberOfConfirmations)
+                        {
+                            return WalletTransactionState.Confirmed;
+                        }
+                    }
+                    else
+                    {
+                        return WalletTransactionState.WaitingConfirmation;
+                    }
                 }
             }
             catch (Exception)
             {
-                _logger.Here().Warning("Connection to the node cannot be established");
+                _logger.Here().Warning("Connection to the node cannot be established!");
             }
+
             // If we get this far then the connection was dropped
-            return true;
+            return WalletTransactionState.Syncing;
         }
 
         /// <summary>
@@ -1273,14 +1253,13 @@ namespace BAMWallet.HD
         ///
         /// </summary>
         /// <param name="session"></param>
-        public void SyncWallet(in Session session)
+        public Task SyncWallet(in Session session)
         {
             Guard.Argument(session, nameof(session)).NotNull();
-            var walletTransactionsNotVerified = session.Database.Query<WalletTransaction>().Where(x => !x.IsVerified).OrderBy(d => d.DateTime).ToList();
-            var walletTransactionsTakeLast2 = session.Database.Query<WalletTransaction>().OrderBy(d => d.DateTime).ToList().TakeLast(2);
-            var walletTransactions = walletTransactionsTakeLast2 as WalletTransaction[] ?? walletTransactionsTakeLast2.ToArray();
-            walletTransactions.ToList().AddRange(walletTransactionsNotVerified);
-            SyncTransactions(session, walletTransactions);
+            var walletTransactionsNotVerified = session.Database.Query<WalletTransaction>()
+                .Where(x => x.State == WalletTransactionState.WaitingConfirmation).OrderBy(d => d.DateTime).ToList();
+            SyncTransactions(session, walletTransactionsNotVerified);
+            return Task.CompletedTask;
         }
 
         /// <summary>

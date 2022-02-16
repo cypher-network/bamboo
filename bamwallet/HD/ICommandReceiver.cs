@@ -19,7 +19,7 @@ namespace BAMWallet.HD
         Tuple<object, string> ReceivePayment(in Session session, string paymentId);
         Tuple<object, string> CreateTransaction(Session session, ref WalletTransaction transaction);
         Tuple<object, string> RecoverTransactions(in Session session, int start);
-        void SyncWallet(in Session session);
+        Task SyncWallet(in Session session);
         bool IsTransactionAllowed(in Session session);
     }
 }

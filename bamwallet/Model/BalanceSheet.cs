@@ -1,4 +1,4 @@
-// CypherNetwork BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0.
+﻿// CypherNetwork BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0.
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
 namespace BAMWallet.Model
@@ -16,5 +16,6 @@ namespace BAMWallet.Model
         public string TxId { get; set; }
         public bool IsVerified { get; set; }
         public bool? IsLocked { get; set; }
+        public WalletTransactionState State { get; set; }
     }
 }
