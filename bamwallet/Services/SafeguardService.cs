@@ -45,7 +45,7 @@ namespace BAMWallet.Services
             var actualSafeGuardFile = Directory.EnumerateFiles(safeGuardPath, "*.messagepack").OrderBy(x =>
                 DateTime.ParseExact(Path.GetFileNameWithoutExtension(x), "dd-MM-yyyy", CultureInfo.InvariantCulture)
             ).Last();
-            return File.Open(actualSafeGuardFile, FileMode.Open, FileAccess.Read);
+            return new FileStream(actualSafeGuardFile, FileMode.Open, FileAccess.Read);
         }
 
         /// <summary>
