@@ -15,7 +15,7 @@ namespace BAMWallet.HD
         Tuple<object, string> WalletList();
         Tuple<object, string> History(in Session session);
         Tuple<object, string> Address(in Session session);
-        Tuple<object, string> Send(in Session session, ref WalletTransaction transaction);
+        Tuple<object, string> SendTransaction(in Session session, ref WalletTransaction transaction);
         Tuple<object, string> ReceivePayment(in Session session, string paymentId);
         Tuple<object, string> CreateTransaction(Session session, ref WalletTransaction transaction);
         Tuple<object, string> RecoverTransactions(in Session session, int start);

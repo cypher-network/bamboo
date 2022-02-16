@@ -1225,16 +1225,34 @@ namespace BAMWallet.HD
         /// <param name="session"></param>
         /// <param name="tx"></param>
         /// <returns></returns>
-        public Tuple<object, string> Send(in Session session, ref WalletTransaction tx)
+        public Tuple<object, string> SendTransaction(in Session session, ref WalletTransaction tx)
         {
-            using var commandExecutionGuard = new RAIIGuard(CommandReceiver.IncrementCommandExecutionCount,
-                CommandReceiver.DecrementCommandExecutionCount);
+            using var commandExecutionGuard =
+                new RAIIGuard(IncrementCommandExecutionCount, DecrementCommandExecutionCount);
             try
             {
                 _client.HasRemoteAddress();
-                var newTransactionResponse = _client.Send<NewTransactionResponse>(MessageCommand.Transaction,
-                    new Parameter { Value = tx.Transaction.Serialize() });
-                if (newTransactionResponse.OK)
+                var blockCountResponse = _client.Send<BlockCountResponse>(new Parameter
+                {
+                    MessageCommand = MessageCommand.GetBlockCount
+                });
+                if (blockCountResponse.Count != 0)
+                {
+                    var transaction = tx;
+                    var walletTransaction = session.Database.Query<WalletTransaction>()
+                        .Where(x => x.Transaction.Id == transaction.Id).FirstOrDefault();
+                    if (walletTransaction is not null)
+                    {
+                        walletTransaction.BlockHeight = (ulong)blockCountResponse.Count;
+                        Update(session, walletTransaction);
+                    }
+                }
+
+                var newTransactionResponse = _client.Send<NewTransactionResponse>(new Parameter
+                {
+                    Value = tx.Transaction.Serialize(), MessageCommand = MessageCommand.Transaction
+                });
+                if (newTransactionResponse.Ok)
                 {
                     return new Tuple<object, string>(true, string.Empty);
                 }

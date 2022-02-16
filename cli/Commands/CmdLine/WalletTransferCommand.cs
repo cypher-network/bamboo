@@ -1,4 +1,4 @@
-﻿// Bamboo (c) by Tangram
+// Bamboo (c) by Tangram
 //
 // Bamboo is licensed under a
 // Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License.
@@ -71,13 +71,13 @@ namespace Cli.Commands.CmdLine
                                 }
                                 else
                                 {
-                                    var sendResult = _commandReceiver.Send(session, ref transaction);
-                                    if (sendResult.Item1 is not true)
-                                    {
-                                        spinner.Fail(sendResult.Item2);
-                                    }
-                                    else
-                                    {
+                                var sendResult = _commandReceiver.SendTransaction(activeSession, ref transaction);
+                                if (sendResult.Item1 is not true)
+                                {
+                                    spinner.Fail(sendResult.Item2);
+                                }
+                                else
+                                {
                                         var balanceResult = _commandReceiver.History(session);
                                         if (balanceResult.Item1 is null)
                                         {
