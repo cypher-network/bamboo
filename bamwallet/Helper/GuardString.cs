@@ -1,4 +1,4 @@
-﻿// BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0. 
+﻿// CypherNetwork BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0.
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
 using System;
@@ -14,7 +14,7 @@ namespace BAMWallet.Helper
 {
     [CLSCompliant(false)]
 #pragma warning disable CS3021 // Type or member does not need a CLSCompliant attribute because the assembly does not have a CLSCompliant attribute
-    public sealed class InsecureString : IDisposable, IEnumerable<char>
+    public sealed class GuardString : IDisposable, IEnumerable<char>
 #pragma warning restore CS3021 // Type or member does not need a CLSCompliant attribute because the assembly does not have a CLSCompliant attribute
     {
         public string Value { get; private set; }
@@ -22,7 +22,7 @@ namespace BAMWallet.Helper
         private SecureString _secureString;
         private GCHandle _gcHandle;
 
-        internal InsecureString(SecureString secureString)
+        internal GuardString(SecureString secureString)
         {
             _secureString = secureString;
 
