@@ -20,6 +20,7 @@ namespace BAMWallet.HD
         Tuple<object, string> CreateTransaction(Session session, ref WalletTransaction transaction);
         Tuple<object, string> RecoverTransactions(in Session session, int start);
         Task SyncWallet(in Session session);
-        bool IsTransactionAllowed(in Session session);
+        Task<MessageResponse<StakeCredentialsResponse>> SendStakeCredentials(in Session session,
+            in StakeCredentialsRequest stakeCredentialsRequest, in byte[] privateKey, in byte[] token);
     }
 }

@@ -1250,6 +1250,53 @@ namespace BAMWallet.HD
         }
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="session"></param>
+        /// <param name="stakeCredentialsRequest"></param>
+        /// <param name="privateKey"></param>
+        /// <param name="token"></param>
+        /// <returns></returns>
+        public Task<MessageResponse<StakeCredentialsResponse>> SendStakeCredentials(in Session session,
+            in StakeCredentialsRequest stakeCredentialsRequest, in byte[] privateKey, in byte[] token)
+        {
+            Guard.Argument(stakeCredentialsRequest, nameof(stakeCredentialsRequest)).NotNull();
+            Guard.Argument(privateKey, nameof(privateKey)).NotNull().NotEmpty().MaxCount(32);
+            Guard.Argument(token, nameof(token)).NotNull().NotEmpty().MaxCount(16);
+            using var commandExecutionGuard =
+                new RAIIGuard(IncrementCommandExecutionCount, DecrementCommandExecutionCount);
+            if (!IsBase58(System.Text.Encoding.UTF8.GetString(stakeCredentialsRequest.RewardAddress)))
+            {
+                return Task.FromResult(new MessageResponse<StakeCredentialsResponse>(new StakeCredentialsResponse
+                {
+                    Success = false, Message = "Reward address does not phrase to a base58 format."
+                }));
+            }
+
+            var stakeCredentials = new StakeCredentialsRequest
+            {
+                Passphrase = stakeCredentialsRequest.Passphrase,
+                RewardAddress = stakeCredentialsRequest.RewardAddress,
+                Seed = stakeCredentialsRequest.Seed,
+                Transactions = ReadWalletTransactions(in session)
+            };
+            var packet = Cryptography.Crypto.EncryptChaCha20Poly1305(MessagePackSerializer.Serialize(stakeCredentials),
+                privateKey, token, out var tag, out var nonce);
+            if (packet is null)
+                return Task.FromResult(new MessageResponse<StakeCredentialsResponse>(
+                    new StakeCredentialsResponse { Success = false, Message = "Failed to encrypt message." }));
+            var stakeRequest = new StakeRequest { Tag = tag, Nonce = nonce, Data = packet, Token = token };
+            var mStakeCredentialsResponse = _client.Send<StakeCredentialsResponse>(new Parameter
+            {
+                Value = MessagePackSerializer.Serialize(stakeRequest), MessageCommand = MessageCommand.Stake
+            });
+            return Task.FromResult(new MessageResponse<StakeCredentialsResponse>(new StakeCredentialsResponse
+            {
+                Success = mStakeCredentialsResponse.Success, Message = mStakeCredentialsResponse.Message
+            }));
+        }
+        
+        /// <summary>
         ///
         /// </summary>
         /// <param name="session"></param>
