@@ -298,7 +298,7 @@ namespace Cli.Configuration
             var section = new TextInput<ushort>(
                 "Enter wallet API port (e.g. 8001). The port must be different from the node's API port when running on the same system",
                 (string portString) => ushort.TryParse(portString, out _),
-                (string portString) => ushort.Parse(portString));
+                ushort.Parse);
             var success = _userInterface.Do(section, out var port);
             if (!success) return false;
             if (Configuration.NodeIPAddress.Equals(IPAddress.Loopback) && port == Configuration.NodePort)

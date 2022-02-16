@@ -10,5 +10,6 @@ namespace BAMWallet.Model
     public class Parameter
     {
         [Key(0)] public byte[] Value { get; set; }
+        [Key(1)] public MessageCommand MessageCommand { get; set; }
     }
 }

@@ -45,7 +45,7 @@ namespace BAMWallet.Model
     [MessagePackObject]
     public record NewTransactionResponse
     {
-        [Key(0)] public bool OK { get; set; }
+        [Key(0)] public bool Ok { get; set; }
     }
 
     /// <summary>
@@ -64,25 +64,7 @@ namespace BAMWallet.Model
     public record SafeguardBlocksResponse
     {
         [Key(0)] public IList<Block> Blocks { get; set; }
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    [MessagePackObject]
-    public record StakeRequest
-    {
-        [Key(0)] public Payment Payment { get; set; }
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    [MessagePackObject]
-    public record StakeResponse
-    {
-        [Key(0)] public Transaction Transaction { get; init; }
-        [Key(1)] public string Message { get; init; }
+        [Key(1)] public string Error { get; set; }
     }
 
     /// <summary>
@@ -93,4 +75,40 @@ namespace BAMWallet.Model
     {
         [Key(0)] public Transaction Transaction { get; set; }
     }
+    
+    /// <summary>
+    /// 
+    /// </summary>
+    [MessagePackObject]
+    public record StakeResponse(int Code);
+
+    [MessagePackObject]
+    public record StakeRequest
+    {
+        [Key(0)] public byte[] Tag { get; set; }
+        [Key(1)] public byte[] Nonce { get; set; }
+        [Key(2)] public byte[] Token { get; set; }
+        [Key(3)] public byte[] Data { get; set; }
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    [MessagePackObject]
+    public record StakeCredentialsResponse
+    {
+        [Key(0)] public bool Success { get; init; }
+        [Key(1)] public string Message { get; init; }
+    }
+
+    [MessagePackObject]
+    public record StakeCredentialsRequest
+    {
+        [Key(0)] public byte[] Seed { get; init; }
+        [Key(1)] public byte[] Passphrase { get; init; }
+        [Key(2)] public byte[] RewardAddress { get; init; }
+        [Key(3)] public Transaction[] Transactions { get; set; }
+    }
+
+    public record MessageResponse<T>(T Value);
 }
