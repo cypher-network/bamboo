@@ -140,6 +140,50 @@ install_info() {
 }
 
 
+install_dependencies() {
+  printf "\n  %b Checking dependencies\n" "${INFO}"
+
+  if [ "${IS_DEBIAN_BASED}" = true ]; then
+    if dpkg -s libc6-dev &> /dev/null; then
+      printf "  %b libc6-dev\n" "${TICK}"
+    else
+      printf "  %b libc6-dev\n" "${CROSS}"
+      printf "  %b Installing libc6-dev\n" "${INFO}"
+      sudo apt-get update
+      if [ "${IS_NON_INTERACTIVE}" = true ]; then
+        sudo DEBIAN_FRONTEND=noninteractive apt-get -yq install libc6-dev
+      else
+        sudo apt-get install libc6-dev
+      fi
+    fi
+    if dpkg -s libssl-dev &> /dev/null; then
+      printf "  %b libssl-dev\n" "${TICK}"
+    else
+      printf "  %b libssl-dev\n" "${CROSS}"
+      printf "  %b Installing libssl-dev\n" "${INFO}"
+      sudo apt-get update
+      if [ "${IS_NON_INTERACTIVE}" = true ]; then
+        sudo DEBIAN_FRONTEND=noninteractive apt-get -yq install libssl-dev
+      else
+        sudo apt-get install libssl-dev
+      fi
+    fi    
+    if dpkg -s libatomic1 &> /dev/null; then
+      printf "  %b libatomic1\n" "${TICK}"
+    else
+      printf "  %b libatomic1\n" "${CROSS}"
+      printf "  %b Installing libatomic1\n" "${INFO}"
+      sudo apt-get update
+      if [ "${IS_NON_INTERACTIVE}" = true ]; then
+        sudo DEBIAN_FRONTEND=noninteractive apt-get -yq install libatomic1
+      else
+        sudo apt-get install libatomic1
+      fi
+    fi     
+  fi
+}
+
+
 download_archive() {
   printf "\n"
   printf "  %b Checking download utility\n" "${INFO}"
@@ -250,6 +294,7 @@ if [ "${IS_UNINSTALL}" = true ]; then
 
 else
   install_info
+  install_dependencies
 
   download_archive
   install_archive
