@@ -11,6 +11,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using BAMWallet.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -224,8 +225,14 @@ namespace Cli.Commands.Common
                     while (!_hasExited)
                     {
                         _cmdFinishedEvent.WaitOne();
-                        var args = Prompt.GetString("bamboo$", promptColor: ConsoleColor.Cyan)?.TrimEnd()?.Split(' ');
 
+                        Thread.Sleep(25);
+                        
+                        var args = _loginState == State.LoggedIn
+                            ? Prompt.GetString($"{_activeSession.Identifier.FromSecureString()}$",
+                                promptColor: ConsoleColor.Cyan)?.TrimEnd()?.Split(' ')
+                            : Prompt.GetString("bamboo$", promptColor: ConsoleColor.Cyan)?.TrimEnd()?.Split(' ');
+                        
                         if ((args == null) || (args.Length == 1 && string.IsNullOrEmpty(args[0])) || (args.Length > 1))
                         {
                             _cmdFinishedEvent.Set();

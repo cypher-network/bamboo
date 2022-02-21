@@ -25,14 +25,12 @@ namespace Cli.Commands.CmdLine
         }
         public override Task Execute(Session activeSession = null)
         {
-            if (_automaticLogout)
-            {
-                _console.ForegroundColor = ConsoleColor.Red;
-                _console.WriteLine("You have been logged out of the wallet due to inactivity. Please login again to use the wallet.");
-                _console.ForegroundColor = ConsoleColor.Cyan;
-                _console.Write("bamboo$ ");
-                _console.ResetColor();
-            }
+            if (!_automaticLogout) return Task.CompletedTask;
+            _console.ForegroundColor = ConsoleColor.Red;
+            _console.WriteLine("You have been logged out of the wallet due to inactivity. Please login again to use the wallet.");
+            _console.ForegroundColor = ConsoleColor.Cyan;
+            _console.Write("bamboo$ ");
+            _console.ResetColor();
 
             return Task.CompletedTask;
         }
