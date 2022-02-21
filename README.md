@@ -5,6 +5,11 @@
 
 ## Installation
 
+### .Net 6
+
+Downloads for .Net
+https://dotnet.microsoft.com/en-us/download
+
 ### Linux and macOS
 
 For quick installation on Linux and macOS, execute the following command:
