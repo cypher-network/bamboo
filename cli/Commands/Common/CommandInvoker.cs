@@ -227,12 +227,12 @@ namespace Cli.Commands.Common
                         _cmdFinishedEvent.WaitOne();
 
                         Thread.Sleep(25);
-                        
+
                         var args = _loginState == State.LoggedIn
                             ? Prompt.GetString($"{_activeSession.Identifier.FromSecureString()}$",
                                 promptColor: ConsoleColor.Cyan)?.TrimEnd()?.Split(' ')
                             : Prompt.GetString("bamboo$", promptColor: ConsoleColor.Cyan)?.TrimEnd()?.Split(' ');
-                        
+
                         if ((args == null) || (args.Length == 1 && string.IsNullOrEmpty(args[0])) || (args.Length > 1))
                         {
                             _cmdFinishedEvent.Set();
