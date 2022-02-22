@@ -144,6 +144,17 @@ install_dependencies() {
   printf "\n  %b Checking dependencies\n" "${INFO}"
   if [ "${IS_DEBIAN_BASED}" = true ]; then
     sudo apt-get update
+    if dpkg -s libsodium-dev &> /dev/null; then
+      printf "  %b libsodium-dev\n" "${TICK}"
+    else
+      printf "  %b libsodium-dev\n" "${CROSS}"
+      printf "  %b Installing libsodium-dev\n" "${INFO}"
+      if [ "${IS_NON_INTERACTIVE}" = true ]; then
+        sudo DEBIAN_FRONTEND=noninteractive apt-get -yq install libsodium-dev
+      else
+        sudo apt-get install libsodium-dev
+      fi
+    fi
     if dpkg -s libsecp256k1-dev &> /dev/null; then
       printf "  %b libsecp256k1-dev\n" "${TICK}"
     else
