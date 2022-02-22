@@ -6,7 +6,7 @@
     <RootNamespace>CLi</RootNamespace>
     <LangVersion>10</LangVersion>
     <Platforms>AnyCPU;x64</Platforms>
-    <AssemblyVersion>0.0.30.1</AssemblyVersion>
+    <AssemblyVersion>0.0.31.0</AssemblyVersion>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
     <InvariantGlobalization>true</InvariantGlobalization>
     <Company>Tangram</Company>
