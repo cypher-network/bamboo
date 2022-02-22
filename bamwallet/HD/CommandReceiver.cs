@@ -1107,7 +1107,7 @@ namespace BAMWallet.HD
             {
                 var book = addressBook;
                 var findAddressBook = addressBooks.FirstOrDefault(x => x.RecipientAddress == book.RecipientAddress || x.Name == book.Name);
-                if (findAddressBook != null)
+                if (findAddressBook != null && !update)
                 {
                     return new Tuple<object, string>(null,
                         $"Recipient name: {addressBook.Name} with address: {addressBook.RecipientAddress} already exists.");

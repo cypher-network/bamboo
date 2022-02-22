@@ -183,7 +183,8 @@ public class WalletAddressBookCommand : Command
             }
 
             var resultUpdate = _commandReceiver.AddAddressBook(activeSession, ref addressBook, true);
-            _console.WriteLine(result.Item1 == null ? resultUpdate.Item2 : $"Saved {newName} to your address book.");
+            _console.WriteLine(resultUpdate.Item1 == null ? resultUpdate.Item2 : $"Saved {newName} to your address book.");
+            List(activeSession);
         }
         else
         {
