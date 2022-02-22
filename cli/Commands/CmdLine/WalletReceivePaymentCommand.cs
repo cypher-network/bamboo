@@ -50,14 +50,20 @@ namespace Cli.Commands.CmdLine
                            else
                            {
                                var (balances, errorBalances) = _commandReceiver.History(activeSession);
-                               if (balances is null)
+                               if (balances is not null)
                                {
-                                   spinner.Fail(errorBalances);
+                                   if (balances is IList<BalanceSheet> balanceSheet)
+                                   {
+                                       var transactions = balanceSheet.Where(x => x.TxId == balanceSheet.Last().TxId);
+                                       var received = transactions.Sum(x => Convert.ToDecimal(x.MoneyIn));
+                                       var balance = transactions.Sum(x => Convert.ToDecimal(x.Balance));
+                                       spinner.Succeed(
+                                           $"Memo: {transactions.First().Memo} Received: [{received:F9}] Available Balance: [{balance:F9}]");
+                                   }
                                }
                                else
                                {
-                                   var lastSheet = (balances as IList<BalanceSheet>)!.Last();
-                                   spinner.Succeed($"Memo: {lastSheet.Memo}  Received: [{lastSheet.MoneyIn}]  Available Balance: [{lastSheet.Balance}]");
+                                   spinner.Fail(errorBalances);
                                }
                            }
                        }

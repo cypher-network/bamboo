@@ -33,7 +33,7 @@ namespace Cli.Configuration
             Console.WriteLine("Wallet API port   : " + networkConfiguration.Configuration.WalletPort);
             Console.WriteLine("Node API address  : " + networkConfiguration.Configuration.NodeIPAddress);
             Console.WriteLine("Node API port     : " + networkConfiguration.Configuration.NodePort);
-            Console.WriteLine("Node Public Key     : " + networkConfiguration.Configuration.NodePubKey);
+            Console.WriteLine("Node Public Key   : " + networkConfiguration.Configuration.NodePubKey);
             Console.WriteLine();
 
             var configTemplate = File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Configuration", "Templates", Constant.AppSettingsFile));

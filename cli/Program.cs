@@ -111,6 +111,7 @@ namespace Cli
             return 0;
         }
 
+        [Obsolete]
         private static IHostBuilder CreateWebHostBuilder(string[] args, IConfiguration configuration) => Host
             .CreateDefaultBuilder(args).ConfigureWebHostDefaults(webBuilder =>
             {

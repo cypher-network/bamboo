@@ -142,14 +142,35 @@ install_info() {
 
 install_dependencies() {
   printf "\n  %b Checking dependencies\n" "${INFO}"
-
   if [ "${IS_DEBIAN_BASED}" = true ]; then
+    sudo apt-get update
+    if dpkg -s libsodium-dev &> /dev/null; then
+      printf "  %b libsodium-dev\n" "${TICK}"
+    else
+      printf "  %b libsodium-dev\n" "${CROSS}"
+      printf "  %b Installing libsodium-dev\n" "${INFO}"
+      if [ "${IS_NON_INTERACTIVE}" = true ]; then
+        sudo DEBIAN_FRONTEND=noninteractive apt-get -yq install libsodium-dev
+      else
+        sudo apt-get install libsodium-dev
+      fi
+    fi
+    if dpkg -s libsecp256k1-dev &> /dev/null; then
+      printf "  %b libsecp256k1-dev\n" "${TICK}"
+    else
+      printf "  %b libsecp256k1-dev\n" "${CROSS}"
+      printf "  %b Installing libsecp256k1-dev\n" "${INFO}"
+      if [ "${IS_NON_INTERACTIVE}" = true ]; then
+        sudo DEBIAN_FRONTEND=noninteractive apt-get -yq install libsecp256k1-dev
+      else
+        sudo apt-get install libsecp256k1-dev
+      fi
+    fi
     if dpkg -s libc6-dev &> /dev/null; then
       printf "  %b libc6-dev\n" "${TICK}"
     else
       printf "  %b libc6-dev\n" "${CROSS}"
       printf "  %b Installing libc6-dev\n" "${INFO}"
-      sudo apt-get update
       if [ "${IS_NON_INTERACTIVE}" = true ]; then
         sudo DEBIAN_FRONTEND=noninteractive apt-get -yq install libc6-dev
       else
@@ -161,7 +182,6 @@ install_dependencies() {
     else
       printf "  %b libssl-dev\n" "${CROSS}"
       printf "  %b Installing libssl-dev\n" "${INFO}"
-      sudo apt-get update
       if [ "${IS_NON_INTERACTIVE}" = true ]; then
         sudo DEBIAN_FRONTEND=noninteractive apt-get -yq install libssl-dev
       else
@@ -173,7 +193,6 @@ install_dependencies() {
     else
       printf "  %b libatomic1\n" "${CROSS}"
       printf "  %b Installing libatomic1\n" "${INFO}"
-      sudo apt-get update
       if [ "${IS_NON_INTERACTIVE}" = true ]; then
         sudo DEBIAN_FRONTEND=noninteractive apt-get -yq install libatomic1
       else

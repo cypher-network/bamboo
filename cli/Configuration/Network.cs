@@ -317,14 +317,12 @@ namespace Cli.Configuration
         private bool StepWalletNodePubKey()
         {
             var section = new TextInput<string>(
-                "Enter remote node public key. You can find the node's public key at (e.g. http://123.1.23.123:48655/peer)." +
-                " Replace (123.1.23.123) with the remote node's IP address that the wallet will connect to." +
-                " The public key provides bi-directional elliptic curve communication using X25519 cryptographic operations.",
+                "Enter remote node public key",
                 pubkey => !string.IsNullOrEmpty(pubkey), pubkey => pubkey);
             var success = _userInterface.Do(section, out var key);
             if (!success) return false;
             Configuration.NodePubKey = key;
-            return false;
+            return true;
         }
 
         #endregion
