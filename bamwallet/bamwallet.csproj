@@ -6,7 +6,7 @@
     <LangVersion>10</LangVersion>
     <Platforms>AnyCPU;x64</Platforms>
     <RootNamespace>BAMWallet</RootNamespace>
-    <AssemblyVersion>0.0.30.0</AssemblyVersion>
+    <AssemblyVersion>0.0.30.1</AssemblyVersion>
     <Company>CypherNetwork</Company>
   </PropertyGroup>
 
