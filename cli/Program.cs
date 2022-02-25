@@ -26,6 +26,7 @@ namespace Cli
     {
         private const int MinimumConfigVersion = 1;
 
+        [Obsolete]
         public static async Task<int> Main(string[] args)
         {
             var basePath = AppDomain.CurrentDomain.BaseDirectory;
@@ -138,7 +139,7 @@ namespace Cli
                     RemoteNodePubKey = nodePk,
                     WalletEndpoint = walletEndpoint
                 };
-                
+
                 var liteDatabase = BAMWallet.Helper.Util.LiteRepositoryAppSettingsFactory();
                 if (!liteDatabase.Database.CollectionExists("networksettings"))
                 {
@@ -148,7 +149,7 @@ namespace Cli
                 {
                     liteDatabase.Update(networkSettings);
                 }
-                
+
                 var endPoint = Helper.Utils.TryParseAddress(walletEndpoint);
                 var port = Helper.Utils.IsFreePort(endPoint.Port);
                 try
@@ -173,7 +174,7 @@ namespace Cli
                 {
                     Log.Error(ex.Message);
                 }
-                
+
                 webBuilder.UseStartup<Startup>().UseUrls(walletEndpoint).UseSerilog();
             });
     }

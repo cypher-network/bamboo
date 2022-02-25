@@ -8,9 +8,9 @@ using McMaster.Extensions.CommandLineUtils;
 namespace CLi.Commands.CmdLine;
 
 [CommandDescriptor("settings", "Mange app settings")]
-public class WalletAppSettingsCommand: Command
+public class WalletAppSettingsCommand : Command
 {
-    public WalletAppSettingsCommand(IServiceProvider serviceProvider) 
+    public WalletAppSettingsCommand(IServiceProvider serviceProvider)
         : base(typeof(WalletAppSettingsCommand), serviceProvider)
     {
     }
@@ -46,8 +46,8 @@ public class WalletAppSettingsCommand: Command
         var walletEndpoint = Prompt.GetString("Wallet endpoint:", null, ConsoleColor.Green);
         var node = Prompt.GetString("Node:", null, ConsoleColor.Green);
         var nodePk = Prompt.GetString("Node public key:", null, ConsoleColor.Green);
-        var nrConfirmations  = Prompt.GetInt("Number of confirmations:", 1, ConsoleColor.Green);
-        
+        var nrConfirmations = Prompt.GetInt("Number of confirmations:", 1, ConsoleColor.Green);
+
         if (!string.IsNullOrEmpty(env))
         {
             if (networkSettings.Environment != env)
@@ -55,7 +55,7 @@ public class WalletAppSettingsCommand: Command
                 networkSettings.Environment = env;
             }
         }
-        
+
         if (!string.IsNullOrEmpty(walletEndpoint))
         {
             if (networkSettings.WalletEndpoint != walletEndpoint)
@@ -63,7 +63,7 @@ public class WalletAppSettingsCommand: Command
                 networkSettings.WalletEndpoint = walletEndpoint;
             }
         }
-        
+
         if (!string.IsNullOrEmpty(node))
         {
             if (networkSettings.RemoteNode != node)
@@ -71,7 +71,7 @@ public class WalletAppSettingsCommand: Command
                 networkSettings.RemoteNode = node;
             }
         }
-        
+
         if (!string.IsNullOrEmpty(nodePk))
         {
             if (networkSettings.RemoteNodePubKey != nodePk)
@@ -79,12 +79,12 @@ public class WalletAppSettingsCommand: Command
                 networkSettings.RemoteNodePubKey = nodePk;
             }
         }
-        
+
         if (networkSettings.NumberOfConfirmations != (ulong)nrConfirmations)
         {
             networkSettings.NumberOfConfirmations = (ulong)nrConfirmations;
         }
-        
+
         var liteDatabase = BAMWallet.Helper.Util.LiteRepositoryAppSettingsFactory();
         if (!liteDatabase.Database.CollectionExists("networksettings"))
         {
