@@ -313,7 +313,7 @@ if [ "${IS_UNINSTALL}" = true ]; then
 
 else
   install_info
-  install_dependencies
+  # install_dependencies
 
   download_archive
   install_archive
