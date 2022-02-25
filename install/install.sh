@@ -143,38 +143,28 @@ install_info() {
 install_dependencies() {
   printf "\n  %b Checking dependencies\n" "${INFO}"
   if [ "${IS_DEBIAN_BASED}" = true ]; then
-    sudo apt-get update
-    if dpkg -s libsodium-dev &> /dev/null; then
-      printf "  %b libsodium-dev\n" "${TICK}"
-    else
-      printf "  %b libsodium-dev\n" "${CROSS}"
-      printf "  %b Installing libsodium-dev\n" "${INFO}"
-      if [ "${IS_NON_INTERACTIVE}" = true ]; then
-        sudo DEBIAN_FRONTEND=noninteractive apt-get -yq install libsodium-dev
-      else
-        sudo apt-get install libsodium-dev
-      fi
-    fi
-    if dpkg -s libsecp256k1-dev &> /dev/null; then
-      printf "  %b libsecp256k1-dev\n" "${TICK}"
-    else
-      printf "  %b libsecp256k1-dev\n" "${CROSS}"
-      printf "  %b Installing libsecp256k1-dev\n" "${INFO}"
-      if [ "${IS_NON_INTERACTIVE}" = true ]; then
-        sudo DEBIAN_FRONTEND=noninteractive apt-get -yq install libsecp256k1-dev
-      else
-        sudo apt-get install libsecp256k1-dev
-      fi
-    fi
     if dpkg -s libc6-dev &> /dev/null; then
       printf "  %b libc6-dev\n" "${TICK}"
     else
       printf "  %b libc6-dev\n" "${CROSS}"
       printf "  %b Installing libc6-dev\n" "${INFO}"
+      sudo apt-get update
       if [ "${IS_NON_INTERACTIVE}" = true ]; then
         sudo DEBIAN_FRONTEND=noninteractive apt-get -yq install libc6-dev
       else
         sudo apt-get install libc6-dev
+      fi
+    fi
+    if dpkg -s libsodium-dev &> /dev/null; then
+      printf "  %b libsodium-dev\n" "${TICK}"
+    else
+      printf "  %b libsodium-dev\n" "${CROSS}"
+      printf "  %b Installing libsodium-dev\n" "${INFO}"
+      sudo apt-get update
+      if [ "${IS_NON_INTERACTIVE}" = true ]; then
+        sudo DEBIAN_FRONTEND=noninteractive apt-get -yq install libsodium-dev
+      else
+        sudo apt-get install libsodium-dev
       fi
     fi
     if dpkg -s libssl-dev &> /dev/null; then
@@ -182,6 +172,7 @@ install_dependencies() {
     else
       printf "  %b libssl-dev\n" "${CROSS}"
       printf "  %b Installing libssl-dev\n" "${INFO}"
+      sudo apt-get update
       if [ "${IS_NON_INTERACTIVE}" = true ]; then
         sudo DEBIAN_FRONTEND=noninteractive apt-get -yq install libssl-dev
       else
@@ -193,12 +184,40 @@ install_dependencies() {
     else
       printf "  %b libatomic1\n" "${CROSS}"
       printf "  %b Installing libatomic1\n" "${INFO}"
+      sudo apt-get update
       if [ "${IS_NON_INTERACTIVE}" = true ]; then
         sudo DEBIAN_FRONTEND=noninteractive apt-get -yq install libatomic1
       else
         sudo apt-get install libatomic1
       fi
     fi     
+  fi
+  
+  if [ -f /ect/centos-release ]; then
+    if yum -q list installed glibc-devel &> /dev/null; then
+      printf "  %b glibc-devel\n" "${TICK}"
+    else
+      printf "  %b glibc-devel\n" "${CROSS}"
+      printf "  %b Installing glibc-devel\n" "${INFO}"
+      sudo yum update
+      yum install glibc-devel
+    fi    
+    if yum -q list installed libnsl.x86_64 &> /dev/null; then
+      printf "  %b libnsl.x86_64\n" "${TICK}"
+    else
+      printf "  %b libnsl.x86_64\n" "${CROSS}"
+      printf "  %b Installing libnsl.x86_64\n" "${INFO}"
+      sudo yum update
+      yum install libnsl.x86_64
+    fi     
+    if yum -q list installed libatomic.x86_64 &> /dev/null; then
+      printf "  %b libatomic.x86_64\n" "${TICK}"
+    else
+      printf "  %b libatomic.x86_64\n" "${CROSS}"
+      printf "  %b Installing libatomic.x86_64\n" "${INFO}"
+      sudo yum update
+      yum install libatomic.x86_64
+    fi
   fi
 }
 
@@ -285,7 +304,7 @@ install_archive() {
   printf "%b  %b Installed to %s\n" "${OVER}" "${TICK}" "${CYPHER_BAMBOO_OPT_PATH}"   
 
   printf "  %b Running configuration util" "${INFO}"
-  "${CYPHER_BAMBOO_OPT_PATH}${CYPHER_BAMBOO_EXECUTABLE} --configure"
+  "${CYPHER_BAMBOO_OPT_PATH}${CYPHER_BAMBOO_EXECUTABLE}" --configure
   printf "%b  %b Run configuration util\n\n" "${OVER}" "${TICK}"
 }
 
@@ -299,6 +318,7 @@ cleanup() {
 }
 
 finish() {
+  printf "\n\n  %b To run the wallet type: clibamwallet" "${INFO}"
   printf "\n\n  %b Installation successful\n\n" "${DONE}"
 }
 

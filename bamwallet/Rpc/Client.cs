@@ -19,9 +19,9 @@ namespace BAMWallet.Rpc
         private readonly ILogger _logger;
         private readonly NetworkSettings _networkSettings;
 
-        public Client(NetworkSettings networkSettings, ILogger logger)
+        public Client(ILogger logger)
         {
-            _networkSettings = networkSettings;
+            _networkSettings = Util.LiteRepositoryAppSettingsFactory().Query<NetworkSettings>().First();
             _logger = logger.ForContext("SourceContext", nameof(Client));
         }
 

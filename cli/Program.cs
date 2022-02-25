@@ -13,6 +13,7 @@ using System.Linq;
 using System.Net.NetworkInformation;
 using System.Threading.Tasks;
 using BAMWallet.HD;
+using BAMWallet.Model;
 using Cli.UI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
@@ -79,8 +80,16 @@ namespace Cli
 
             try
             {
-                Log.Information("Starting wallet");
-                Log.Information($"Version: {BAMWallet.Helper.Util.GetAssemblyVersion()}");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine(@$"
+.______        ___      .___  ___. .______     ______     ______   
+|   _  \      /   \     |   \/   | |   _  \   /  __  \   /  __  \  
+|  |_)  |    /  ^  \    |  \  /  | |  |_)  | |  |  |  | |  |  |  | 
+|   _  <    /  /_\  \   |  |\/|  | |   _  <  |  |  |  | |  |  |  | 
+|  |_)  |  /  _____  \  |  |  |  | |  |_)  | |  `--'  | |  `--'  | 
+|______/  /__/     \__\ |__|  |__| |______/   \______/   \______/  v{BAMWallet.Helper.Util.GetAssemblyVersion()}");
+                Console.WriteLine("");
+                Console.ResetColor();
                 var builder = CreateWebHostBuilder(args, config);
                 builder.UseConsoleLifetime();
 
@@ -117,6 +126,29 @@ namespace Cli
             {
                 var fileStream = new FileStream(".LOCK", FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
                 var walletEndpoint = configuration["NetworkSettings:WalletEndpoint"];
+                var env = configuration["NetworkSettings:Environment"];
+                var node = configuration["NetworkSettings:RemoteNode"];
+                var nodePk = configuration["NetworkSettings:RemoteNodePubKey"];
+                var confirmations = configuration["NetworkSettings:NumberOfConfirmations"];
+                var networkSettings = new NetworkSettings
+                {
+                    NumberOfConfirmations = Convert.ToUInt64(confirmations),
+                    Environment = env,
+                    RemoteNode = node,
+                    RemoteNodePubKey = nodePk,
+                    WalletEndpoint = walletEndpoint
+                };
+                
+                var liteDatabase = BAMWallet.Helper.Util.LiteRepositoryAppSettingsFactory();
+                if (!liteDatabase.Database.CollectionExists("networksettings"))
+                {
+                    liteDatabase.Insert(networkSettings);
+                }
+                else
+                {
+                    liteDatabase.Update(networkSettings);
+                }
+                
                 var endPoint = Helper.Utils.TryParseAddress(walletEndpoint);
                 var port = Helper.Utils.IsFreePort(endPoint.Port);
                 try
@@ -141,7 +173,7 @@ namespace Cli
                 {
                     Log.Error(ex.Message);
                 }
-
+                
                 webBuilder.UseStartup<Startup>().UseUrls(walletEndpoint).UseSerilog();
             });
     }

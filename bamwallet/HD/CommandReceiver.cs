@@ -8,7 +8,6 @@ using BAMWallet.Rpc;
 using BAMWallet.Services;
 using Dawn;
 using Libsecp256k1Zkp.Net;
-using Microsoft.Extensions.Options;
 using NBitcoin;
 using Newtonsoft.Json.Linq;
 using Serilog;
@@ -31,16 +30,15 @@ namespace BAMWallet.HD
 {
     public class CommandReceiver : ICommandReceiver
     {
-        public CommandReceiver(ISafeguardDownloadingFlagProvider safeguardDownloadingFlagProvider,
-            IOptions<NetworkSettings> networkSettings, ILogger logger)
+        public CommandReceiver(ISafeguardDownloadingFlagProvider safeguardDownloadingFlagProvider, ILogger logger)
         {
             _safeguardDownloadingFlagProvider = safeguardDownloadingFlagProvider;
-            _networkSettings = networkSettings.Value;
+            _networkSettings = Util.LiteRepositoryAppSettingsFactory().Query<NetworkSettings>().First();
             _network = _networkSettings.Environment == Constant.Mainnet
                 ? NBitcoin.Network.Main
                 : NBitcoin.Network.TestNet;
             _logger = logger.ForContext("SourceContext", nameof(CommandReceiver));
-            _client = new Client(networkSettings.Value, _logger);
+            _client = new Client(_logger);
             _commandExecutionCounter = 0;
         }
 
