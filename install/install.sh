@@ -184,12 +184,40 @@ install_dependencies() {
     else
       printf "  %b libatomic1\n" "${CROSS}"
       printf "  %b Installing libatomic1\n" "${INFO}"
+      sudo apt-get update
       if [ "${IS_NON_INTERACTIVE}" = true ]; then
         sudo DEBIAN_FRONTEND=noninteractive apt-get -yq install libatomic1
       else
         sudo apt-get install libatomic1
       fi
     fi     
+  fi
+  
+  if [ -f /ect/centos-release ]; then
+    if yum -q list installed glibc-devel &> /dev/null; then
+      printf "  %b glibc-devel\n" "${TICK}"
+    else
+      printf "  %b glibc-devel\n" "${CROSS}"
+      printf "  %b Installing glibc-devel\n" "${INFO}"
+      sudo yum update
+      yum install glibc-devel
+    fi    
+    if yum -q list installed libnsl.x86_64 &> /dev/null; then
+      printf "  %b libnsl.x86_64\n" "${TICK}"
+    else
+      printf "  %b libnsl.x86_64\n" "${CROSS}"
+      printf "  %b Installing libnsl.x86_64\n" "${INFO}"
+      sudo yum update
+      yum install libnsl.x86_64
+    fi     
+    if yum -q list installed libatomic.x86_64 &> /dev/null; then
+      printf "  %b libatomic.x86_64\n" "${TICK}"
+    else
+      printf "  %b libatomic.x86_64\n" "${CROSS}"
+      printf "  %b Installing libatomic.x86_64\n" "${INFO}"
+      sudo yum update
+      yum install libatomic.x86_64
+    fi
   fi
 }
 
