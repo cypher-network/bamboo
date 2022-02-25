@@ -76,7 +76,7 @@ namespace BAMWallet.Helper
             var x = new LiteRepository(connectionString);
             return x;
         }
-        
+
         public static LiteRepository LiteRepositoryAppSettingsFactory()
         {
             var connectionString = new ConnectionString
