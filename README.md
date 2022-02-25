@@ -3,8 +3,19 @@
 [![Build wallet](https://github.com/cypher-network/bamboo/workflows/build%20wallet/badge.svg)](https://github.com/cypher-network/bamboo/commits/master/)
 [![GitHub release](https://img.shields.io/github/release/cypher-network/bamboo.svg)](https://GitHub.com/cypher-network/bamboo/releases/)
 
-## Installation
 
+| OS            | Version | Architecture | Supported           |
+|---------------|---------|--------------|---------------------|
+| Ubuntu        | 21.10   | x64          | :heavy_check_mark:  |
+| CentOS Stream | 8       | x64          | :heavy_check_mark:  |
+| Windows       | 10      | x64          | :heavy_minus_sign:  |
+| macOS         | 11,12   | x64          | :heavy_minus_sign:  |
+
+> Unknown operating systems are still being tested. 
+> If you are technical or would like to get your hands dirty, please go ahead and install the wallet. It won't bite :yum:
+
+
+## Installation
 ### .Net 6
 
 Downloads for .Net
