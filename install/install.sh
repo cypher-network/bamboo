@@ -193,7 +193,7 @@ install_dependencies() {
     fi     
   fi
   
-  if [ -f /ect/centos-release ]; then
+  if cat /etc/*release | grep ^NAME | grep CentOS; then
     if yum -q list installed glibc-devel &> /dev/null; then
       printf "  %b glibc-devel\n" "${TICK}"
     else
@@ -333,7 +333,7 @@ if [ "${IS_UNINSTALL}" = true ]; then
 
 else
   install_info
-  # install_dependencies
+  install_dependencies
 
   download_archive
   install_archive
