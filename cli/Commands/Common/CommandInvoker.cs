@@ -156,6 +156,7 @@ namespace Cli.Commands.Common
             RegisterCommand(new WalletRestoreCommand(_serviceProvider));
             RegisterCommand(new WalletVersionCommand(_serviceProvider));
             RegisterCommand(new ExitCommand(_serviceProvider));
+            RegisterCommand(new WalletAppSettingsCommand(_serviceProvider));
         }
 
         private void RegisterLoggedInCommands()
@@ -178,6 +179,7 @@ namespace Cli.Commands.Common
             RegisterCommand(new WalletTxHistoryCommand(_serviceProvider));
             RegisterCommand(new WalletAddressBookCommand(_serviceProvider));
             RegisterCommand(new ExitCommand(_serviceProvider));
+            RegisterCommand(new WalletAppSettingsCommand(_serviceProvider));
         }
 
         private void Console_CancelKeyPress(object sender, ConsoleCancelEventArgs e)

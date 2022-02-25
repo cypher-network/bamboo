@@ -76,6 +76,18 @@ namespace BAMWallet.Helper
             var x = new LiteRepository(connectionString);
             return x;
         }
+        
+        public static LiteRepository LiteRepositoryAppSettingsFactory()
+        {
+            var connectionString = new ConnectionString
+            {
+                Filename = WalletPath("appsettings"),
+                Connection = ConnectionType.Shared
+            };
+
+            var x = new LiteRepository(connectionString);
+            return x;
+        }
 
         public static ulong Sum(IEnumerable<ulong> source)
         {

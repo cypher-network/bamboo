@@ -26,13 +26,12 @@ namespace BAMWallet.Services
         private readonly Client _client;
         private readonly ILogger _logger;
 
-        public SafeguardService(IHostApplicationLifetime lifeTime, ISafeguardDownloadingFlagProvider safeguardDownloadingFlagService,
-            IOptions<NetworkSettings> networkSettings, ILogger logger)
+        public SafeguardService(IHostApplicationLifetime lifeTime, ISafeguardDownloadingFlagProvider safeguardDownloadingFlagService, ILogger logger)
         {
             _applicationLifetime = lifeTime;
             _safeguardDownloadingFlagService = safeguardDownloadingFlagService;
             _logger = logger.ForContext("SourceContext", nameof(SafeguardService));
-            _client = new Client(networkSettings.Value, _logger);
+            _client = new Client(_logger);
         }
 
         /// <summary>
