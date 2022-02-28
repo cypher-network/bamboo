@@ -38,7 +38,7 @@ namespace Cli.Commands.CmdLine
                 var address = Prompt.GetString("Address/Name:", null, ConsoleColor.Red);
                 var amount = Prompt.GetString("Amount:", null, ConsoleColor.Red);
                 var memo = Prompt.GetString("Memo:", null, ConsoleColor.Green);
-                var delay = Prompt.GetInt("Priority:", 6, ConsoleColor.Magenta);
+                var delay = Prompt.GetInt("Priority:", 5, ConsoleColor.Magenta);
                 if (decimal.TryParse(amount, out var t))
                 {
                     if (!_commandReceiver.IsBase58(address))
@@ -117,7 +117,7 @@ namespace Cli.Commands.CmdLine
                         catch (Exception ex)
                         {
                             activeSession.SessionId = Guid.NewGuid();
-                            _logger.LogError(ex.StackTrace);
+                            _logger.LogError($"Message: {ex.Message}\nStack Trace:{ex.StackTrace}");
                             throw;
                         }
 
