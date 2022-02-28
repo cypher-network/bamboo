@@ -56,9 +56,8 @@ namespace Cli.Commands.CmdLine
                                    {
                                        var transactions = balanceSheet.Where(x => x.TxId == balanceSheet.Last().TxId);
                                        var received = transactions.Sum(x => Convert.ToDecimal(x.MoneyIn));
-                                       var balance = transactions.Sum(x => Convert.ToDecimal(x.Balance));
                                        spinner.Succeed(
-                                           $"Memo: {transactions.First().Memo} Received: [{received:F9}] Available Balance: [{balance:F9}]");
+                                           $"Memo: {transactions.First().Memo} Received: [{received:F9}] Available Balance: [{balanceSheet.Last().Balance:F9}]");
                                    }
                                }
                                else
