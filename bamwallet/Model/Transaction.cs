@@ -74,9 +74,9 @@ namespace BAMWallet.Model
         /// 
         /// </summary>
         /// <returns></returns>
-        public ushort GetSize()
+        public int GetSize()
         {
-            return (ushort)ToStream().Length;
+            return ToStream().Length;
         }
 
         /// <summary>
