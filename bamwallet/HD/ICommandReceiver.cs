@@ -20,7 +20,7 @@ namespace BAMWallet.HD
         Tuple<object, string> SendTransaction(in Session session, ref WalletTransaction transaction);
         Tuple<object, string> ReceivePayment(in Session session, string paymentId);
         Tuple<object, string> CreateTransaction(Session session, ref WalletTransaction transaction);
-        Tuple<object, string> RecoverTransactions(in Session session, int start);
+        Tuple<object, string> RecoverTransactions(in Session session, int start, bool recoverCompletely = false);
         Task SyncWallet(in Session session);
         Task<MessageResponse<StakeCredentialsResponse>> SendStakeCredentials(in Session session,
             in StakeCredentialsRequest stakeCredentialsRequest, in byte[] privateKey, in byte[] token);
@@ -31,5 +31,6 @@ namespace BAMWallet.HD
         Tuple<object, string> FindAddressBook(Session session, ref AddressBook addressBook);
         Tuple<object, string> RemoveAddressBook(Session session, ref AddressBook addressBook);
         Tuple<object, string> ListAddressBook(Session session);
+        ulong GetLastTransactionHeight(in Session session);
     }
 }

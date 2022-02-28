@@ -95,17 +95,18 @@ namespace BAMWallet.HD
                 if (!freeBalances.Any())
                     return TaskResult<bool>.CreateFailure(
                         new Exception("No free commitments available. Please retry after commitments unlock."));
-                var payment = (long)walletTransaction.Payment;
+                var payment = walletTransaction.Payment;
+                const ulong max = 18446740000;
                 var totals = new List<Balance>();
-                while (payment != 0)
+                while (payment != 0 || freeBalances.Count != 0)
                 {
                     var spend = freeBalances.Select(x => x.Total)
-                        .Aggregate((x, y) => x - (ulong)payment < y - (ulong)payment ? x : y);
+                        .Aggregate((x, y) => x - payment < y - payment ? x : y);
                     var bal = freeBalances.First(a => a.Total == spend);
                     freeBalances.Remove(bal);
                     totals.Add(bal);
-                    payment -= (long)spend;
-                    if (payment <= 0) break;
+                    payment -= spend;
+                    if (payment is >= max or <= 0) break;
                 }
 
                 if (totals.Count == 0)
@@ -114,14 +115,11 @@ namespace BAMWallet.HD
                 if (walletTransaction.Payment > total.ConvertToUInt64())
                     return TaskResult<bool>.CreateFailure(
                         new Exception("The payment exceeds the total commitment balance."));
-                var change = total.ConvertToUInt64() - walletTransaction.Payment;
-                walletTransaction.Balance = total.ConvertToUInt64();
-                walletTransaction.Change = change;
                 walletTransaction.DateTime = DateTime.UtcNow;
                 walletTransaction.Id = session.SessionId;
                 walletTransaction.Spending = totals.Select(x => x.Commitment).ToArray();
                 walletTransaction.SpendAmounts = totals.Select(x => x.Total).ToArray();
-                walletTransaction.Spent = change == 0;
+                walletTransaction.Spent = total.ConvertToUInt64() - walletTransaction.Payment == 0;
                 walletTransaction.Reward = session.SessionType == SessionType.Coinstake ? walletTransaction.Reward : 0;
             }
             catch (Exception ex)
@@ -157,14 +155,16 @@ namespace BAMWallet.HD
                     where keyImage != null
                     let spent = IsSpent(session, keyImage)
                     where !spent
-                    let amount = Transaction.Amount(output, scan)
+                    let message = Transaction.Message(output, scan)
+                    where message != null
+                    let amount = message.Amount
                     where amount != 0
                     select new Balance
                     {
                         DateTime = balanceSheet.DateTime,
                         Commitment = output,
                         State = balanceSheet.State,
-                        Total = Transaction.Amount(output, scan),
+                        Total = amount,
                         TxnId = balanceSheet.Transaction.TxnId
                     });
             }
@@ -296,7 +296,7 @@ namespace BAMWallet.HD
 
                 var size = transaction.GetSize() / 1024;
                 var timer = new Stopwatch();
-                var t = (int)(delay * decimal.Round(size, 2, MidpointRounding.ToZero) * 667);
+                var t = (int)(delay * decimal.Round(size, 2, MidpointRounding.ToZero) * 600 * (decimal)1.6);
                 timer.Start();
                 var nonce = Cryptography.Sloth.Eval(t, x);
                 timer.Stop();
@@ -798,11 +798,10 @@ namespace BAMWallet.HD
         {
             Guard.Argument(image, nameof(image)).NotNull().MaxCount(33);
             var spent = false;
-            var walletTransactions = session.Database.Query<WalletTransaction>().ToList();
-            var transactions = walletTransactions.Where(x => x.Transaction.Vin.Any(t => t.Key.KImage.Xor(image))).ToArray();
             try
             {
-                if (transactions.Length != 0)
+                var walletTransactions = session.Database.Query<WalletTransaction>().ToList();
+                foreach (var _ in from walletTransaction in walletTransactions from vin in walletTransaction.Transaction.Vin where vin.Key.KImage.Xor(image) select vin)
                 {
                     spent = true;
                 }
@@ -1223,14 +1222,15 @@ namespace BAMWallet.HD
             var payment = walletTransaction.Payment;
             foreach (var spendAmount in walletTransaction.SpendAmounts)
             {
-                var amount = spendAmount;
-                var output = walletTransaction.Spending.First(x => Transaction.Amount(x, scan) == spendAmount);
-                var isChange = spendAmount % payment;
-                var change = (ulong)Math.Abs((long)(payment - spendAmount));
+                var output = walletTransaction.Spending.First(x => Transaction.Amount(x, scan) >= spendAmount);
+                var outputAmount = Transaction.Amount(output, scan);
+                var amount = outputAmount;
+                var isChange = outputAmount % payment;
+                var change = (ulong)Math.Abs((long)(payment - outputAmount));
                 payment = change;
-                if (isChange != spendAmount)
+                if (isChange != 0)
                 {
-                    amount = spendAmount - payment;
+                    amount = outputAmount - payment;
                     change = payment;
                 }
                 else
@@ -1258,14 +1258,11 @@ namespace BAMWallet.HD
                 if (!generateTransaction.Success)
                 {
                     return new Tuple<object, string>(null,
-                        $"Unable to make the transaction. Inner error message {generateTransaction.NonSuccessMessage.message}");
+                        $"Unable to generate the transaction. Inner error message {generateTransaction.NonSuccessMessage.message}");
                 }
 
                 transactions.Add(newWalletTransaction.Transaction);
             }
-
-            if (payment != walletTransaction.Change)
-                return new Tuple<object, string>(null, "Unable to calculate the change.");
 
             var tx = new Transaction
             {
@@ -1551,24 +1548,57 @@ namespace BAMWallet.HD
         }
 
         /// <summary>
-        ///
+        /// 
+        /// </summary>
+        /// <param name="session"></param>
+        /// <returns></returns>
+        public ulong GetLastTransactionHeight(in Session session)
+        {
+            ulong start = 0;
+            var walletTransactions = session.Database.Query<WalletTransaction>().OrderBy(x => x.DateTime).ToList();
+            if (walletTransactions.Count != 0)
+            {
+                start = walletTransactions.Last().BlockHeight;
+            }
+
+            return start;
+        }
+
+        /// <summary>
+        /// 
         /// </summary>
         /// <param name="session"></param>
         /// <param name="start"></param>
+        /// <param name="recoverCompletely"></param>
         /// <returns></returns>
-        public Tuple<object, string> RecoverTransactions(in Session session, int start)
+        public Tuple<object, string> RecoverTransactions(in Session session, int start, bool recoverCompletely = false)
         {
             using var commandExecutionGuard =
                 new RAIIGuard(IncrementCommandExecutionCount, DecrementCommandExecutionCount);
             Guard.Argument(start, nameof(start)).NotNegative();
             try
             {
-                if (start == 0)
+                if (!recoverCompletely)
                 {
-                    var walletTransactions = session.Database.Query<WalletTransaction>().OrderBy(x => x.DateTime).ToList();
-                    if (walletTransactions.Count != 0)
+                    if (start == 0)
                     {
-                        start = (int)walletTransactions.Last().BlockHeight;
+                        start = (int)GetLastTransactionHeight(session);
+                    }
+                }
+                else
+                {
+                    using var db = Util.LiteRepositoryFactory(session.Identifier.FromSecureString(),
+                        session.Passphrase);
+                    var wExists = db.Query<WalletTransaction>().Exists();
+                    if (wExists)
+                    {
+                        var dropped = db.Database.DropCollection($"{nameof(WalletTransaction)}");
+                        if (!dropped)
+                        {
+                            var message = $"Unable to drop collection for {nameof(WalletTransaction)}";
+                            _logger.Here().Error(message);
+                            return new Tuple<object, string>(false, message);
+                        }
                     }
                 }
 

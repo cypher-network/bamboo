@@ -141,16 +141,16 @@ namespace Cli
                 };
 
                 var liteDatabase = BAMWallet.Helper.Util.LiteRepositoryAppSettingsFactory();
-                if (!liteDatabase.Database.CollectionExists("networksettings"))
+                if (!liteDatabase.Database.CollectionExists($"{nameof(NetworkSettings)}"))
                 {
                     liteDatabase.Insert(networkSettings);
                 }
                 else
                 {
-                    liteDatabase.Update(networkSettings);
+                    networkSettings = BAMWallet.Helper.Util.LiteRepositoryAppSettingsFactory().Query<NetworkSettings>().First();
                 }
 
-                var endPoint = Helper.Utils.TryParseAddress(walletEndpoint);
+                var endPoint = Helper.Utils.TryParseAddress(networkSettings.WalletEndpoint);
                 var port = Helper.Utils.IsFreePort(endPoint.Port);
                 try
                 {
@@ -175,7 +175,7 @@ namespace Cli
                     Log.Error(ex.Message);
                 }
 
-                webBuilder.UseStartup<Startup>().UseUrls(walletEndpoint).UseSerilog();
+                webBuilder.UseStartup<Startup>().UseUrls(networkSettings.WalletEndpoint).UseSerilog();
             });
     }
 }

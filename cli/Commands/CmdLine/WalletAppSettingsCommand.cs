@@ -27,8 +27,8 @@ public class WalletAppSettingsCommand : Command
         _console.ForegroundColor = ConsoleColor.Yellow;
         _console.WriteLine("");
         _console.WriteLine($"[1] Environment: {networkSettings.Environment}");
-        _console.WriteLine($"[2] Wallet endpoint: {networkSettings.WalletEndpoint}");
-        _console.WriteLine($"[3] Node: {networkSettings.RemoteNode}");
+        _console.WriteLine($"[2] Wallet endpoint [http://0.0.0.0:8001]: {networkSettings.WalletEndpoint}");
+        _console.WriteLine($"[3] Node [127.0.0.1:7946]: {networkSettings.RemoteNode}");
         _console.WriteLine($"[4] Node public key: {networkSettings.RemoteNodePubKey}");
         _console.WriteLine($"[5] Number of confirmations: {networkSettings.NumberOfConfirmations}");
         _console.WriteLine("");

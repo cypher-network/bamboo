@@ -33,10 +33,15 @@ namespace Cli.Commands.CmdLine
                                         "To continue, enter y or N to exit.", false, ConsoleColor.Yellow);
             if (yesno)
             {
-                var start = Prompt.GetInt("Recover from specific blockchain height:", 0, ConsoleColor.Magenta);
+                var start = 0;
+                var ynRecoverCompletely = Prompt.GetYesNo("All existing transactions will be dropped. Do you want to recover from the beginning?", false, ConsoleColor.Red);
+                if (!ynRecoverCompletely)
+                {
+                    start = Prompt.GetInt("Recover from specific blockchain height or leave it blank to recover from your last transaction height:", 0, ConsoleColor.Magenta);
+                }
                 await Spinner.StartAsync("Recovering transactions ...", spinner =>
                 {
-                    var (recovered, message) = _commandReceiver.RecoverTransactions(activeSession, start);
+                    var (recovered, message) = _commandReceiver.RecoverTransactions(activeSession, start, ynRecoverCompletely);
                     if (recovered is null)
                     {
                         spinner.Fail(message);
