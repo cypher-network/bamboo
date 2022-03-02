@@ -64,11 +64,13 @@ public class WalletAppSettingsCommand : Command
             }
         }
 
+        var remoteNodeChanged = false;
         if (!string.IsNullOrEmpty(node))
         {
             if (networkSettings.RemoteNode != node)
             {
                 networkSettings.RemoteNode = node;
+                remoteNodeChanged = true;
             }
         }
 
@@ -96,6 +98,10 @@ public class WalletAppSettingsCommand : Command
             liteDatabase.Update(networkSettings);
             _console.WriteLine("Network settings updated.");
         }
+
+        if (!remoteNodeChanged) return Task.CompletedTask;
+        _console.WriteLine("Remote node settings has changed. The wallet is shutting down. Please run the wallet again.");
+        Environment.Exit(0);
 
         return Task.CompletedTask;
     }

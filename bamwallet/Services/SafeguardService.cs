@@ -13,7 +13,6 @@ using BAMWallet.Rpc;
 using BAMWallet.Helper;
 using BAMWallet.Model;
 using MessagePack;
-using Microsoft.Extensions.Options;
 using Serilog;
 using System.Globalization;
 
@@ -21,14 +20,12 @@ namespace BAMWallet.Services
 {
     public class SafeguardService : BackgroundService
     {
-        private readonly IHostApplicationLifetime _applicationLifetime;
         private readonly ISafeguardDownloadingFlagProvider _safeguardDownloadingFlagService;
         private readonly Client _client;
         private readonly ILogger _logger;
 
-        public SafeguardService(IHostApplicationLifetime lifeTime, ISafeguardDownloadingFlagProvider safeguardDownloadingFlagService, ILogger logger)
+        public SafeguardService(ISafeguardDownloadingFlagProvider safeguardDownloadingFlagService, ILogger logger)
         {
-            _applicationLifetime = lifeTime;
             _safeguardDownloadingFlagService = safeguardDownloadingFlagService;
             _logger = logger.ForContext("SourceContext", nameof(SafeguardService));
             _client = new Client(_logger);
