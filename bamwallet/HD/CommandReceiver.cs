@@ -1239,7 +1239,7 @@ namespace BAMWallet.HD
                 var isChange = outputAmount % payment;
                 var change = (ulong)Math.Abs((long)(payment - outputAmount));
                 payment = change;
-                if (isChange != 0)
+                if (isChange != change)
                 {
                     amount = outputAmount - payment;
                     change = payment;
