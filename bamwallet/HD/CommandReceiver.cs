@@ -142,31 +142,42 @@ namespace BAMWallet.HD
             try
             {
                 var (_, scan) = Unlock(session);
-                var walletTransactions = session.Database.Query<WalletTransaction>().OrderBy(x => x.DateTime).ToArray();
-                if (walletTransactions?.Any() != true)
+                foreach (var walletTransaction in session.Database.Query<WalletTransaction>().OrderBy(x => x.DateTime).ToArray())
                 {
-                    return Array.Empty<Balance>();
-                }
-
-                balances.AddRange(
-                    from balanceSheet in walletTransactions.Where(x => x.State == WalletTransactionState.Confirmed)
-                    from output in balanceSheet.Transaction.Vout
-                    let keyImage = GetKeyImage(session, output)
-                    where keyImage != null
-                    let spent = IsSpent(session, keyImage)
-                    where !spent
-                    let message = Transaction.Message(output, scan)
-                    where message != null
-                    let amount = message.Amount
-                    where amount != 0
-                    select new Balance
+                    if (walletTransaction.State is not (WalletTransactionState.Confirmed
+                        or WalletTransactionState.NotFound)) continue;
+                    foreach (var output in walletTransaction.Transaction.Vout)
                     {
-                        DateTime = balanceSheet.DateTime,
-                        Commitment = output,
-                        State = balanceSheet.State,
-                        Total = amount,
-                        TxnId = balanceSheet.Transaction.TxnId
-                    });
+                        if (walletTransaction.State == WalletTransactionState.Confirmed)
+                        {
+                            var keyImage = GetKeyImage(session, output);
+                            if (keyImage == null) continue;
+                            var spent = IsSpent(session, keyImage);
+                            if (spent) continue;
+                            balances.Add(new Balance
+                            {
+                                DateTime = walletTransaction.DateTime,
+                                Commitment = output,
+                                State = walletTransaction.State,
+                                Total = Transaction.Amount(output, scan),
+                                TxnId = walletTransaction.Transaction.TxnId
+                            });
+                        }
+                        else
+                        {
+                            var message = Transaction.Message(output, scan);
+                            if (message == null) continue;
+                            balances.Add(new Balance
+                            {
+                                DateTime = walletTransaction.DateTime,
+                                Commitment = output,
+                                State = walletTransaction.State,
+                                Total = message.Paid,
+                                TxnId = walletTransaction.Transaction.TxnId
+                            });
+                        }
+                    }
+                }
             }
             catch (Exception ex)
             {
