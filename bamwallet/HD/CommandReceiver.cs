@@ -1436,11 +1436,10 @@ namespace BAMWallet.HD
                     ? new Tuple<object, string>(tx, string.Empty)
                     : new Tuple<object, string>(null, saved.Exception.Message);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _logger.Here().Error(ex, "Error receiving payment.");
-                var message = ex.Message;
-                return new Tuple<object, string>(null, $"{message}");
+                return new Tuple<object, string>(null,
+                    $"Unable to find transaction with paymentId: {paymentId}. It could be on its way. Please try again in a few seconds.");
             }
         }
 
