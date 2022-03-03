@@ -1253,34 +1253,33 @@ namespace BAMWallet.HD
                 return new Tuple<object, string>(null, "Recipient address does not phrase to a base58 format.");
             }
 
-            var calculated = CalculateChange(session, walletTransaction);
+            var calculated = GetSpending(session, walletTransaction);
             if (!calculated.Success) return new Tuple<object, string>(null, calculated.Exception.Message);
             var (_, scan) = Unlock(session);
             var transactions = new List<Transaction>();
             var payment = walletTransaction.Payment;
-            foreach (var spendAmount in walletTransaction.SpendAmounts)
+            foreach (var spending in walletTransaction.Spending)
             {
-                var output = walletTransaction.Spending.First(x => Transaction.Amount(x, scan) >= spendAmount);
-                var outputAmount = Transaction.Amount(output, scan);
+                var outputAmount = Transaction.Amount(spending, scan);
                 var amount = outputAmount;
-                var isChange = outputAmount % payment;
-                var change = (ulong)Math.Abs((long)(payment - outputAmount));
-                payment = change;
-                if (isChange != change)
+                var change = (long)payment - (long)outputAmount;
+                if (change > 0)
                 {
-                    amount = outputAmount - payment;
-                    change = payment;
+                    payment = (ulong)change;
+                    change = 0;
                 }
                 else
                 {
-                    change = 0;
+                    change = (long)(outputAmount - payment);
+                    amount = payment;
+                    payment = 0;
                 }
 
-                var ringConfidentialTransaction = RingCT(session, amount, change, output);
+                var ringConfidentialTransaction = RingCT(session, amount, (ulong)change, spending);
                 var newWalletTransaction = new WalletTransaction
                 {
                     Balance = amount,
-                    Change = change,
+                    Change = (ulong)change,
                     Id = session.SessionId,
                     Memo = walletTransaction.Memo,
                     Payment = amount,
@@ -1300,6 +1299,7 @@ namespace BAMWallet.HD
                 }
 
                 transactions.Add(newWalletTransaction.Transaction);
+                if (payment == 0) break;
             }
 
             var tx = new Transaction
