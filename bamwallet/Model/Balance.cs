@@ -12,6 +12,7 @@ namespace BAMWallet.Model
         public DateTime DateTime { get; set; }
         public byte[] TxnId { get; set; }
         public ulong Total { get; set; }
+        public ulong Paid { get; set; }
         public Vout Commitment { get; set; }
         public WalletTransactionState State { get; set; }
 

@@ -18,6 +18,7 @@ using BAMWallet.Model;
 using Cli.Commands.Common;
 using Kurukuru;
 using McMaster.Extensions.CommandLineUtils;
+
 namespace Cli.Commands.CmdLine
 {
     [CommandDescriptor("spend", "Spend some crypto")]
@@ -67,6 +68,7 @@ namespace Cli.Commands.CmdLine
                         }
                     }
 
+                    WalletTransaction walletTransaction = null;
                     await Spinner.StartAsync("Processing transaction ...", spinner =>
                     {
                         try
@@ -82,6 +84,7 @@ namespace Cli.Commands.CmdLine
                                 IsVerified = false,
                                 SenderAddress = activeSession.KeySet.StealthAddress
                             };
+
                             var createTransactionResult =
                                 _commandReceiver.CreateTransaction(activeSession, ref transaction);
                             if (createTransactionResult.Item1 is null)
@@ -90,28 +93,7 @@ namespace Cli.Commands.CmdLine
                             }
                             else
                             {
-                                var sendResult = _commandReceiver.SendTransaction(activeSession, ref transaction);
-                                if (sendResult.Item1 is not true)
-                                {
-                                    spinner.Fail(sendResult.Item2);
-                                }
-                                else
-                                {
-                                    var balanceResult = _commandReceiver.History(activeSession);
-                                    if (balanceResult.Item1 is null)
-                                    {
-                                        spinner.Fail(balanceResult.Item2);
-                                    }
-                                    else
-                                    {
-                                        var message =
-                                            $"Available Balance: [{(balanceResult.Item1 as IList<BalanceSheet>).Last().Balance}] " +
-                                            $"TxID: ({transaction.Transaction.TxnId.ByteToHex()}) " +
-                                            $"Tx size: [{transaction.Transaction.GetSize() / 1024}kB]";
-                                        activeSession.SessionId = Guid.NewGuid();
-                                        spinner.Succeed(message);
-                                    }
-                                }
+                                walletTransaction = createTransactionResult.Item1 as WalletTransaction;
                             }
                         }
                         catch (Exception ex)
@@ -121,6 +103,64 @@ namespace Cli.Commands.CmdLine
                             throw;
                         }
 
+                        return Task.CompletedTask;
+                    }, Patterns.Toggle3);
+
+                    if (walletTransaction == null)
+                    {
+                        _console.ForegroundColor = ConsoleColor.Red;
+                        _console.WriteLine("Something went wrong!");
+                        return;
+                    }
+
+                    var balances = Array.Empty<Balance>();
+                    await Spinner.StartAsync("Checking transaction balance ...", spinner =>
+                    {
+                        balances = _commandReceiver.GetBalancesByTransactionId(activeSession, walletTransaction.Transaction.TxnId);
+                        if (balances.Length == 0)
+                        {
+                            spinner.Fail("Nothing to see.");
+                        }
+                        return Task.CompletedTask;
+                    }, Patterns.Toggle3);
+
+                    var totals = balances.Where(x => x.TxnId.Xor(walletTransaction.Transaction.TxnId));
+                    var send = Prompt.GetYesNo($"Ready to send? [{totals.Sum(x => x.Paid.DivWithGYin())}]", false, ConsoleColor.Red);
+                    if (!send)
+                    {
+                        var result = _commandReceiver.RollBackTransaction(activeSession, walletTransaction.Id);
+                        _console.Write(result.Success
+                            ? "Transaction successfully rolled back."
+                            : "There was a problem rolling back the transaction.");
+                        _console.WriteLine();
+                        return;
+                    }
+
+                    await Spinner.StartAsync("Sending transaction ...", spinner =>
+                    {
+                        var sendResult = _commandReceiver.SendTransaction(activeSession, ref walletTransaction);
+                        if (sendResult.Item1 is not true)
+                        {
+                            spinner.Fail(sendResult.Item2);
+                        }
+                        else
+                        {
+                            spinner.Text = "Checking balance...";
+                            var balanceResult = _commandReceiver.History(activeSession);
+                            if (balanceResult.Item1 is null)
+                            {
+                                spinner.Fail(balanceResult.Item2);
+                            }
+                            else
+                            {
+                                var message =
+                                    $"Available Balance: [{(balanceResult.Item1 as IList<BalanceSheet>).Last().Balance}] " +
+                                    $"TxID: ({walletTransaction.Transaction.TxnId.ByteToHex()}) " +
+                                    $"Tx size: [{walletTransaction.Transaction.GetSize() / 1024}kB]";
+                                activeSession.SessionId = Guid.NewGuid();
+                                spinner.Succeed(message);
+                            }
+                        }
                         return Task.CompletedTask;
                     }, Patterns.Toggle3);
                 }

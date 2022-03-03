@@ -82,35 +82,26 @@ namespace BAMWallet.HD
         /// <param name="session"></param>
         /// <param name="walletTransaction"></param>
         /// <returns></returns>
-        private TaskResult<bool> CalculateChange(Session session, WalletTransaction walletTransaction)
+        private TaskResult<bool> GetSpending(Session session, WalletTransaction walletTransaction)
         {
             try
             {
                 var balances = GetBalances(session);
-                if (walletTransaction.Payment == 0)
+                if (walletTransaction.Payment < 0)
                     return TaskResult<bool>.CreateFailure(new Exception("Unable to use zero value payment amount."));
-                var freeBalances = new List<Balance>();
-                freeBalances.AddRange(balances.Where(balance => !balance.Commitment.IsLockedOrInvalid())
-                    .OrderByDescending(x => x.Total));
-                if (!freeBalances.Any())
-                    return TaskResult<bool>.CreateFailure(
-                        new Exception("No free commitments available. Please retry after commitments unlock."));
-                var payment = walletTransaction.Payment;
-                const ulong max = 18446740000;
+                var payment = (long)walletTransaction.Payment;
                 var totals = new List<Balance>();
-                while (payment != 0 || freeBalances.Count != 0)
+                foreach (var balance in balances.Where(balance => !balance.Commitment.IsLockedOrInvalid())
+                             .OrderByDescending(x => x.Total))
                 {
-                    var spend = freeBalances.Select(x => x.Total)
-                        .Aggregate((x, y) => x - payment < y - payment ? x : y);
-                    var bal = freeBalances.First(a => a.Total == spend);
-                    freeBalances.Remove(bal);
-                    totals.Add(bal);
-                    payment -= spend;
-                    if (payment is >= max or <= 0) break;
+                    totals.Add(balance);
+                    payment -= (long)balance.Total;
+                    if (payment <= 0) break;
                 }
 
-                if (totals.Count == 0)
-                    return TaskResult<bool>.CreateFailure(new Exception("No free commitments available."));
+                if (!totals.Any())
+                    return TaskResult<bool>.CreateFailure(
+                        new Exception("No free commitments available. Please retry after commitments unlock."));
                 var total = totals.Sum(x => x.Total.DivWithGYin());
                 if (walletTransaction.Payment > total.ConvertToUInt64())
                     return TaskResult<bool>.CreateFailure(
@@ -182,6 +173,42 @@ namespace BAMWallet.HD
             catch (Exception ex)
             {
                 _logger.Here().Error(ex, "Error adding balances.");
+            }
+
+            return balances.ToArray();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="session"></param>
+        /// <param name="transactionId"></param>
+        /// <returns></returns>
+        public Balance[] GetBalancesByTransactionId(in Session session, in byte[] transactionId)
+        {
+            var balances = new List<Balance>();
+            try
+            {
+                var walletTransactions = session.Database.Query<WalletTransaction>().OrderBy(x => x.DateTime).ToArray();
+                var txId = transactionId;
+                var transactions = walletTransactions.Where(x => x.Transaction.TxnId.Xor(txId))
+                    .Select(n => n.Transaction);
+                var (_, scan) = Unlock(session);
+                foreach (var transaction in transactions)
+                {
+                    balances.AddRange(transaction.Vout.Select(output => new Balance
+                    {
+                        DateTime = DateTime.UtcNow,
+                        Commitment = output,
+                        Total = Transaction.Amount(output, scan),
+                        Paid = Transaction.Message(output, scan) != null ? Transaction.Message(output, scan).Paid : 0,
+                        TxnId = transaction.TxnId
+                    }));
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Here().Error(ex.Message);
             }
 
             return balances.ToArray();
@@ -324,7 +351,7 @@ namespace BAMWallet.HD
                     }
                 }
 
-                if (timer.Elapsed.Seconds < 5)
+                if (timer.Elapsed.Ticks < TimeSpan.FromSeconds(5).Ticks)
                 {
                     return TaskResult<Vtime>.CreateFailure(JObject.FromObject(new
                     {
@@ -766,7 +793,7 @@ namespace BAMWallet.HD
         /// <param name="session"></param>
         /// <param name="id"></param>
         /// <returns></returns>
-        private TaskResult<bool> RollBackTransaction(in Session session, Guid id)
+        public TaskResult<bool> RollBackTransaction(in Session session, Guid id)
         {
             Guard.Argument(id, nameof(id)).NotDefault();
             try
@@ -1226,34 +1253,33 @@ namespace BAMWallet.HD
                 return new Tuple<object, string>(null, "Recipient address does not phrase to a base58 format.");
             }
 
-            var calculated = CalculateChange(session, walletTransaction);
+            var calculated = GetSpending(session, walletTransaction);
             if (!calculated.Success) return new Tuple<object, string>(null, calculated.Exception.Message);
             var (_, scan) = Unlock(session);
             var transactions = new List<Transaction>();
             var payment = walletTransaction.Payment;
-            foreach (var spendAmount in walletTransaction.SpendAmounts)
+            foreach (var spending in walletTransaction.Spending)
             {
-                var output = walletTransaction.Spending.First(x => Transaction.Amount(x, scan) >= spendAmount);
-                var outputAmount = Transaction.Amount(output, scan);
+                var outputAmount = Transaction.Amount(spending, scan);
                 var amount = outputAmount;
-                var isChange = outputAmount % payment;
-                var change = (ulong)Math.Abs((long)(payment - outputAmount));
-                payment = change;
-                if (isChange != change)
+                var change = (long)payment - (long)outputAmount;
+                if (change > 0)
                 {
-                    amount = outputAmount - payment;
-                    change = payment;
+                    payment = (ulong)change;
+                    change = 0;
                 }
                 else
                 {
-                    change = 0;
+                    change = (long)(outputAmount - payment);
+                    amount = payment;
+                    payment = 0;
                 }
 
-                var ringConfidentialTransaction = RingCT(session, amount, change, output);
+                var ringConfidentialTransaction = RingCT(session, amount, (ulong)change, spending);
                 var newWalletTransaction = new WalletTransaction
                 {
                     Balance = amount,
-                    Change = change,
+                    Change = (ulong)change,
                     Id = session.SessionId,
                     Memo = walletTransaction.Memo,
                     Payment = amount,
@@ -1273,6 +1299,7 @@ namespace BAMWallet.HD
                 }
 
                 transactions.Add(newWalletTransaction.Transaction);
+                if (payment == 0) break;
             }
 
             var tx = new Transaction
