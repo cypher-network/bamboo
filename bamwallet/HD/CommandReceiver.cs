@@ -793,7 +793,7 @@ namespace BAMWallet.HD
         /// <param name="session"></param>
         /// <param name="id"></param>
         /// <returns></returns>
-        private TaskResult<bool> RollBackTransaction(in Session session, Guid id)
+        public TaskResult<bool> RollBackTransaction(in Session session, Guid id)
         {
             Guard.Argument(id, nameof(id)).NotDefault();
             try
