@@ -360,7 +360,7 @@ namespace BAMWallet.HD
                     }
                 }
 
-                if (timer.Elapsed.Seconds < 5)
+                if (timer.Elapsed.Ticks < TimeSpan.FromSeconds(5).Ticks)
                 {
                     return TaskResult<Vtime>.CreateFailure(JObject.FromObject(new
                     {
