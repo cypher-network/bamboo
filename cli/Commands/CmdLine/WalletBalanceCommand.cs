@@ -32,7 +32,7 @@ namespace Cli.Commands.CmdLine
         {
             if (activeSession != null)
             {
-                await Spinner.StartAsync("Checking balance ...", spinner =>
+                await Spinner.StartAsync("Checking confirmed balance(s) ...", spinner =>
                 {
                     var balances = _commandReceiver.GetBalances(activeSession);
                     if (balances.Length == 0)

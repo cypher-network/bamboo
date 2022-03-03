@@ -6,6 +6,7 @@ using BAMWallet.Model;
 using NBitcoin;
 using System;
 using System.Threading.Tasks;
+using BAMWallet.Helper;
 using BAMWallet.Rpc;
 
 namespace BAMWallet.HD
@@ -32,5 +33,7 @@ namespace BAMWallet.HD
         Tuple<object, string> RemoveAddressBook(Session session, ref AddressBook addressBook);
         Tuple<object, string> ListAddressBook(Session session);
         ulong GetLastTransactionHeight(in Session session);
+        Balance[] GetBalancesByTransactionId(in Session session, in byte[] transactionId);
+        TaskResult<bool> RollBackTransaction(in Session session, Guid id);
     }
 }

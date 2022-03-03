@@ -191,6 +191,42 @@ namespace BAMWallet.HD
         /// 
         /// </summary>
         /// <param name="session"></param>
+        /// <param name="transactionId"></param>
+        /// <returns></returns>
+        public Balance[] GetBalancesByTransactionId(in Session session, in byte[] transactionId)
+        {
+            var balances = new List<Balance>();
+            try
+            {
+                var walletTransactions = session.Database.Query<WalletTransaction>().OrderBy(x => x.DateTime).ToArray();
+                var txId = transactionId;
+                var transactions = walletTransactions.Where(x => x.Transaction.TxnId.Xor(txId))
+                    .Select(n => n.Transaction);
+                var (_, scan) = Unlock(session);
+                foreach (var transaction in transactions)
+                {
+                    balances.AddRange(transaction.Vout.Select(output => new Balance
+                    {
+                        DateTime = DateTime.UtcNow,
+                        Commitment = output,
+                        Total = Transaction.Amount(output, scan),
+                        Paid = Transaction.Message(output, scan) != null ? Transaction.Message(output, scan).Paid : 0,
+                        TxnId = transaction.TxnId
+                    }));
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Here().Error(ex.Message);
+            }
+
+            return balances.ToArray();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="session"></param>
         /// <param name="walletTransaction"></param>
         /// <param name="ringCt"></param>
         /// <returns></returns>
