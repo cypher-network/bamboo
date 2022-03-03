@@ -82,35 +82,26 @@ namespace BAMWallet.HD
         /// <param name="session"></param>
         /// <param name="walletTransaction"></param>
         /// <returns></returns>
-        private TaskResult<bool> CalculateChange(Session session, WalletTransaction walletTransaction)
+        private TaskResult<bool> GetSpending(Session session, WalletTransaction walletTransaction)
         {
             try
             {
                 var balances = GetBalances(session);
-                if (walletTransaction.Payment == 0)
+                if (walletTransaction.Payment < 0)
                     return TaskResult<bool>.CreateFailure(new Exception("Unable to use zero value payment amount."));
-                var freeBalances = new List<Balance>();
-                freeBalances.AddRange(balances.Where(balance => !balance.Commitment.IsLockedOrInvalid())
-                    .OrderByDescending(x => x.Total));
-                if (!freeBalances.Any())
-                    return TaskResult<bool>.CreateFailure(
-                        new Exception("No free commitments available. Please retry after commitments unlock."));
-                var payment = walletTransaction.Payment;
-                const ulong max = 18446740000;
+                var payment = (long)walletTransaction.Payment;
                 var totals = new List<Balance>();
-                while (payment != 0 || freeBalances.Count != 0)
+                foreach (var balance in balances.Where(balance => !balance.Commitment.IsLockedOrInvalid())
+                             .OrderByDescending(x => x.Total))
                 {
-                    var spend = freeBalances.Select(x => x.Total)
-                        .Aggregate((x, y) => x - payment < y - payment ? x : y);
-                    var bal = freeBalances.First(a => a.Total == spend);
-                    freeBalances.Remove(bal);
-                    totals.Add(bal);
-                    payment -= spend;
-                    if (payment is >= max or <= 0) break;
+                    totals.Add(balance);
+                    payment -= (long)balance.Total;
+                    if (payment <= 0) break;
                 }
 
-                if (totals.Count == 0)
-                    return TaskResult<bool>.CreateFailure(new Exception("No free commitments available."));
+                if (!totals.Any())
+                    return TaskResult<bool>.CreateFailure(
+                        new Exception("No free commitments available. Please retry after commitments unlock."));
                 var total = totals.Sum(x => x.Total.DivWithGYin());
                 if (walletTransaction.Payment > total.ConvertToUInt64())
                     return TaskResult<bool>.CreateFailure(
