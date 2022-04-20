@@ -18,6 +18,8 @@
 *.pdb
 .DS_Store
 CLI/appsettings.json
+desktop/
+blockzero/
 
 # Build results
 [Dd]ebug/
