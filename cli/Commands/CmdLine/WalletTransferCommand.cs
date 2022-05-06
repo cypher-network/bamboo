@@ -85,6 +85,12 @@ namespace Cli.Commands.CmdLine
                                 SenderAddress = activeSession.KeySet.StealthAddress
                             };
 
+                            var canSpend = _commandReceiver.GetSpending(activeSession, transaction);
+                            if (!canSpend.Success)
+                            {
+                                throw new Exception(canSpend.NonSuccessMessage);
+                            }
+                            
                             var createTransactionResult =
                                 _commandReceiver.CreateTransaction(activeSession, ref transaction);
                             if (createTransactionResult.Item1 is null)

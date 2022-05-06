@@ -3,13 +3,15 @@
 
 using System;
 using System.Linq;
+using BAMWallet.Extensions;
+using BAMWallet.Helper;
 using MessagePack;
 using NBitcoin;
 
 namespace BAMWallet.Model
 {
     [MessagePackObject]
-    public class Vout
+    public record Vout
     {
         [Key(0)] public ulong A { get; set; }
         [Key(1)] public byte[] C { get; set; }
@@ -17,9 +19,10 @@ namespace BAMWallet.Model
         [Key(3)] public long L { get; set; }
         [Key(4)] public byte[] N { get; set; }
         [Key(5)] public byte[] P { get; set; }
-        [Key(6)] public string S { get; set; }
+        [Key(6)] public byte[] S { get; set; }
         [Key(7)] public CoinType T { get; set; }
         [Key(8)] public byte[] D { get; set; }
+        
         /// <summary>
         ///
         /// </summary>
@@ -28,8 +31,8 @@ namespace BAMWallet.Model
         {
             if (T != CoinType.Coinbase) return false;
 
-            var lockTime = new LockTime(Helper.Util.UnixTimeToDateTime(L));
-            var script = S;
+            var lockTime = new LockTime(Util.UnixTimeToDateTime(L));
+            var script = S.FromBytes();
             var sc1 = new Script(Op.GetPushOp(lockTime.Value), OpcodeType.OP_CHECKLOCKTIMEVERIFY);
             var sc2 = new Script(script);
             if (!sc1.ToString().Equals(sc2.ToString()))

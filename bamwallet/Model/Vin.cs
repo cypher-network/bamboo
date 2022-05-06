@@ -6,8 +6,9 @@ using MessagePack;
 namespace BAMWallet.Model
 {
     [MessagePackObject]
-    public class Vin
+    public record Vin
     {
-        [Key(0)] public KeyOffsetImage Key { get; set; }
+        [Key(0)] public byte[] Image { get; set; }
+        [Key(1)] public byte[] Offsets { get; set; }
     }
 }

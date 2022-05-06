@@ -7,14 +7,14 @@ using MessagePack;
 namespace BAMWallet.Model
 {
     [MessagePackObject]
-    public class Block
+    public record Block
     {
-        [Key(0)] public byte[] Hash { get; set; }
-        [Key(1)] public ulong Height { get; set; }
-        [Key(2)] public ushort Size { get; set; }
-        [Key(3)] public BlockHeader BlockHeader { get; set; }
-        [Key(4)] public ushort NrTx { get; set; }
-        [Key(5)] public IList<Transaction> Txs { get; set; } = new List<Transaction>();
-        [Key(6)] public BlockPos BlockPos { get; set; }
+        [Key(0)] public byte[] Hash { get; init; }
+        [Key(1)] public ulong Height { get; init; }
+        [Key(2)] public ushort Size { get; init; }
+        [Key(3)] public BlockHeader BlockHeader { get; init; }
+        [Key(4)] public ushort NrTx { get; init; }
+        [Key(5)] public IList<Transaction> Txs { get; init; }
+        [Key(6)] public BlockPPoS BlockPos { get; init; }
     }
 }

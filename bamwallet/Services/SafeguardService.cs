@@ -2,7 +2,6 @@
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -12,7 +11,6 @@ using Microsoft.Extensions.Hosting;
 using BAMWallet.Rpc;
 using BAMWallet.Helper;
 using BAMWallet.Model;
-using MessagePack;
 using Serilog;
 using System.Globalization;
 
@@ -51,9 +49,9 @@ namespace BAMWallet.Services
         public static Transaction[] GetTransactions()
         {
             var byteArray = Util.StreamToArray(GetSafeguardData());
-            var blocks = MessagePackSerializer.Deserialize<List<Block>>(byteArray);
-            blocks.Shuffle();
-            return blocks.SelectMany(x => x.Txs).ToArray();
+            var blocksResponse = MessagePack.MessagePackSerializer.Deserialize<BlocksResponse>(byteArray);
+            blocksResponse.Blocks.Shuffle();
+            return blocksResponse.Blocks.SelectMany(x => x.Txs).ToArray();
         }
 
         /// <summary>
@@ -76,9 +74,12 @@ namespace BAMWallet.Services
                         { MessageCommand = MessageCommand.GetSafeguardBlocks });
                     if (safeguardBlocksResponse != null)
                     {
+                        if (!string.IsNullOrEmpty(safeguardBlocksResponse.Error))
+                        {
+                            throw new Exception($"SafeGuard: {safeguardBlocksResponse.Error}");
+                        }
                         var fileStream = SafeguardData(GetDays());
-                        var buffer = MessagePackSerializer.Serialize(safeguardBlocksResponse.Blocks,
-                            cancellationToken: stoppingToken);
+                        var buffer = MessagePack.MessagePackSerializer.Serialize(new BlocksResponse { Blocks = safeguardBlocksResponse.Blocks.ToList() });
                         fileStream.Write(buffer, 0, buffer.Length);
                         fileStream.Flush();
                         fileStream.Close();

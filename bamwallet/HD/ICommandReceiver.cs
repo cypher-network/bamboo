@@ -7,7 +7,8 @@ using NBitcoin;
 using System;
 using System.Threading.Tasks;
 using BAMWallet.Helper;
-using BAMWallet.Rpc;
+using NBitcoin.Stealth;
+using Transaction = BAMWallet.Model.Transaction;
 
 namespace BAMWallet.HD
 {
@@ -27,7 +28,7 @@ namespace BAMWallet.HD
             in StakeCredentialsRequest stakeCredentialsRequest, in byte[] privateKey, in byte[] token);
         bool IsBase58(string address);
         Tuple<object, string> NotFoundTransactions(in Session session);
-        Balance[] GetBalances(Session session);
+        Balance[] GetBalances(in Session session);
         Tuple<object, string> AddAddressBook(Session session, ref AddressBook addressBook, bool update = false);
         Tuple<object, string> FindAddressBook(Session session, ref AddressBook addressBook);
         Tuple<object, string> RemoveAddressBook(Session session, ref AddressBook addressBook);
@@ -35,5 +36,10 @@ namespace BAMWallet.HD
         ulong GetLastTransactionHeight(in Session session);
         Balance[] GetBalancesByTransactionId(in Session session, in byte[] transactionId);
         TaskResult<bool> RollBackTransaction(in Session session, Guid id);
+        TaskResult<bool> GetSpending(Session session, WalletTransaction walletTransaction);
+        PubKey ScanPublicKey(string address);
+        (PubKey, StealthPayment) StealthPayment(string address);
+        TaskResult<bool> Update<T>(Session session, T data);
+        Transaction[] ReadWalletTransactions(in Session session);
     }
 }

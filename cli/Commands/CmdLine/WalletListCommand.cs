@@ -25,8 +25,8 @@ namespace Cli.Commands.CmdLine
 
         public override Task Execute(Session activeSession = null)
         {
-            var (balances, message) = _commandReceiver.WalletList();
-            if (balances is null)
+            var (wallets, message) = _commandReceiver.WalletList();
+            if (wallets is null)
             {
                 _console.ForegroundColor = ConsoleColor.Red;
                 _console.WriteLine($"Wallet list request failed: {message}!");
@@ -35,7 +35,7 @@ namespace Cli.Commands.CmdLine
             }
 
             var table = new ConsoleTable("Path");
-            foreach (var balance in balances as List<string>)
+            foreach (var balance in wallets as List<string>)
             {
                 table.AddRow(balance);
             }
