@@ -11,54 +11,17 @@ using NBitcoin;
 
 namespace BAMWallet.Model
 {
-    public interface ITransaction
-    {
-        Guid Id { get; set; }
-        byte[] TxnId { get; set; }
-        Bp[] Bp { get; set; }
-        int Ver { get; set; }
-        int Mix { get; set; }
-        Vin[] Vin { get; set; }
-        Vout[] Vout { get; set; }
-        RCT[] Rct { get; set; }
-        Vtime Vtime { get; set; }
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <returns></returns>
-        byte[] ToHash();
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <returns></returns>
-        byte[] ToStream();
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <returns></returns>
-        byte[] Serialize();
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <returns></returns>
-        bool IsLockedOrInvalid();
-    }
-
     [MessagePackObject]
-    public class Transaction : ITransaction
+    public record Transaction
     {
         [IgnoreMember] [BsonId] public Guid Id { get; set; }
         [Key(0)] public byte[] TxnId { get; set; }
         [Key(1)] public Bp[] Bp { get; set; }
-        [Key(2)] public int Ver { get; set; } = 0x03;
+        [Key(2)] public int Ver { get; set; } = 2;
         [Key(3)] public int Mix { get; set; } = 22;
         [Key(4)] public Vin[] Vin { get; set; }
         [Key(5)] public Vout[] Vout { get; set; }
-        [Key(6)] public RCT[] Rct { get; set; }
+        [Key(6)] public Rct[] Rct { get; set; }
         [Key(7)] public Vtime Vtime { get; set; }
 
         /// <summary>
@@ -97,8 +60,8 @@ namespace BAMWallet.Model
 
             foreach (var input in Vin)
             {
-                ts.Append(input.Key.KImage);
-                ts.Append(input.Key.KOffsets);
+                ts.Append(input.Image);
+                ts.Append(input.Offsets);
             }
 
             foreach (var output in Vout)
@@ -110,7 +73,7 @@ namespace BAMWallet.Model
                     .Append(output.L)
                     .Append(output.N)
                     .Append(output.P)
-                    .Append(output.S ?? string.Empty)
+                    .Append(output.S ?? Array.Empty<byte>())
                     .Append(output.T.ToString())
                     .Append(output.D ?? Array.Empty<byte>());
             }
@@ -160,7 +123,6 @@ namespace BAMWallet.Model
             try
             {
                 message = MessagePackSerializer.Deserialize<WalletTransactionMessage>(scan.Decrypt(output.N));
-                message.Output = output;
             }
             catch (Exception)
             {
@@ -184,9 +146,8 @@ namespace BAMWallet.Model
             {
                 amount = MessagePackSerializer.Deserialize<WalletTransactionMessage>(scan.Decrypt(output.N)).Amount;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                var e = ex.Message;
                 // Ignore
             }
 

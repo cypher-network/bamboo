@@ -6,13 +6,13 @@ using MessagePack;
 namespace BAMWallet.Model
 {
     [MessagePackObject]
-    public class Vtime
+    public record Vtime
     {
         [Key(0)] public long W { get; set; }
         [Key(1)] public byte[] M { get; set; }
         [Key(2)] public byte[] N { get; set; }
         [Key(3)] public int I { get; set; }
-        [Key(4)] public string S { get; set; }
+        [Key(4)] public byte[] S { get; set; }
         [Key(5)] public long L { get; set; }
     }
 }

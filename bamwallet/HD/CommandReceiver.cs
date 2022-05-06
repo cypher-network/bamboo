@@ -19,7 +19,6 @@ using System.Linq;
 using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
-using MessagePack;
 using NBitcoin.DataEncoders;
 using NBitcoin.Stealth;
 using Transaction = BAMWallet.Model.Transaction;
@@ -59,7 +58,7 @@ namespace BAMWallet.HD
         private readonly Client _client;
         private readonly NetworkSettings _networkSettings;
         private static int _commandExecutionCounter;
-
+        
         /// <summary>
         ///
         /// </summary>
@@ -90,12 +89,12 @@ namespace BAMWallet.HD
         /// <param name="session"></param>
         /// <param name="walletTransaction"></param>
         /// <returns></returns>
-        private TaskResult<bool> GetSpending(Session session, WalletTransaction walletTransaction)
+        public TaskResult<bool> GetSpending(Session session, WalletTransaction walletTransaction)
         {
             try
             {
                 var balances = GetBalances(session);
-                if (walletTransaction.Payment < 0)
+                if ((long)walletTransaction.Payment < 0)
                     return TaskResult<bool>.CreateFailure(new Exception("Unable to use zero value payment amount."));
                 var payment = (long)walletTransaction.Payment;
                 var totals = new List<Balance>();
@@ -135,7 +134,7 @@ namespace BAMWallet.HD
         /// </summary>
         /// <param name="session"></param>
         /// <returns></returns>
-        public Balance[] GetBalances(Session session)
+        public Balance[] GetBalances(in Session session)
         {
             var balances = new List<Balance>();
             try
@@ -298,7 +297,7 @@ namespace BAMWallet.HD
                                 walletTransaction.Reward, 0, blind, walletTransaction.Memo)),
                             P = outPkReward.ToBytes(),
                             S = new Script(Op.GetPushOp(rewardLockTime.Value), OpcodeType.OP_CHECKLOCKTIMEVERIFY)
-                                .ToString(),
+                                .ToString().ToBytes(),
                             T = CoinType.Coinbase
                         });
                     tx.Vout = vOutput.ToArray();
@@ -375,7 +374,7 @@ namespace BAMWallet.HD
                     N = nonce.ToBytes(),
                     W = timer.Elapsed.Ticks,
                     L = lockTime,
-                    S = new Script(Op.GetPushOp(lockTime), OpcodeType.OP_CHECKLOCKTIMEVERIFY).ToString()
+                    S = new Script(Op.GetPushOp(lockTime), OpcodeType.OP_CHECKLOCKTIMEVERIFY).ToString().ToBytes()
                 };
             }
             catch (Exception ex)
@@ -573,7 +572,7 @@ namespace BAMWallet.HD
         {
             var balanceSheet = new BalanceSheet
             {
-                Date = dateTime.ToString("dd-MM-yyyy HH:mm:ss"),
+                Date = dateTime,
                 Memo = memo,
                 Balance = balance.DivWithGYin().ToString("F9"),
                 Outputs = outputs,
@@ -604,7 +603,7 @@ namespace BAMWallet.HD
         /// </summary>
         /// <param name="address"></param>
         /// <returns></returns>
-        private (PubKey, StealthPayment) StealthPayment(string address)
+        public (PubKey, StealthPayment) StealthPayment(string address)
         {
             Guard.Argument(address, nameof(address)).NotNull().NotEmpty().NotWhiteSpace();
             var ephem = new Key();
@@ -619,7 +618,7 @@ namespace BAMWallet.HD
         /// </summary>
         /// <param name="address"></param>
         /// <returns></returns>
-        private PubKey ScanPublicKey(string address)
+        public PubKey ScanPublicKey(string address)
         {
             Guard.Argument(address, nameof(address)).NotNull().NotEmpty().NotWhiteSpace();
             var stealth = new BitcoinStealthAddress(address, _network);
@@ -778,7 +777,7 @@ namespace BAMWallet.HD
         /// <param name="data"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        private TaskResult<bool> Update<T>(Session session, T data)
+        public TaskResult<bool> Update<T>(Session session, T data)
         {
             Guard.Argument(data, nameof(data)).NotEqual(default);
             try
@@ -846,7 +845,7 @@ namespace BAMWallet.HD
             try
             {
                 var walletTransactions = session.Database.Query<WalletTransaction>().ToList();
-                foreach (var _ in from walletTransaction in walletTransactions from vin in walletTransaction.Transaction.Vin where vin.Key.KImage.Xor(image) select vin)
+                foreach (var _ in from walletTransaction in walletTransactions from vin in walletTransaction.Transaction.Vin where vin.Image.Xor(image) select vin)
                 {
                     spent = true;
                 }
@@ -864,11 +863,11 @@ namespace BAMWallet.HD
         /// </summary>
         /// <param name="session"></param>
         /// <exception cref="Exception"></exception>
-        private static Transaction[] ReadWalletTransactions(in Session session)
+        public Transaction[] ReadWalletTransactions(in Session session)
         {
             Guard.Argument(session, nameof(session)).NotNull();
             var walletTransactions = session.Database.Query<WalletTransaction>().ToList();
-            return walletTransactions.Select(x => x.Transaction).ToArray();
+            return walletTransactions.OrderBy(d => d.DateTime).Select(x => x.Transaction).ToArray();
         }
 
         #endregion
@@ -917,6 +916,7 @@ namespace BAMWallet.HD
                     {
                         var messageCoinbase = Transaction.Message(change.ElementAt(0), scan);
                         var messageCoinstake = Transaction.Message(change.ElementAt(1), scan);
+                        if (messageCoinbase == null || messageCoinstake == null) continue;
                         received -= messageCoinstake.Amount;
                         received += messageCoinstake.Amount;
                         received += messageCoinbase.Amount;
@@ -929,7 +929,11 @@ namespace BAMWallet.HD
                     foreach (var paid in change)
                     {
                         var messageChange = Transaction.Message(paid, scan);
-                        received -= messageChange.Paid;
+                        if(messageChange == null) continue;
+                        if (messageChange.Paid < received)
+                        {
+                            received -= messageChange.Paid;   
+                        }
                         balanceSheets.Add(MoneyBalanceSheet(messageChange.Date, messageChange.Memo, messageChange.Paid,
                             0, 0, received, new[] { paid }, transaction.TxnId.ByteToHex(), walletTransaction.State,
                             isLocked));
@@ -1259,9 +1263,7 @@ namespace BAMWallet.HD
             {
                 return new Tuple<object, string>(null, "Recipient address does not phrase to a base58 format.");
             }
-
-            var calculated = GetSpending(session, walletTransaction);
-            if (!calculated.Success) return new Tuple<object, string>(null, calculated.Exception.Message);
+            
             var (_, scan) = Unlock(session);
             var transactions = new List<Transaction>();
             var payment = walletTransaction.Payment;
@@ -1651,7 +1653,7 @@ namespace BAMWallet.HD
 
                 _client.HasRemoteAddress();
                 var blockCountResponse = _client.Send<BlockCountResponse>(new Parameter { MessageCommand = MessageCommand.GetBlockCount });
-                if (blockCountResponse is null) return new Tuple<object, string>(null, "Error recovering block count.");
+                if (blockCountResponse.Count == 0) return new Tuple<object, string>(null, "Error recovering block count.");
                 var height = (int)blockCountResponse.Count;
 
                 if (start > height)

@@ -15,6 +15,13 @@ namespace BAMWallet.Extensions
 
         public static string ByteToString(this byte[] data) => Encoding.UTF8.GetString(data);
 
+        public static string FromBytes(this byte[] data)
+        {
+            return Encoding.UTF8.GetString(data);
+        }
+        
+        
+        
         private static string Byte2Hex(byte[] bytes)
         {
             char[] c = new char[bytes.Length * 2];

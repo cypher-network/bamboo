@@ -6,21 +6,14 @@ using MessagePack;
 
 namespace BAMWallet.Model
 {
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="Index"></param>
-    [MessagePackObject(true)]
-    public record TransactionBlockIndexResponse(ulong Index);
+
+    [MessagePackObject]
+    public record TransactionBlockIndexResponse([property:Key(0)] ulong Index);
     public record TransactionBlockIndexRequest(byte[] TransactionId);
 
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="Count"></param>
-    [MessagePackObject(true)]
-    public record BlockCountResponse(long Count);
-
+    [MessagePackObject]
+    public record BlockCountResponse([property:Key(0)] long Count);
+    
     /// <summary>
     /// 
     /// </summary>
@@ -29,7 +22,7 @@ namespace BAMWallet.Model
     {
         [Key(0)] public List<Block> Blocks { get; set; }
     }
-
+    
     /// <summary>
     /// 
     /// </summary>
@@ -38,7 +31,7 @@ namespace BAMWallet.Model
     {
         [Key(0)] public Transaction Transaction { get; set; }
     }
-
+    
     /// <summary>
     /// 
     /// </summary>
@@ -47,7 +40,7 @@ namespace BAMWallet.Model
     {
         [Key(0)] public bool Ok { get; set; }
     }
-
+    
     /// <summary>
     /// 
     /// </summary>
@@ -56,16 +49,15 @@ namespace BAMWallet.Model
     {
         [Key(0)] public Transaction Transaction { get; set; }
     }
-
+    
     /// <summary>
     /// 
     /// </summary>
+    /// <param name="Blocks"></param>
+    /// <param name="Error"></param>
     [MessagePackObject]
-    public record SafeguardBlocksResponse
-    {
-        [Key(0)] public IList<Block> Blocks { get; set; }
-        [Key(1)] public string Error { get; set; }
-    }
+    public record SafeguardBlocksResponse([property: Key(0)] IReadOnlyList<Block> Blocks, [property:Key(1)] string Error);
+    public record SafeguardBlocksRequest(int NumberOfBlocks);
 
     /// <summary>
     /// 
@@ -75,13 +67,10 @@ namespace BAMWallet.Model
     {
         [Key(0)] public Transaction Transaction { get; set; }
     }
-
+    
     /// <summary>
     /// 
     /// </summary>
-    [MessagePackObject]
-    public record StakeResponse(int Code);
-
     [MessagePackObject]
     public record StakeRequest
     {
@@ -97,18 +86,26 @@ namespace BAMWallet.Model
     [MessagePackObject]
     public record StakeCredentialsResponse
     {
-        [Key(0)] public bool Success { get; init; }
-        [Key(1)] public string Message { get; init; }
+        [Key(0)] public string Message { get; init; }
+        [Key(1)] public bool Success { get; init; }
     }
-
+    
+    /// <summary>
+    /// 
+    /// </summary>
     [MessagePackObject]
     public record StakeCredentialsRequest
     {
         [Key(0)] public byte[] Seed { get; init; }
         [Key(1)] public byte[] Passphrase { get; init; }
         [Key(2)] public byte[] RewardAddress { get; init; }
-        [Key(3)] public Transaction[] Transactions { get; set; }
+        [Key(3)] public Output[] Outputs { get; init; }
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="Value"></param>
+    /// <typeparam name="T"></typeparam>
     public record MessageResponse<T>(T Value);
 }

@@ -113,9 +113,9 @@ namespace Cli.Commands.CmdLine
         {
             var table = new ConsoleTable("Date Time", "Transaction Id", "Memo", "Money In", "Money Out",
                 "Reward", "Balance", "Status", "Locked");
-            foreach (var sheet in orderedBalanceSheets)
+            foreach (var sheet in orderedBalanceSheets.OrderBy(x => x.Date))
             {
-                table.AddRow(sheet.Date, sheet.TxId, sheet.Memo, sheet.MoneyIn, sheet.MoneyOut, sheet.Reward,
+                table.AddRow(sheet.Date.ToString("dd-MM-yyyy HH:mm:ss"), sheet.TxId, sheet.Memo, sheet.MoneyIn, sheet.MoneyOut, sheet.Reward,
                     sheet.Balance, sheet.State.ToString(), sheet.IsLocked.ToString());
             }
 

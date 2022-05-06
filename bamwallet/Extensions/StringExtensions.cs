@@ -15,23 +15,14 @@ namespace BAMWallet.Extensions
             return secureString;
         }
 
-        public static byte[] HexToByte(this string hex) => Hex2Byte(hex);
-        public static byte[] HexToByte<T>(this T hex) => Hex2Byte(hex.ToString());
-
-        private static byte[] Hex2Byte(string s)
+        public static byte[] HexToByte(this string hex)
         {
-            byte[] bytes = new byte[s.Length / 2];
-            for (int i = 0; i < bytes.Length; i++)
-            {
-                int hi = s[i * 2] - 65;
-                hi = hi + 10 + ((hi >> 31) & 7);
+            return Convert.FromHexString(hex);
+        }
 
-                int lo = s[i * 2 + 1] - 65;
-                lo = lo + 10 + ((lo >> 31) & 7) & 0x0f;
-
-                bytes[i] = (byte)(lo | hi << 4);
-            }
-            return bytes;
+        public static byte[] HexToByte<T>(this T hex)
+        {
+            return Convert.FromHexString(hex.ToString()!);
         }
 
         public static void ZeroString(this string value)
@@ -52,6 +43,11 @@ namespace BAMWallet.Extensions
         public static decimal ToDecimal(this string value)
         {
             return Convert.ToDecimal(value);
+        }
+        
+        public static long ToInt64(this string value)
+        {
+            return Convert.ToInt64(value);
         }
     }
 }

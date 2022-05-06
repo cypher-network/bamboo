@@ -1,4 +1,4 @@
-﻿// CypherNetwork BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0.
+// CypherNetwork BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0.
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
 using System;
@@ -6,8 +6,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using BAMWallet.Extensions;
 using BAMWallet.Helper;
-using MessagePack;
 using BAMWallet.Model;
+using MessagePack;
 using NitraLibSodium.Box;
 using nng;
 using Serilog;
@@ -21,7 +21,7 @@ namespace BAMWallet.Rpc
 
         public Client(ILogger logger)
         {
-            _networkSettings = Util.LiteRepositoryAppSettingsFactory().Query<NetworkSettings>().First();
+            _networkSettings = Util.LiteRepositoryAppSettingsFactory().Query<NetworkSettings>().FirstOrDefault();
             _logger = logger.ForContext("SourceContext", nameof(Client));
         }
 
@@ -49,14 +49,14 @@ namespace BAMWallet.Rpc
                             break;
                         }
 
-                        using var socket = NngSingletonFactory.Instance.Factory.RequesterOpen()
+                        using var socket = NngFactorySingleton.Instance.Factory.RequesterOpen()
                             .ThenDial($"tcp://{_networkSettings.RemoteNode}").Unwrap();
-                        using var ctx = socket.CreateAsyncContext(NngSingletonFactory.Instance.Factory).Unwrap();
+                        using var ctx = socket.CreateAsyncContext(NngFactorySingleton.Instance.Factory).Unwrap();
                         var (pk, sk) = Cryptography.Crypto.KeyPair();
                         var cipher = Cryptography.Crypto.BoxSeal(MessagePackSerializer.Serialize(values),
-                            _networkSettings.RemoteNodePubKey.HexToByte().Skip(1).ToArray());
+                            _networkSettings.RemoteNodePubKey.HexToByte()[1..33]);
                         var packet = Util.Combine(pk.WrapLengthPrefix(), cipher.WrapLengthPrefix());
-                        var nngMsg = NngSingletonFactory.Instance.Factory.CreateMessage();
+                        var nngMsg = NngFactorySingleton.Instance.Factory.CreateMessage();
                         nngMsg.Append(packet);
                         var nngResult = await ctx.Send(nngMsg);
                         if (!nngResult.IsOk()) continue;
@@ -94,11 +94,11 @@ namespace BAMWallet.Rpc
             });
             return tcs.Task.Result;
         }
-
+        
         /// <summary>
-        ///
+        /// 
         /// </summary>
-        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
         public void HasRemoteAddress()
         {
             var uriString = _networkSettings.RemoteNode;
