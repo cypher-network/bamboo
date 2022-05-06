@@ -33,10 +33,18 @@ namespace BAMWallet.HD
         public CommandReceiver(ISafeguardDownloadingFlagProvider safeguardDownloadingFlagProvider, ILogger logger)
         {
             _safeguardDownloadingFlagProvider = safeguardDownloadingFlagProvider;
-            _networkSettings = Util.LiteRepositoryAppSettingsFactory().Query<NetworkSettings>().First();
-            _network = _networkSettings.Environment == Constant.Mainnet
-                ? NBitcoin.Network.Main
-                : NBitcoin.Network.TestNet;
+            _networkSettings = Util.LiteRepositoryAppSettingsFactory().Query<NetworkSettings>().FirstOrDefault();
+            if (_networkSettings != null)
+            {
+                _network = _networkSettings.Environment == Constant.Mainnet
+                    ? NBitcoin.Network.Main
+                    : NBitcoin.Network.TestNet;
+            }
+            else
+            {
+                _network = NBitcoin.Network.TestNet;
+            }
+            
             _logger = logger.ForContext("SourceContext", nameof(CommandReceiver));
             _client = new Client(_logger);
             _commandExecutionCounter = 0;
