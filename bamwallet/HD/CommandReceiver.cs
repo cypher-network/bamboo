@@ -240,14 +240,13 @@ namespace BAMWallet.HD
                 {
                     Bp = new[] { new Bp { Proof = ringCt.Bp } },
                     Mix = ringCt.Cols,
-                    Rct = new[] { new RCT { I = ringCt.Preimage, M = ringCt.M, P = ringCt.Pc, S = ringCt.Ss } },
-                    Vin = new[] { new Vin { Key = new KeyOffsetImage { KImage = ringCt.Ki, KOffsets = ringCt.Offsets } } },
+                    Rct = new[] { new Rct { I = ringCt.Preimage, M = ringCt.M, P = ringCt.Pc, S = ringCt.Ss } },
+                    Vin = new[] { new Vin { Image = ringCt.Ki, Offsets = ringCt.Offsets } },
                     Vout = new[]
                     {
                         new Vout
                         {
-                            A =
-                                session.SessionType == SessionType.Coinstake
+                            A = session.SessionType == SessionType.Coinstake
                                     ? walletTransaction.Payment
                                     : 0,
                             C = ringCt.PcmOut[0],

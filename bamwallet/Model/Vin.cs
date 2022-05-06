@@ -8,6 +8,7 @@ namespace BAMWallet.Model
     [MessagePackObject]
     public class Vin
     {
-        [Key(0)] public KeyOffsetImage Key { get; set; }
+        [Key(0)] public byte[] Image { get; set; }
+        [Key(1)] public byte[] Offsets { get; set; }
     }
 }
