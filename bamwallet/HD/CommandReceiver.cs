@@ -1553,15 +1553,18 @@ namespace BAMWallet.HD
                     Message = "Reward address does not phrase to a base58 format."
                 }));
             }
-
-            var stakeCredentials = new StakeCredentialsRequest
+            
+            var balances = GetBalances(in session);
+            var listOutputs = balances.Select(balance => new Output
             {
-                Passphrase = stakeCredentialsRequest.Passphrase,
-                RewardAddress = stakeCredentialsRequest.RewardAddress,
-                Seed = stakeCredentialsRequest.Seed,
-                Transactions = ReadWalletTransactions(in session)
-            };
-            var packet = Cryptography.Crypto.EncryptChaCha20Poly1305(MessagePackSerializer.Serialize(stakeCredentials),
+                C = balance.Commitment.C,
+                E = balance.Commitment.E,
+                N = balance.Commitment.N,
+                T = balance.Commitment.T
+            }).ToArray();
+            
+            var stakeCredentials = stakeCredentialsRequest with { Outputs = listOutputs };
+            var packet = Cryptography.Crypto.EncryptChaCha20Poly1305(MessagePack.MessagePackSerializer.Serialize(stakeCredentials),
                 privateKey, token, out var tag, out var nonce);
             if (packet is null)
                 return Task.FromResult(new MessageResponse<StakeCredentialsResponse>(
@@ -1569,7 +1572,7 @@ namespace BAMWallet.HD
             var stakeRequest = new StakeRequest { Tag = tag, Nonce = nonce, Data = packet, Token = token };
             var mStakeCredentialsResponse = _client.Send<StakeCredentialsResponse>(new Parameter
             {
-                Value = MessagePackSerializer.Serialize(stakeRequest),
+                Value = MessagePack.MessagePackSerializer.Serialize(stakeRequest),
                 MessageCommand = MessageCommand.Stake
             });
             return Task.FromResult(new MessageResponse<StakeCredentialsResponse>(new StakeCredentialsResponse
