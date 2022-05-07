@@ -94,7 +94,7 @@ namespace BAMWallet.Rpc
             });
             return tcs.Task.Result;
         }
-        
+
         /// <summary>
         /// 
         /// </summary>

@@ -6,7 +6,7 @@ using MessagePack;
 namespace BAMWallet.Model;
 
 [MessagePackObject]
-public record Output 
+public record Output
 {
     [Key(0)] public byte[] C { get; set; }
     [Key(1)] public byte[] E { get; set; }

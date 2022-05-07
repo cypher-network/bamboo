@@ -8,12 +8,12 @@ namespace BAMWallet.Model
 {
 
     [MessagePackObject]
-    public record TransactionBlockIndexResponse([property:Key(0)] ulong Index);
+    public record TransactionBlockIndexResponse([property: Key(0)] ulong Index);
     public record TransactionBlockIndexRequest(byte[] TransactionId);
 
     [MessagePackObject]
-    public record BlockCountResponse([property:Key(0)] long Count);
-    
+    public record BlockCountResponse([property: Key(0)] long Count);
+
     /// <summary>
     /// 
     /// </summary>
@@ -22,7 +22,7 @@ namespace BAMWallet.Model
     {
         [Key(0)] public List<Block> Blocks { get; set; }
     }
-    
+
     /// <summary>
     /// 
     /// </summary>
@@ -31,7 +31,7 @@ namespace BAMWallet.Model
     {
         [Key(0)] public Transaction Transaction { get; set; }
     }
-    
+
     /// <summary>
     /// 
     /// </summary>
@@ -40,7 +40,7 @@ namespace BAMWallet.Model
     {
         [Key(0)] public bool Ok { get; set; }
     }
-    
+
     /// <summary>
     /// 
     /// </summary>
@@ -49,14 +49,14 @@ namespace BAMWallet.Model
     {
         [Key(0)] public Transaction Transaction { get; set; }
     }
-    
+
     /// <summary>
     /// 
     /// </summary>
     /// <param name="Blocks"></param>
     /// <param name="Error"></param>
     [MessagePackObject]
-    public record SafeguardBlocksResponse([property: Key(0)] IReadOnlyList<Block> Blocks, [property:Key(1)] string Error);
+    public record SafeguardBlocksResponse([property: Key(0)] IReadOnlyList<Block> Blocks, [property: Key(1)] string Error);
     public record SafeguardBlocksRequest(int NumberOfBlocks);
 
     /// <summary>
@@ -67,7 +67,7 @@ namespace BAMWallet.Model
     {
         [Key(0)] public Transaction Transaction { get; set; }
     }
-    
+
     /// <summary>
     /// 
     /// </summary>
@@ -89,7 +89,7 @@ namespace BAMWallet.Model
         [Key(0)] public string Message { get; init; }
         [Key(1)] public bool Success { get; init; }
     }
-    
+
     /// <summary>
     /// 
     /// </summary>

@@ -44,7 +44,7 @@ namespace BAMWallet.Extensions
         {
             return Convert.ToDecimal(value);
         }
-        
+
         public static long ToInt64(this string value)
         {
             return Convert.ToInt64(value);
