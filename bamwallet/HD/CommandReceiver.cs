@@ -43,7 +43,7 @@ namespace BAMWallet.HD
             {
                 _network = NBitcoin.Network.TestNet;
             }
-            
+
             _logger = logger.ForContext("SourceContext", nameof(CommandReceiver));
             _client = new Client(_logger);
             _commandExecutionCounter = 0;
@@ -58,7 +58,7 @@ namespace BAMWallet.HD
         private readonly Client _client;
         private readonly NetworkSettings _networkSettings;
         private static int _commandExecutionCounter;
-        
+
         /// <summary>
         ///
         /// </summary>
@@ -257,6 +257,7 @@ namespace BAMWallet.HD
                                 Transaction.Message(walletTransaction.Payment, 0, ringCt.Blinds[1],
                                     walletTransaction.Memo)),
                             P = outPkPayment.ToBytes(),
+                            S = Array.Empty<byte>(),
                             T = session.SessionType == SessionType.Coin
                                 ? CoinType.Payment
                                 : CoinType.Coinstake
@@ -265,11 +266,13 @@ namespace BAMWallet.HD
                         {
                             A = 0,
                             C = ringCt.PcmOut[1],
+                            D = Array.Empty<byte>(),
                             E = stealthChange.Metadata.EphemKey.ToBytes(),
                             N = ScanPublicKey(walletTransaction.SenderAddress).Encrypt(
                                 Transaction.Message(walletTransaction.Change, walletTransaction.Payment,
                                     ringCt.Blinds[2], walletTransaction.Memo)),
                             P = outPkChange.ToBytes(),
+                            S = Array.Empty<byte>(),
                             T = CoinType.Change
                         }
                     },
@@ -929,10 +932,10 @@ namespace BAMWallet.HD
                     foreach (var paid in change)
                     {
                         var messageChange = Transaction.Message(paid, scan);
-                        if(messageChange == null) continue;
+                        if (messageChange == null) continue;
                         if (messageChange.Paid < received)
                         {
-                            received -= messageChange.Paid;   
+                            received -= messageChange.Paid;
                         }
                         balanceSheets.Add(MoneyBalanceSheet(messageChange.Date, messageChange.Memo, messageChange.Paid,
                             0, 0, received, new[] { paid }, transaction.TxnId.ByteToHex(), walletTransaction.State,
@@ -1263,7 +1266,7 @@ namespace BAMWallet.HD
             {
                 return new Tuple<object, string>(null, "Recipient address does not phrase to a base58 format.");
             }
-            
+
             var (_, scan) = Unlock(session);
             var transactions = new List<Transaction>();
             var payment = walletTransaction.Payment;
@@ -1554,7 +1557,7 @@ namespace BAMWallet.HD
                     Message = "Reward address does not phrase to a base58 format."
                 }));
             }
-            
+
             var balances = GetBalances(in session);
             var listOutputs = balances.Select(balance => new Output
             {
@@ -1563,7 +1566,7 @@ namespace BAMWallet.HD
                 N = balance.Commitment.N,
                 T = balance.Commitment.T
             }).ToArray();
-            
+
             var stakeCredentials = stakeCredentialsRequest with { Outputs = listOutputs };
             var packet = Cryptography.Crypto.EncryptChaCha20Poly1305(MessagePack.MessagePackSerializer.Serialize(stakeCredentials),
                 privateKey, token, out var tag, out var nonce);

@@ -19,9 +19,9 @@ namespace BAMWallet.Extensions
         {
             return Encoding.UTF8.GetString(data);
         }
-        
-        
-        
+
+
+
         private static string Byte2Hex(byte[] bytes)
         {
             char[] c = new char[bytes.Length * 2];

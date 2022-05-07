@@ -90,7 +90,7 @@ namespace Cli.Commands.CmdLine
                             {
                                 throw new Exception(canSpend.NonSuccessMessage);
                             }
-                            
+
                             var createTransactionResult =
                                 _commandReceiver.CreateTransaction(activeSession, ref transaction);
                             if (createTransactionResult.Item1 is null)

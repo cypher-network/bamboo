@@ -22,7 +22,7 @@ namespace BAMWallet.Model
         [Key(6)] public byte[] S { get; set; }
         [Key(7)] public CoinType T { get; set; }
         [Key(8)] public byte[] D { get; set; }
-        
+
         /// <summary>
         ///
         /// </summary>
