@@ -8,7 +8,7 @@
 |---------------|---------|--------------|---------------------|
 | Ubuntu        | 21.10   | x64          | :heavy_check_mark:  |
 | CentOS Stream | 8       | x64          | :heavy_check_mark:  |
-| Windows       | 10      | x64          | :heavy_minus_sign:  |
+| Windows       | 10      | x64          | :heavy_check_mark:  |
 | macOS         | 11,12   | x64          | :heavy_minus_sign:  |
 
 > Unknown operating systems are still being tested. 
