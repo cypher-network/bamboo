@@ -7,7 +7,7 @@ using McMaster.Extensions.CommandLineUtils;
 
 namespace CLi.Commands.CmdLine;
 
-[CommandDescriptor("settings", "Mange app settings")]
+[CommandDescriptor("settings", "Manage app settings")]
 public class WalletAppSettingsCommand : Command
 {
     public WalletAppSettingsCommand(IServiceProvider serviceProvider)
@@ -34,15 +34,7 @@ public class WalletAppSettingsCommand : Command
         _console.WriteLine("");
         _console.ResetColor();
 
-        var env = Prompt.GetString("Environment:", Constant.Testnet, ConsoleColor.Green);
-        if (env != Constant.Testnet)
-        {
-            if (!string.Equals(env, Constant.Mainnet, StringComparison.Ordinal))
-            {
-                env = Constant.Mainnet;
-            }
-        }
-
+        var env = Prompt.GetString("Environment:", null, ConsoleColor.Green);
         var walletEndpoint = Prompt.GetString("Wallet endpoint:", null, ConsoleColor.Green);
         var node = Prompt.GetString("Node:", null, ConsoleColor.Green);
         var nodePk = Prompt.GetString("Node public key:", null, ConsoleColor.Green);
@@ -50,9 +42,13 @@ public class WalletAppSettingsCommand : Command
 
         if (!string.IsNullOrEmpty(env))
         {
-            if (networkSettings.Environment != env)
+            if (env.Equals(Constant.Mainnet, StringComparison.Ordinal) || env.Equals(Constant.Testnet, StringComparison.Ordinal))
             {
                 networkSettings.Environment = env;
+            }
+            else
+            {
+                networkSettings.Environment = Constant.Testnet;
             }
         }
 
@@ -63,14 +59,12 @@ public class WalletAppSettingsCommand : Command
                 networkSettings.WalletEndpoint = walletEndpoint;
             }
         }
-
-        var remoteNodeChanged = false;
+        
         if (!string.IsNullOrEmpty(node))
         {
             if (networkSettings.RemoteNode != node)
             {
                 networkSettings.RemoteNode = node;
-                remoteNodeChanged = true;
             }
         }
 
@@ -99,10 +93,8 @@ public class WalletAppSettingsCommand : Command
             _console.WriteLine("Network settings updated.");
         }
 
-        if (!remoteNodeChanged) return Task.CompletedTask;
-        _console.WriteLine("Remote node settings has changed. The wallet is shutting down. Please run the wallet again.");
-        Environment.Exit(0);
-
+        _commandReceiver.SetNetworkSettings();
+        
         return Task.CompletedTask;
     }
 }

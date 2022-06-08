@@ -19,5 +19,5 @@ public sealed class NngFactorySingleton
         Factory = NngLoadContext.Init(alc);
     }
 
-    internal IAPIFactory<INngMsg> Factory { get; }
+    public IAPIFactory<INngMsg> Factory { get; }
 }

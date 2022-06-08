@@ -32,6 +32,27 @@ namespace BAMWallet.HD
         public CommandReceiver(ISafeguardDownloadingFlagProvider safeguardDownloadingFlagProvider, ILogger logger)
         {
             _safeguardDownloadingFlagProvider = safeguardDownloadingFlagProvider;
+            SetNetworkSettings();
+            _logger = logger.ForContext("SourceContext", nameof(CommandReceiver));
+            _client = new Client(_logger);
+            _commandExecutionCounter = 0;
+        }
+
+        #region: CLASS_INTERNALS
+
+        private const string HdPath = Constants.HD_PATH;
+        private readonly ISafeguardDownloadingFlagProvider _safeguardDownloadingFlagProvider;
+        private readonly ILogger _logger;
+        private NBitcoin.Network _network;
+        private readonly Client _client;
+        private NetworkSettings _networkSettings;
+        private static int _commandExecutionCounter;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void SetNetworkSettings()
+        {
             _networkSettings = Util.LiteRepositoryAppSettingsFactory().Query<NetworkSettings>().FirstOrDefault();
             if (_networkSettings != null)
             {
@@ -43,22 +64,8 @@ namespace BAMWallet.HD
             {
                 _network = NBitcoin.Network.TestNet;
             }
-
-            _logger = logger.ForContext("SourceContext", nameof(CommandReceiver));
-            _client = new Client(_logger);
-            _commandExecutionCounter = 0;
         }
-
-        #region: CLASS_INTERNALS
-
-        private const string HdPath = Constants.HD_PATH;
-        private readonly ISafeguardDownloadingFlagProvider _safeguardDownloadingFlagProvider;
-        private readonly ILogger _logger;
-        private readonly NBitcoin.Network _network;
-        private readonly Client _client;
-        private readonly NetworkSettings _networkSettings;
-        private static int _commandExecutionCounter;
-
+        
         /// <summary>
         ///
         /// </summary>
@@ -933,9 +940,9 @@ namespace BAMWallet.HD
                     {
                         var messageChange = Transaction.Message(paid, scan);
                         if (messageChange == null) continue;
-                        if (messageChange.Paid < received)
+                        if (messageChange.Paid <= received)
                         {
-                            received -= messageChange.Paid;
+                            received -= messageChange.Paid == 0 ? received - messageChange.Paid : messageChange.Paid;
                         }
                         balanceSheets.Add(MoneyBalanceSheet(messageChange.Date, messageChange.Memo, messageChange.Paid,
                             0, 0, received, new[] { paid }, transaction.TxnId.ByteToHex(), walletTransaction.State,
@@ -1680,10 +1687,13 @@ namespace BAMWallet.HD
                             foreach (var transaction in block.Txs)
                             {
                                 var (spend, scan) = Unlock(session);
-                                var outputs = (from v in transaction.Vout
-                                               let uncover = spend.Uncover(scan, new PubKey(v.E))
-                                               where uncover.PubKey.ToBytes().Xor(v.P)
-                                               select v).ToList();
+                                var outputs = new List<Vout>();
+                                foreach (var v in transaction.Vout)
+                                {
+                                    Key uncover = spend.Uncover(scan, new PubKey(v.E));
+                                    if (uncover.PubKey.ToBytes().Xor(v.P)) outputs.Add(v);
+                                }
+
                                 if (outputs.Any() != true) continue;
                                 if (AlreadyReceivedPayment(transaction.TxnId.ByteToHex(), session)) continue;
                                 var tx = new WalletTransaction
@@ -1692,18 +1702,7 @@ namespace BAMWallet.HD
                                     BlockHeight = block.Height,
                                     SenderAddress = session.KeySet.StealthAddress,
                                     DateTime = DateTime.UtcNow,
-                                    Transaction = new Transaction
-                                    {
-                                        Id = session.SessionId,
-                                        Bp = transaction.Bp,
-                                        Mix = transaction.Mix,
-                                        Rct = transaction.Rct,
-                                        TxnId = transaction.TxnId,
-                                        Vtime = transaction.Vtime,
-                                        Vout = outputs.ToArray(),
-                                        Vin = transaction.Vin,
-                                        Ver = transaction.Ver
-                                    },
+                                    Transaction = transaction with { Id = session.SessionId, Vout = outputs.ToArray() },
                                     WalletType = WalletType.Restore,
                                     Delay = 5,
                                     State = WalletTransactionState.Confirmed

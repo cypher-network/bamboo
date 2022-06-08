@@ -35,48 +35,50 @@ namespace Cli.Commands.CmdLine
 
         private void DeleteWallet()
         {
-            if (_idToDelete != String.Empty)
+            if (string.IsNullOrEmpty(_idToDelete))
             {
-                var baseDir = Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory);
-                try
+                _console.WriteLine("Wallet name cannot be empty.");
+                return;
+            }
+            var baseDir = Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory);
+            try
+            {
+                if (Directory.Exists(baseDir))
                 {
-                    if (Directory.Exists(baseDir))
+                    var walletsDir = Path.Combine(baseDir, Constants.WALLET_DIR_SUFFIX);
+                    if (Directory.Exists(walletsDir))
                     {
-                        var walletsDir = Path.Combine(baseDir, Constants.WALLET_DIR_SUFFIX);
-                        if (Directory.Exists(walletsDir))
+                        var files = Directory.GetFiles(walletsDir, Constants.WALLET_FILE_EXTENSION);
+                        var deleted = false;
+                        if (files.Any())
                         {
-                            var files = Directory.GetFiles(walletsDir, Constants.WALLET_FILE_EXTENSION);
-                            var deleted = false;
-                            if (files.Any())
+                            var walletFile = files.FirstOrDefault(x => string.Equals(Path.GetFileNameWithoutExtension(x), _idToDelete, StringComparison.CurrentCulture));
+                            if (!string.IsNullOrEmpty(walletFile))
                             {
-                                var walletFile = files.FirstOrDefault(x => string.Equals(Path.GetFileNameWithoutExtension(x), _idToDelete, StringComparison.CurrentCulture));
-                                if (!string.IsNullOrEmpty(walletFile))
-                                {
-                                    File.Delete(walletFile);
-                                    deleted = true;
-                                }
+                                File.Delete(walletFile);
+                                deleted = true;
                             }
-                            if (!deleted)
-                            {
-                                _console.ForegroundColor = ConsoleColor.Red;
-                                _console.WriteLine("Wallet with id: {0} does not exist. Command failed.", _idToDelete);
-                                _console.ForegroundColor = ConsoleColor.White;
-                            }
-                            else
-                            {
-                                _console.ForegroundColor = ConsoleColor.Green;
-                                _console.WriteLine("Wallet with id: {0} permanently deleted.", _idToDelete);
-                                _console.ForegroundColor = ConsoleColor.White;
-                            }
+                        }
+                        if (!deleted)
+                        {
+                            _console.ForegroundColor = ConsoleColor.Red;
+                            _console.WriteLine("Wallet with name: {0} does not exist. Command failed.", _idToDelete);
+                            _console.ForegroundColor = ConsoleColor.White;
+                        }
+                        else
+                        {
+                            _console.ForegroundColor = ConsoleColor.Green;
+                            _console.WriteLine("Wallet with name: {0} permanently deleted.", _idToDelete);
+                            _console.ForegroundColor = ConsoleColor.White;
                         }
                     }
                 }
-                catch (Exception ex)
-                {
-                    Logger.LogException(_console, _logger, ex);
-                }
-                _idToDelete = String.Empty;
             }
+            catch (Exception ex)
+            {
+                Logger.LogException(_console, _logger, ex);
+            }
+            _idToDelete = String.Empty;
         }
         public WalletRemoveCommand(IServiceProvider serviceProvider, ILogger logger)
             : base(typeof(WalletRemoveCommand), serviceProvider)

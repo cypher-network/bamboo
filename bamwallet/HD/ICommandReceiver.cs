@@ -41,5 +41,6 @@ namespace BAMWallet.HD
         (PubKey, StealthPayment) StealthPayment(string address);
         TaskResult<bool> Update<T>(Session session, T data);
         Transaction[] ReadWalletTransactions(in Session session);
+        void SetNetworkSettings();
     }
 }

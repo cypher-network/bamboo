@@ -8,7 +8,7 @@
 |---------------|---------|--------------|---------------------|
 | Ubuntu        | 21.10   | x64          | :heavy_check_mark:  |
 | CentOS Stream | 8       | x64          | :heavy_check_mark:  |
-| Windows       | 10      | x64          | :heavy_check_mark:  |
+| Windows       | 10,11   | x64          | :heavy_check_mark:  |
 | macOS         | 11,12   | x64          | :heavy_minus_sign:  |
 
 > Unknown operating systems are still being tested. 
@@ -39,6 +39,14 @@ Uninstall wallet
 For example:
 
 `bash <(curl -sSL https://tangrams.io/bamboo/install.sh) --uninstall`
+
+
+### Microsoft Windows
+
+For quick installation on Windows
+https://github.com/cypher-network/bamboo/releases
+
+Once installed open Powershell/CMD in Administrative mode then type `clibamwallet --configure`
 
 
 ## Contribution
