@@ -101,6 +101,12 @@ namespace Cli.Configuration
 
             var choiceEnvironment = _userInterface.Do(section);
 
+            if (choiceEnvironment.Equals(optionEnvironmentMainnet))
+            {
+                Configuration.Environment = optionEnvironmentMainnet.Text;
+                return StepNode();
+            }
+            
             if (choiceEnvironment.Equals(optionEnvironmentTestnet))
             {
                 Configuration.Environment = optionEnvironmentTestnet.Text;
