@@ -65,7 +65,7 @@ namespace BAMWallet.HD
                 _network = NBitcoin.Network.TestNet;
             }
         }
-        
+
         /// <summary>
         ///
         /// </summary>

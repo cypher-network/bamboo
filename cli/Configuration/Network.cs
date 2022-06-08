@@ -89,7 +89,7 @@ namespace Cli.Configuration
         {
             UserInterfaceChoice optionEnvironmentMainnet = new("mainnet");
             UserInterfaceChoice optionEnvironmentTestnet = new("testnet");
-            
+
             var section = new UserInterfaceSection(
                 "Environment",
                 "The environment defines the network your wallet will be operating on.",
