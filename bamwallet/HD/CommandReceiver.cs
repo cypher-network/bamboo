@@ -32,6 +32,27 @@ namespace BAMWallet.HD
         public CommandReceiver(ISafeguardDownloadingFlagProvider safeguardDownloadingFlagProvider, ILogger logger)
         {
             _safeguardDownloadingFlagProvider = safeguardDownloadingFlagProvider;
+            SetNetworkSettings();
+            _logger = logger.ForContext("SourceContext", nameof(CommandReceiver));
+            _client = new Client(_logger);
+            _commandExecutionCounter = 0;
+        }
+
+        #region: CLASS_INTERNALS
+
+        private const string HdPath = Constants.HD_PATH;
+        private readonly ISafeguardDownloadingFlagProvider _safeguardDownloadingFlagProvider;
+        private readonly ILogger _logger;
+        private NBitcoin.Network _network;
+        private readonly Client _client;
+        private NetworkSettings _networkSettings;
+        private static int _commandExecutionCounter;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void SetNetworkSettings()
+        {
             _networkSettings = Util.LiteRepositoryAppSettingsFactory().Query<NetworkSettings>().FirstOrDefault();
             if (_networkSettings != null)
             {
@@ -43,22 +64,8 @@ namespace BAMWallet.HD
             {
                 _network = NBitcoin.Network.TestNet;
             }
-
-            _logger = logger.ForContext("SourceContext", nameof(CommandReceiver));
-            _client = new Client(_logger);
-            _commandExecutionCounter = 0;
         }
-
-        #region: CLASS_INTERNALS
-
-        private const string HdPath = Constants.HD_PATH;
-        private readonly ISafeguardDownloadingFlagProvider _safeguardDownloadingFlagProvider;
-        private readonly ILogger _logger;
-        private readonly NBitcoin.Network _network;
-        private readonly Client _client;
-        private readonly NetworkSettings _networkSettings;
-        private static int _commandExecutionCounter;
-
+        
         /// <summary>
         ///
         /// </summary>

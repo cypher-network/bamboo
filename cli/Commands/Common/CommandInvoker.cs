@@ -179,7 +179,7 @@ namespace Cli.Commands.Common
             RegisterCommand(new WalletTxHistoryCommand(_serviceProvider));
             RegisterCommand(new WalletAddressBookCommand(_serviceProvider));
             RegisterCommand(new ExitCommand(_serviceProvider));
-            RegisterCommand(new WalletAppSettingsCommand(_serviceProvider));
+            //RegisterCommand(new WalletAppSettingsCommand(_serviceProvider));
         }
 
         private void Console_CancelKeyPress(object sender, ConsoleCancelEventArgs e)

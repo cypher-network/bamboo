@@ -17,14 +17,14 @@ namespace BAMWallet.Rpc
     public class Client
     {
         private readonly ILogger _logger;
-        private readonly NetworkSettings _networkSettings;
+        private NetworkSettings _networkSettings;
 
         public Client(ILogger logger)
         {
-            _networkSettings = Util.LiteRepositoryAppSettingsFactory().Query<NetworkSettings>().FirstOrDefault();
             _logger = logger.ForContext("SourceContext", nameof(Client));
+            SetNetworkingSettings();
         }
-
+        
         /// <summary>
         /// 
         /// </summary>
@@ -33,6 +33,7 @@ namespace BAMWallet.Rpc
         /// <returns></returns>
         public T Send<T>(params Parameter[] values)
         {
+            SetNetworkingSettings();
             var tcs = new TaskCompletionSource<T>();
             Task.Run(async () =>
             {
@@ -105,6 +106,14 @@ namespace BAMWallet.Rpc
             if (!string.IsNullOrEmpty(uriString)) return;
             _logger.Here().Error("Remote node address not set in config");
             throw new Exception("Address not specified");
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void SetNetworkingSettings()
+        {
+            _networkSettings = Util.LiteRepositoryAppSettingsFactory().Query<NetworkSettings>().FirstOrDefault();
         }
     }
 }
