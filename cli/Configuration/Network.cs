@@ -87,13 +87,15 @@ namespace Cli.Configuration
 
         private bool StepEnvironment()
         {
+            UserInterfaceChoice optionEnvironmentMainnet = new("mainnet");
             UserInterfaceChoice optionEnvironmentTestnet = new("testnet");
-
+            
             var section = new UserInterfaceSection(
                 "Environment",
-                "The environment defines the network your wallet will be operating on. Currently only 'testnet' is a valid environment.",
+                "The environment defines the network your wallet will be operating on.",
                 new[]
                 {
+                    optionEnvironmentMainnet,
                     optionEnvironmentTestnet
                 });
 
@@ -317,7 +319,7 @@ namespace Cli.Configuration
         private bool StepWalletNodePubKey()
         {
             var section = new TextInput<string>(
-                "Enter remote node public key",
+                "Enter remote node public key from http://167.99.81.173:48655/member/peer",
                 pubkey => !string.IsNullOrEmpty(pubkey), pubkey => pubkey);
             var success = _userInterface.Do(section, out var key);
             if (!success) return false;
