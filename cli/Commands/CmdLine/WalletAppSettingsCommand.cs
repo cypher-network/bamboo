@@ -59,7 +59,7 @@ public class WalletAppSettingsCommand : Command
                 networkSettings.WalletEndpoint = walletEndpoint;
             }
         }
-        
+
         if (!string.IsNullOrEmpty(node))
         {
             if (networkSettings.RemoteNode != node)
@@ -94,7 +94,7 @@ public class WalletAppSettingsCommand : Command
         }
 
         _commandReceiver.SetNetworkSettings();
-        
+
         return Task.CompletedTask;
     }
 }

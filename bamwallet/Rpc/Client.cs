@@ -24,7 +24,7 @@ namespace BAMWallet.Rpc
             _logger = logger.ForContext("SourceContext", nameof(Client));
             SetNetworkingSettings();
         }
-        
+
         /// <summary>
         /// 
         /// </summary>

@@ -35,7 +35,7 @@ namespace Cli.Commands.CmdLine
             if (Session.AreCredentialsValid(identifier.ToSecureString(), passphrase))
             {
                 ActiveSession = new Session(identifier.ToSecureString(), passphrase); //will throw if wallet doesn't exist
-                
+
                 var networkSettings = BAMWallet.Helper.Util.LiteRepositoryAppSettingsFactory().Query<NetworkSettings>().First();
                 if (networkSettings != null)
                 {
@@ -46,7 +46,7 @@ namespace Cli.Commands.CmdLine
                         Environment.Exit(0);
                         return;
                     }
-                    
+
                     if (ActiveSession.KeySet.StealthAddress.StartsWith('w') && !networkSettings.Environment.Equals(Constant.Testnet))
                     {
                         _console.WriteLine("Please create a separate wallet for testnet. Or change the network environment back to testnet.\nShutting down...");
@@ -54,7 +54,7 @@ namespace Cli.Commands.CmdLine
                         return;
                     }
                 }
-                
+
                 await Spinner.StartAsync("Syncing wallet ...", async spinner =>
                 {
                     await _commandReceiver.SyncWallet(ActiveSession);
