@@ -138,7 +138,9 @@ namespace Cli
                     RemoteNodePubKey = nodePk,
                     WalletEndpoint = walletEndpoint
                 };
-
+                
+                Helper.Utils.SetConsoleTitle(networkSettings.Environment);
+                
                 var liteDatabase = BAMWallet.Helper.Util.LiteRepositoryAppSettingsFactory();
                 if (!liteDatabase.Database.CollectionExists($"{nameof(NetworkSettings)}"))
                 {
