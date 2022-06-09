@@ -47,4 +47,9 @@ public class Utils
 
         return endPoint;
     }
+
+    public static void SetConsoleTitle(string networkMode)
+    {
+        Console.Title = $"Bamboo v{BAMWallet.Helper.Util.GetAssemblyVersion()} network mode: [{networkMode}]";
+    }
 }

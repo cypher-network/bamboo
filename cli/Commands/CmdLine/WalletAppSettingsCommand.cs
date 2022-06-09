@@ -94,7 +94,9 @@ public class WalletAppSettingsCommand : Command
         }
 
         _commandReceiver.SetNetworkSettings();
-
+        
+        Cli.Helper.Utils.SetConsoleTitle(networkSettings.Environment);
+        
         return Task.CompletedTask;
     }
 }
