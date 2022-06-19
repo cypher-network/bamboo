@@ -940,9 +940,11 @@ namespace BAMWallet.HD
                     {
                         var messageChange = Transaction.Message(paid, scan);
                         if (messageChange == null) continue;
-                        if (messageChange.Paid <= received)
+                        if (messageChange.Paid <= received && messageChange.Paid != 0)
                         {
-                            received -= messageChange.Paid == 0 ? received - messageChange.Paid : messageChange.Paid;
+                            received -= messageChange.Paid == 0
+                                ? received - messageChange.Paid
+                                : messageChange.Paid;
                         }
                         balanceSheets.Add(MoneyBalanceSheet(messageChange.Date, messageChange.Memo, messageChange.Paid,
                             0, 0, received, new[] { paid }, transaction.TxnId.ByteToHex(), walletTransaction.State,
