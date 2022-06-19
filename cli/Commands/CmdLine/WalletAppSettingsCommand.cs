@@ -26,17 +26,19 @@ public class WalletAppSettingsCommand : Command
 
         _console.ForegroundColor = ConsoleColor.Yellow;
         _console.WriteLine("");
-        _console.WriteLine($"[1] Environment: {networkSettings.Environment}");
+        _console.WriteLine($"[1] Environment:                           {networkSettings.Environment}");
         _console.WriteLine($"[2] Wallet endpoint [http://0.0.0.0:8001]: {networkSettings.WalletEndpoint}");
-        _console.WriteLine($"[3] Node [127.0.0.1:7946]: {networkSettings.RemoteNode}");
-        _console.WriteLine($"[4] Node public key: {networkSettings.RemoteNodePubKey}");
-        _console.WriteLine($"[5] Number of confirmations: {networkSettings.NumberOfConfirmations}");
+        _console.WriteLine($"[3] Node [127.0.0.1:7946]:                 {networkSettings.RemoteNode}");
+        _console.WriteLine($"[4] Node Http Port [48655]:                {networkSettings.RemoteNodeHttpPort}");
+        _console.WriteLine($"[4] Node Public Key:                       {networkSettings.RemoteNodePubKey}");
+        _console.WriteLine($"[5] Number of confirmations:               {networkSettings.NumberOfConfirmations}");
         _console.WriteLine("");
         _console.ResetColor();
 
         var env = Prompt.GetString("Environment:", null, ConsoleColor.Green);
         var walletEndpoint = Prompt.GetString("Wallet endpoint:", null, ConsoleColor.Green);
         var node = Prompt.GetString("Node:", null, ConsoleColor.Green);
+        var nodeRestPort = Prompt.GetInt("Node Http Port:", 48655, ConsoleColor.Green);
         var nodePk = Prompt.GetString("Node public key:", null, ConsoleColor.Green);
         var nrConfirmations = Prompt.GetInt("Number of confirmations:", 1, ConsoleColor.Green);
 
@@ -68,6 +70,11 @@ public class WalletAppSettingsCommand : Command
             }
         }
 
+        if (networkSettings.RemoteNodeHttpPort != nodeRestPort)
+        {
+            networkSettings.RemoteNodeHttpPort = nodeRestPort;
+        }
+        
         if (!string.IsNullOrEmpty(nodePk))
         {
             if (networkSettings.RemoteNodePubKey != nodePk)
@@ -75,7 +82,7 @@ public class WalletAppSettingsCommand : Command
                 networkSettings.RemoteNodePubKey = nodePk;
             }
         }
-
+        
         if (networkSettings.NumberOfConfirmations != (ulong)nrConfirmations)
         {
             networkSettings.NumberOfConfirmations = (ulong)nrConfirmations;

@@ -29,6 +29,7 @@ namespace Cli.Configuration
             public ushort NodePort { get; set; } = 7946;
             public ushort WalletPort { get; set; } = 8001;
             public string NodePubKey { get; set; }
+            public ushort NodeHttpPort { get; set; } = 48655;
         }
 
         public ConfigurationClass Configuration { get; } = new();
@@ -121,7 +122,7 @@ namespace Cli.Configuration
         #region node
         private bool StepNode()
         {
-            UserInterfaceChoice optionNodeTangram = new("Tangram Team-managed node (http://167.99.81.173:48655)");
+            UserInterfaceChoice optionNodeTangram = new("Tangram Team-managed node (167.99.81.173:7946)");
             UserInterfaceChoice optionNodeCustom = new("Custom node");
 
             var section = new UserInterfaceSection(
@@ -200,7 +201,7 @@ namespace Cli.Configuration
         private bool StepNodePort()
         {
             var section = new TextInput<ushort>(
-                "Enter node API port (e.g. 7946)",
+                "Enter node tcp port (e.g. 7946)",
                 (string portString) => ushort.TryParse(portString, out _),
                 (string portString) => ushort.Parse(portString));
 
@@ -218,7 +219,7 @@ namespace Cli.Configuration
 
             return success;
         }
-
+        
         readonly UserInterfaceChoice _optionIpAddressManual = new("Manually enter IP address");
         readonly UserInterfaceChoice _optionIpAddressAuto = new("Find IP address automatically");
 
@@ -330,7 +331,23 @@ namespace Cli.Configuration
             var success = _userInterface.Do(section, out var key);
             if (!success) return false;
             Configuration.NodePubKey = key;
-            return true;
+            return StepNodeRestPort();
+        }
+        
+        private bool StepNodeRestPort()
+        {
+            var section = new TextInput<ushort>(
+                "Enter node http port (e.g. 48655)",
+                (string portString) => ushort.TryParse(portString, out _),
+                (string portString) => ushort.Parse(portString));
+
+            var success = _userInterface.Do(section, out var port);
+            if (success)
+            {
+                Configuration.NodeHttpPort = port;
+            }
+
+            return success;
         }
 
         #endregion

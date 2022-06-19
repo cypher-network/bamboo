@@ -32,10 +32,11 @@ namespace BAMWallet.HD
         public CommandReceiver(ISafeguardDownloadingFlagProvider safeguardDownloadingFlagProvider, ILogger logger)
         {
             _safeguardDownloadingFlagProvider = safeguardDownloadingFlagProvider;
-            SetNetworkSettings();
             _logger = logger.ForContext("SourceContext", nameof(CommandReceiver));
             _client = new Client(_logger);
             _commandExecutionCounter = 0;
+            
+            SetNetworkSettings();
         }
 
         #region: CLASS_INTERNALS
@@ -63,6 +64,15 @@ namespace BAMWallet.HD
             else
             {
                 _network = NBitcoin.Network.TestNet;
+            }
+
+            var peer =  _client.GetSeedPeer().Result;
+            if (peer == null)
+                throw new Exception(
+                    "Cannot establish a connection to the Remote node! Please check settings and the remote node's peer details");
+            if (!peer.PublicKey.Equals(_networkSettings.RemoteNodePubKey))
+            {
+                throw new Exception("Remote node's public key has change. Please reset or make sure it's correct in settings");
             }
         }
 
@@ -940,9 +950,11 @@ namespace BAMWallet.HD
                     {
                         var messageChange = Transaction.Message(paid, scan);
                         if (messageChange == null) continue;
-                        if (messageChange.Paid <= received)
+                        if (messageChange.Paid <= received && messageChange.Paid != 0)
                         {
-                            received -= messageChange.Paid == 0 ? received - messageChange.Paid : messageChange.Paid;
+                            received -= messageChange.Paid == 0
+                                ? received - messageChange.Paid
+                                : messageChange.Paid;
                         }
                         balanceSheets.Add(MoneyBalanceSheet(messageChange.Date, messageChange.Memo, messageChange.Paid,
                             0, 0, received, new[] { paid }, transaction.TxnId.ByteToHex(), walletTransaction.State,
