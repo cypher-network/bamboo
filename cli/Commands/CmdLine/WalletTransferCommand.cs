@@ -131,7 +131,7 @@ namespace Cli.Commands.CmdLine
                     }, Patterns.Toggle3);
 
                     var totals = balances.Where(x => x.TxnId.Xor(walletTransaction.Transaction.TxnId));
-                    var send = Prompt.GetYesNo($"Ready to send? [{totals.Sum(x => x.Paid.DivWithGYin())}]", false, ConsoleColor.Red);
+                    var send = Prompt.GetYesNo($"Ready to spend? [{totals.Sum(x => x.Paid.DivWithGYin())}]", false, ConsoleColor.Red);
                     if (!send)
                     {
                         var result = _commandReceiver.RollBackTransaction(activeSession, walletTransaction.Id);
@@ -161,7 +161,7 @@ namespace Cli.Commands.CmdLine
                             {
                                 var message =
                                     $"Available Balance: [{(balanceResult.Item1 as IList<BalanceSheet>).Last().Balance}] " +
-                                    $"TxID: ({walletTransaction.Transaction.TxnId.ByteToHex()}) " +
+                                    $"TxID: ** {walletTransaction.Transaction.TxnId.ByteToHex()} ** " +
                                     $"Tx size: [{walletTransaction.Transaction.GetSize() / 1024}kB]";
                                 activeSession.SessionId = Guid.NewGuid();
                                 spinner.Succeed(message);
