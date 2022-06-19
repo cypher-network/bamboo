@@ -32,10 +32,11 @@ namespace BAMWallet.HD
         public CommandReceiver(ISafeguardDownloadingFlagProvider safeguardDownloadingFlagProvider, ILogger logger)
         {
             _safeguardDownloadingFlagProvider = safeguardDownloadingFlagProvider;
-            SetNetworkSettings();
             _logger = logger.ForContext("SourceContext", nameof(CommandReceiver));
             _client = new Client(_logger);
             _commandExecutionCounter = 0;
+            
+            SetNetworkSettings();
         }
 
         #region: CLASS_INTERNALS
@@ -63,6 +64,15 @@ namespace BAMWallet.HD
             else
             {
                 _network = NBitcoin.Network.TestNet;
+            }
+
+            var peer =  _client.GetSeedPeer().Result;
+            if (peer == null)
+                throw new Exception(
+                    "Cannot establish a connection to the Remote node! Please check settings and the remote node's peer details");
+            if (!peer.PublicKey.Equals(_networkSettings.RemoteNodePubKey))
+            {
+                throw new Exception("Remote node's public key has change. Please reset or make sure it's correct in settings");
             }
         }
 

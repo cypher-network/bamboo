@@ -13,6 +13,7 @@ namespace BAMWallet.Model
         public string Environment { get; set; }
         public string WalletEndpoint { get; set; }
         public string RemoteNode { get; set; }
+        public int RemoteNodeHttpPort { get; set; }
         public string RemoteNodePubKey { get; set; }
         public ulong NumberOfConfirmations { get; set; }
     }

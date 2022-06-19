@@ -44,6 +44,24 @@ namespace Cli
 
                 var ui = new TerminalUserInterface();
                 var nc = new Configuration.Configuration(ui);
+
+                var storedAppSettings = BAMWallet.Helper.Util.WalletPath("appsettings");
+                try
+                {
+                    if (File.Exists(storedAppSettings))
+                    {
+                        File.Delete(storedAppSettings);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.Write($"Something went wrong!" +
+                                  $"\nBamboo might not have permissions to delete the file appsettings.db." +
+                                  $"\nPlease manually delete the file : {storedAppSettings}\n" +
+                                  $"Or run Bamboo with elevated permissions.");
+                    Log.Error("{@Message}", ex.Message);
+                }
+                
                 return 0;
             }
 
@@ -128,6 +146,7 @@ namespace Cli
                 var walletEndpoint = configuration["NetworkSettings:WalletEndpoint"];
                 var env = configuration["NetworkSettings:Environment"];
                 var node = configuration["NetworkSettings:RemoteNode"];
+                var nodeHttp = configuration["NetworkSettings:RemoteNodeHttpPort"];
                 var nodePk = configuration["NetworkSettings:RemoteNodePubKey"];
                 var confirmations = configuration["NetworkSettings:NumberOfConfirmations"];
                 var networkSettings = new NetworkSettings
@@ -135,6 +154,7 @@ namespace Cli
                     NumberOfConfirmations = Convert.ToUInt64(confirmations),
                     Environment = env,
                     RemoteNode = node,
+                    RemoteNodeHttpPort = Convert.ToInt32(nodeHttp),
                     RemoteNodePubKey = nodePk,
                     WalletEndpoint = walletEndpoint
                 };
