@@ -117,26 +117,35 @@ namespace BAMWallet.Rpc
         /// <returns></returns>
         public async Task<Peer> GetSeedPeer()
         {
-            var httpClient = new HttpClient();
-            if (!IPEndPoint.TryParse(_networkSettings.RemoteNode, out var ipEndPoint)) return default;
-            var url = $"http://{ipEndPoint.Address}:{_networkSettings.RemoteNodeHttpPort}/member/peer";
-            using var httpResponseMessage = await httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get, new Uri(url)));
-            using var stream = httpResponseMessage.Content.ReadAsStringAsync();
-            if (!httpResponseMessage.IsSuccessStatusCode) return default;
-            var read = await stream;
-            var jObject = JObject.Parse(read);
-            
-            return new Peer
+            try
             {
-                Advertise = jObject["advertise"].Value<string>(),
-                BlockCount = jObject["blockHeight"].Value<ulong>(),
-                Listening = jObject["listening"].Value<string>(),
-                Name = jObject["name"].Value<string>(),
-                Version = jObject["version"].Value<string>(),
-                ClientId = jObject["clientId"].Value<ulong>(),
-                PublicKey = jObject["publicKey"].Value<string>(),
-                HttpEndPoint = jObject["httpEndPoint"].Value<string>()
-            };
+                var httpClient = new HttpClient();
+                if (!IPEndPoint.TryParse(_networkSettings.RemoteNode, out var ipEndPoint)) return default;
+                var url = $"http://{ipEndPoint.Address}:{_networkSettings.RemoteNodeHttpPort}/member/peer";
+                using var httpResponseMessage = await httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get, new Uri(url)));
+                using var stream = httpResponseMessage.Content.ReadAsStringAsync();
+                if (!httpResponseMessage.IsSuccessStatusCode) return default;
+                var read = await stream;
+                var jObject = JObject.Parse(read);
+            
+                return new Peer
+                {
+                    Advertise = jObject["advertise"].Value<string>(),
+                    BlockCount = jObject["blockHeight"].Value<ulong>(),
+                    Listening = jObject["listening"].Value<string>(),
+                    Name = jObject["name"].Value<string>(),
+                    Version = jObject["version"].Value<string>(),
+                    ClientId = jObject["clientId"].Value<ulong>(),
+                    PublicKey = jObject["publicKey"].Value<string>(),
+                    HttpEndPoint = jObject["httpEndPoint"].Value<string>()
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.Here().Error("{@Message}", ex.Message);
+            }
+
+            return null;
         }
 
         /// <summary>
