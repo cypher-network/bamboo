@@ -7,6 +7,8 @@
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
 
 using System;
+using System.Security;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using BAMWallet.Extensions;
 using BAMWallet.HD;
@@ -27,18 +29,36 @@ namespace Cli.Commands.CmdLine
 
         public override async Task Execute(Session activeSession = null)
         {
+            var passphrase = new SecureString();
+
             var walletName = Prompt.GetString("Specify wallet file name (e.g., MyWallet):", null, ConsoleColor.Yellow);
+            var genPassOrPin = Prompt.GetYesNo("Generate a secure passphrase or pin?", false, ConsoleColor.Green);
+            if (genPassOrPin)
+            {
+                var pinOrPass = Prompt.GetYesNo("Passphrase or pin?", true, ConsoleColor.Green);
+                if (pinOrPass)
+                {
+                    passphrase = string.Join(" ", _commandReceiver.CreateSeed(NBitcoin.WordCount.Twelve)).ToSecureString();
+                }
+
+                if (!pinOrPass)
+                {
+                    passphrase = SecurePin();
+                }
+            }
+            else
+            {
+                passphrase = Prompt.GetPasswordAsSecureString("Specify wallet passphrase/pin:", ConsoleColor.Yellow);
+            }
 
             try
             {
-                await Spinner.StartAsync("Creating wallet ...", async spinner =>
+                await Spinner.StartAsync("Creating wallet ...", async _ =>
                 {
-                    var seedDefault = _commandReceiver.CreateSeed(NBitcoin.WordCount.TwentyFour);
-                    var passPhraseDefault = _commandReceiver.CreateSeed(NBitcoin.WordCount.Twelve);
-                    var joinMmnemonic = string.Join(" ", seedDefault);
-                    var joinPassphrase = string.Join(" ", passPhraseDefault);
-                    var id = await _commandReceiver.CreateWallet(joinMmnemonic.ToSecureString(),
-                        joinPassphrase.ToSecureString(), walletName);
+                    var defaultSeed = _commandReceiver.CreateSeed(NBitcoin.WordCount.TwentyFour);
+                    var joinMmnemonic = string.Join(" ", defaultSeed);
+                    var passTemp = passphrase.FromSecureString();
+                    var id = await _commandReceiver.CreateWallet(joinMmnemonic.ToSecureString(), passphrase, walletName);
                     var path = Util.WalletPath(id);
 
                     _console.WriteLine();
@@ -47,6 +67,14 @@ namespace Cli.Commands.CmdLine
                     _console.WriteLine("Your wallet has been generated!");
                     _console.ForegroundColor = ConsoleColor.White;
 
+                    _console.WriteLine();
+                    
+                    _console.ForegroundColor = ConsoleColor.Red;
+                    _console.WriteLine("NOTE:\n" +
+                                       "The following 24 seed word can be used to recover your wallet.\n" +
+                                       "Please write down the 24 seed word and store it somewhere safe and secure.");
+                    _console.ForegroundColor = ConsoleColor.White;
+                    
                     _console.WriteLine();
 
                     _console.WriteLine("Your wallet can be found here:");
@@ -60,32 +88,18 @@ namespace Cli.Commands.CmdLine
                     _console.ForegroundColor = ConsoleColor.Green;
                     _console.WriteLine($"{id}");
                     _console.ForegroundColor = ConsoleColor.White;
-
-                    _console.WriteLine();
-
-                    _console.ForegroundColor = ConsoleColor.Red;
-                    _console.WriteLine("PLEASE NOTE:\n" +
-                                       "The following Seed and Passphrase words can be used to recover access to your wallet.\n" +
-                                       "Please write them down and store them somewhere safe and secure.");
-                    _console.ForegroundColor = ConsoleColor.White;
-
-                    _console.WriteLine();
-
                     _console.WriteLine("Seed:");
                     _console.ForegroundColor = ConsoleColor.Green;
                     _console.WriteLine($"{joinMmnemonic}");
                     _console.ForegroundColor = ConsoleColor.White;
-
-                    _console.WriteLine();
-
-                    _console.WriteLine("Passphrase:");
+                    _console.WriteLine("Passphrase/Pin:");
                     _console.ForegroundColor = ConsoleColor.Green;
-                    _console.WriteLine($"{joinPassphrase}");
+                    _console.WriteLine($"{passTemp}");
                     _console.ForegroundColor = ConsoleColor.White;
 
                     joinMmnemonic.ZeroString();
-                    joinPassphrase.ZeroString();
-
+                    passTemp.ZeroString();
+                    
                     _console.WriteLine();
 
                     return Task.CompletedTask;
@@ -97,6 +111,20 @@ namespace Cli.Commands.CmdLine
                 _console.WriteLine($"{ex.Message}");
                 _console.ForegroundColor = ConsoleColor.White;
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        private static SecureString SecurePin()
+        {
+            var buffer = new byte[sizeof(ulong)];
+            using var rng = RandomNumberGenerator.Create();
+            rng.GetBytes(buffer);
+            var num = BitConverter.ToUInt64(buffer, 0);
+            var pin = num % 100000000;
+            return pin.ToString("D8").ToSecureString();
         }
     }
 }

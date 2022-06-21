@@ -561,14 +561,12 @@ namespace BAMWallet.HD
         ///
         /// </summary>
         /// <param name="seed"></param>
-        /// <param name="passphrase"></param>
         /// <param name="hdRoot"></param>
-        private static void CreateHdRootKey(SecureString seed, SecureString passphrase, out ExtKey hdRoot)
+        private static void CreateHdRootKey(SecureString seed, out ExtKey hdRoot)
         {
             Guard.Argument(seed, nameof(seed)).NotNull();
-            Guard.Argument(passphrase, nameof(passphrase)).NotNull();
             var concatenateMnemonic = string.Join(" ", seed.FromSecureString());
-            hdRoot = new Mnemonic(concatenateMnemonic).DeriveExtKey(passphrase.FromSecureString());
+            hdRoot = new Mnemonic(concatenateMnemonic).DeriveExtKey();
             concatenateMnemonic.ZeroString();
         }
 
@@ -1108,7 +1106,7 @@ namespace BAMWallet.HD
             passphrase.MakeReadOnly();
             try
             {
-                CreateHdRootKey(seed, passphrase, out var hdRoot);
+                CreateHdRootKey(seed, out var hdRoot);
                 var keySet = CreateKeySet(new KeyPath($"{HdPath}0"), hdRoot.PrivateKey.ToHex().HexToByte(),
                     hdRoot.ChainCode);
                 var db = Util.LiteRepositoryFactory(walletName, passphrase);
