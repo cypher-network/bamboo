@@ -26,14 +26,14 @@ namespace Cli.Commands.CmdLine
         {
             var walletName = Prompt.GetString("Specify new wallet name (e.g., MyWallet):", null, ConsoleColor.Red);
             using var seed = Prompt.GetPasswordAsSecureString("Seed:", ConsoleColor.Yellow);
-            using var passphrase = Prompt.GetPasswordAsSecureString("Passphrase:", ConsoleColor.Yellow);
+            using var passphrase = Prompt.GetPasswordAsSecureString("Passphrase/pin:", ConsoleColor.Yellow);
 
             var id = await _commandReceiver.CreateWallet(seed, passphrase, walletName);
             var path = Util.WalletPath(id);
 
             _console.ForegroundColor = ConsoleColor.Yellow;
             _console.WriteLine("Your wallet has been generated!\n");
-            _console.WriteLine("To start synchronizing with the daemon, login and the use the recover command.\n");
+            _console.WriteLine("To start synchronizing with the network, login and the use the recover command.\n");
             _console.ForegroundColor = ConsoleColor.White;
             _console.ForegroundColor = ConsoleColor.Green;
             _console.WriteLine($"Wallet Name: {id}");
