@@ -4,14 +4,15 @@
 [![GitHub release](https://img.shields.io/github/release/cypher-network/bamboo.svg)](https://GitHub.com/cypher-network/bamboo/releases/)
 
 
-| OS            | Version | Architecture | Supported           |
-|---------------|---------|--------------|---------------------|
-| Ubuntu        | 21.10   | x64          | :heavy_check_mark:  |
-| CentOS Stream | 8       | x64          | :heavy_check_mark:  |
-| Windows       | 10,11   | x64          | :heavy_check_mark:  |
-| macOS         | 11,12   | x64          | :heavy_minus_sign:  |
+| OS             | Version      | Architecture | Supported           |
+|----------------|--------------|--------------|---------------------|
+| Ubuntu         | 21.10,22.04  | x64          | :heavy_check_mark:  |
+| CentOS Stream  | 8,9          | x64          | :heavy_check_mark:  |
+| Windows        | 10,11        | x64          | :heavy_check_mark:  |
+| macOS          | 11,12        | x64          | :heavy_check_mark:  |
+| Raspberry Pi 4 | 10 (buster)  | x64          | :heavy_check_mark:  |
 
-> Unknown operating systems are still being tested. 
+> Some unknown operating systems are still being tested. 
 > If you are technical or would like to get your hands dirty, please go ahead and install the wallet. It won't bite :yum:
 
 
@@ -44,6 +45,21 @@ For example:
 bash <(curl -sSL https://raw.githubusercontent.com/cypher-network/bamboo/master/install/install.sh) --uninstall
 ```
 
+> In some cases, `macOS` users might need to install gmp. The secp256k1 library depends on gmp (arbitrary precision arithmetic).
+
+For quick installation execute the following command:
+
+`brew install gmp`
+
+If you don't have homebrew installed:
+
+### Installing Homebrew macOS
+
+Users running Catalina, Mojave, or Big Sur, execute the following command if you don't have homebrew installed:
+
+```shell
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+````
 
 ### Microsoft Windows
 
@@ -52,6 +68,10 @@ https://github.com/cypher-network/bamboo/releases
 
 Once installed open Powershell/CMD in Administrative mode then type `clibamwallet --configure`
 
+## Safety
+
+This software is using cryptography that has not been formally audited.
+While we do our best to make it safe, it is up to the user to evaluate whether or not it is safe to use for their purposes.
 
 ## Contribution
 

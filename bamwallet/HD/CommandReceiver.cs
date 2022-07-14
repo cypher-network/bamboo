@@ -514,7 +514,7 @@ namespace BAMWallet.HD
             {
                 using var bulletProof = new BulletProof();
                 using var sec256K1 = new Secp256k1();
-                proofStruct = bulletProof.GenerateBulletProof(balance, blindSum, sec256K1.RandomSeed(32), null!, null!, null!);
+                proofStruct = bulletProof.GenProof(balance, blindSum, sec256K1.RandomSeed(32), null!, null!, null!);
                 var success = bulletProof.Verify(commitSum, proofStruct.proof, null!);
                 if (!success)
                 {
@@ -1638,7 +1638,7 @@ namespace BAMWallet.HD
         /// </summary>
         /// <param name="session"></param>
         /// <param name="start"></param>
-        /// <param name="recoverCompletely"></param>
+        /// <param name="settingsCompletely"></param>
         /// <returns></returns>
         public Tuple<object, string> RecoverTransactions(in Session session, int start, bool recoverCompletely = false)
         {
