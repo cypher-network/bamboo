@@ -59,6 +59,6 @@
     <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.2.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.3.1" />
     <PackageReference Include="WebApiContrib.Core.Formatter.Bson" Version="2.1.0" />
-    <PackageReference Include="libsecp256k1Zkp.Net" Version="1.1.11" />
+    <PackageReference Include="libsecp256k1Zkp.Net" Version="1.1.10" />
   </ItemGroup>
 </Project>
