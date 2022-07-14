@@ -9,6 +9,7 @@
 using System;
 using System.Security;
 using System.Security.Cryptography;
+using System.Threading;
 using System.Threading.Tasks;
 using BAMWallet.Extensions;
 using BAMWallet.HD;
@@ -30,25 +31,24 @@ namespace Cli.Commands.CmdLine
         public override async Task Execute(Session activeSession = null)
         {
             var passphrase = new SecureString();
-
+            bool genPin = false;
             var walletName = Prompt.GetString("Specify wallet file name (e.g., MyWallet):", null, ConsoleColor.Yellow);
-            var genPassOrPin = Prompt.GetYesNo("Generate a secure passphrase or pin?", false, ConsoleColor.Green);
-            if (genPassOrPin)
+            var genPass = Prompt.GetYesNo("Generate a secure passphrase?", false, ConsoleColor.Green);
+            if (genPass)
             {
-                var pinOrPass = Prompt.GetYesNo("Passphrase or pin?", true, ConsoleColor.Green);
-                if (pinOrPass)
-                {
-                    passphrase = string.Join(" ", _commandReceiver.CreateSeed(NBitcoin.WordCount.Twelve)).ToSecureString();
-                }
-
-                if (!pinOrPass)
+                passphrase = string.Join(" ", _commandReceiver.CreateSeed(NBitcoin.WordCount.Twelve)).ToSecureString();
+            }
+            if (!genPass)
+            {
+                genPin = Prompt.GetYesNo("Generate a secure pin?", true, ConsoleColor.Green);
+                if (genPin)
                 {
                     passphrase = SecurePin();
                 }
             }
-            else
+            if (!genPass && !genPin)
             {
-                passphrase = Prompt.GetPasswordAsSecureString("Specify wallet passphrase/pin:", ConsoleColor.Yellow);
+                passphrase = Prompt.GetPasswordAsSecureString("Specify wallet passphrase or pin:", ConsoleColor.Yellow);
             }
 
             try
@@ -102,6 +102,8 @@ namespace Cli.Commands.CmdLine
                     
                     _console.WriteLine();
 
+                    Thread.Sleep(100);
+                    
                     return Task.CompletedTask;
                 }, Patterns.Hearts);
             }
