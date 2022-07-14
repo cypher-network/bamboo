@@ -155,6 +155,18 @@ install_dependencies() {
         sudo apt-get install libc6-dev
       fi
     fi
+    if dpkg -s libgmp-dev &> /dev/null; then
+      printf "  %b libgmp-dev\n" "${TICK}"
+    else
+      printf "  %b libgmp-dev\n" "${CROSS}"
+      printf "  %b Installing libgmp-dev\n" "${INFO}"
+      sudo apt-get update
+      if [ "${IS_NON_INTERACTIVE}" = true ]; then
+        sudo DEBIAN_FRONTEND=noninteractive apt-get -yq install libgmp-dev
+      else
+        sudo apt-get install libgmp-dev
+      fi
+    fi    
     if dpkg -s libsodium-dev &> /dev/null; then
       printf "  %b libsodium-dev\n" "${TICK}"
     else
