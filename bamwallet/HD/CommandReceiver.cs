@@ -187,7 +187,7 @@ namespace BAMWallet.HD
                                 DateTime = walletTransaction.DateTime,
                                 Commitment = output,
                                 State = walletTransaction.State,
-                                Total = message.Paid,
+                                Total = message.Amount,
                                 TxnId = walletTransaction.Transaction.TxnId
                             });
                         }
