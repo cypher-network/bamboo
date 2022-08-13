@@ -74,7 +74,7 @@ public class WalletAppSettingsCommand : Command
         {
             networkSettings.RemoteNodeHttpPort = nodeRestPort;
         }
-        
+
         if (!string.IsNullOrEmpty(nodePk))
         {
             if (networkSettings.RemoteNodePubKey != nodePk)
@@ -82,7 +82,7 @@ public class WalletAppSettingsCommand : Command
                 networkSettings.RemoteNodePubKey = nodePk;
             }
         }
-        
+
         if (networkSettings.NumberOfConfirmations != (ulong)nrConfirmations)
         {
             networkSettings.NumberOfConfirmations = (ulong)nrConfirmations;
@@ -101,9 +101,9 @@ public class WalletAppSettingsCommand : Command
         }
 
         _commandReceiver.SetNetworkSettings();
-        
+
         Cli.Helper.Utils.SetConsoleTitle(networkSettings.Environment);
-        
+
         return Task.CompletedTask;
     }
 }

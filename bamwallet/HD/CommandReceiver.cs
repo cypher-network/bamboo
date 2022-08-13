@@ -36,7 +36,7 @@ namespace BAMWallet.HD
             _logger = logger.ForContext("SourceContext", nameof(CommandReceiver));
             _client = new Client(_logger);
             _commandExecutionCounter = 0;
-            
+
             SetNetworkSettings();
         }
 
@@ -67,7 +67,7 @@ namespace BAMWallet.HD
                 _network = NBitcoin.Network.TestNet;
             }
 
-            var peer =  _client.GetSeedPeer().Result;
+            var peer = _client.GetSeedPeer().Result;
             if (peer == null)
                 throw new Exception(
                     "Cannot establish a connection to the Remote node! Please check settings and the remote node's peer details");
@@ -987,7 +987,7 @@ namespace BAMWallet.HD
 
                         continue;
                     }
-                    
+
                     foreach (var paid in change)
                     {
                         var messageChange = Transaction.Message(paid, scan);

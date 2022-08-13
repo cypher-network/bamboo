@@ -34,10 +34,10 @@ public class WalletStakeCommand : Command
         {
             rewardAddress = Prompt.GetString("Reward Address:", null, ConsoleColor.Yellow);
         }
-        
+
         var secret = Prompt.GetPasswordAsSecureString("Node Private Key:", ConsoleColor.Red);
         var token = Prompt.GetPasswordAsSecureString("Node Token:", ConsoleColor.Red);
-        if (seed.Length != 0 &&  secret.Length != 0 && token.Length != 0)
+        if (seed.Length != 0 && secret.Length != 0 && token.Length != 0)
         {
             await Spinner.StartAsync("Setting up staking on your node ...", async spinner =>
             {
@@ -56,7 +56,7 @@ public class WalletStakeCommand : Command
                         }
                         rewardAddress = request.Item1 as string;
                     }
-                    
+
                     var stakeCredentialsRequest = new StakeCredentialsRequest
                     {
                         Passphrase = activeSession.Passphrase.ToArray(),

@@ -107,7 +107,7 @@ namespace Cli.Configuration
                 Configuration.Environment = optionEnvironmentMainnet.Text;
                 return StepNode();
             }
-            
+
             if (choiceEnvironment.Equals(optionEnvironmentTestnet))
             {
                 Configuration.Environment = optionEnvironmentTestnet.Text;
@@ -219,7 +219,7 @@ namespace Cli.Configuration
 
             return success;
         }
-        
+
         readonly UserInterfaceChoice _optionIpAddressManual = new("Manually enter IP address");
         readonly UserInterfaceChoice _optionIpAddressAuto = new("Find IP address automatically");
 
@@ -333,7 +333,7 @@ namespace Cli.Configuration
             Configuration.NodePubKey = key;
             return StepNodeRestPort();
         }
-        
+
         private bool StepNodeRestPort()
         {
             var section = new TextInput<ushort>(

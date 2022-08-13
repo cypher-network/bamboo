@@ -79,13 +79,13 @@ namespace BAMWallet.Services
                     }
                     if (!string.IsNullOrEmpty(safeguardBlocksResponse.Error))
                     {
-                        _logger.Here().Fatal("SafeGuard downloading blocks: {@Message}",  safeguardBlocksResponse.Error);
+                        _logger.Here().Fatal("SafeGuard downloading blocks: {@Message}", safeguardBlocksResponse.Error);
                         return Task.CompletedTask;
                     }
 
                     var fileStream = SafeguardData(GetDays());
                     var buffer = MessagePack.MessagePackSerializer.Serialize(new BlocksResponse
-                        { Blocks = safeguardBlocksResponse.Blocks.ToList() });
+                    { Blocks = safeguardBlocksResponse.Blocks.ToList() });
                     fileStream.Write(buffer, 0, buffer.Length);
                     fileStream.Flush();
                     fileStream.Close();

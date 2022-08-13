@@ -14,7 +14,7 @@ namespace BAMWallet.Model
     [MessagePackObject]
     public record Transaction
     {
-        [IgnoreMember] [BsonId] public Guid Id { get; set; }
+        [IgnoreMember][BsonId] public Guid Id { get; set; }
         [Key(0)] public byte[] TxnId { get; set; }
         [Key(1)] public Bp[] Bp { get; set; }
         [Key(2)] public int Ver { get; set; } = 2;

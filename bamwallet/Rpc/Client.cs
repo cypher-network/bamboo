@@ -127,7 +127,7 @@ namespace BAMWallet.Rpc
                 if (!httpResponseMessage.IsSuccessStatusCode) return default;
                 var read = await stream;
                 var jObject = JObject.Parse(read);
-            
+
                 return new Peer
                 {
                     Advertise = jObject["advertise"].Value<string>(),

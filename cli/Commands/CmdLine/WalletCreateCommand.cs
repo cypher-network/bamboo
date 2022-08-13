@@ -68,14 +68,14 @@ namespace Cli.Commands.CmdLine
                     _console.ResetColor();
 
                     _console.WriteLine();
-                    
+
                     _console.ForegroundColor = ConsoleColor.Red;
                     _console.WriteLine("NOTE:\n" +
                                        "The following 24 seed word can be used to recover your wallet.\n" +
                                        "Please write down the 24 seed word and store it somewhere safe and secure.\n" +
                                        "Your seed and passphrase/pin will not be displayed again!");
                     _console.ResetColor();
-                    
+
                     _console.WriteLine();
 
                     _console.WriteLine("Your wallet can be found here:");
@@ -100,11 +100,11 @@ namespace Cli.Commands.CmdLine
 
                     joinMmnemonic.ZeroString();
                     passTemp.ZeroString();
-                    
+
                     _console.WriteLine();
 
                     Thread.Sleep(100);
-                    
+
                     return Task.CompletedTask;
                 }, Patterns.Hearts);
             }
