@@ -33,6 +33,7 @@ namespace Cli.Commands.CmdLine
                     _console.ForegroundColor = ConsoleColor.Red;
                     _console.WriteLine($"Address request failed : {request.Item2}");
                     _console.ForegroundColor = ConsoleColor.White;
+                    return Task.CompletedTask;
                 }
 
                 var table = new ConsoleTable("Address");

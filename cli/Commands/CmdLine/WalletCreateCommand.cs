@@ -65,37 +65,38 @@ namespace Cli.Commands.CmdLine
 
                     _console.ForegroundColor = ConsoleColor.Yellow;
                     _console.WriteLine("Your wallet has been generated!");
-                    _console.ForegroundColor = ConsoleColor.White;
+                    _console.ResetColor();
 
                     _console.WriteLine();
                     
                     _console.ForegroundColor = ConsoleColor.Red;
                     _console.WriteLine("NOTE:\n" +
                                        "The following 24 seed word can be used to recover your wallet.\n" +
-                                       "Please write down the 24 seed word and store it somewhere safe and secure.");
-                    _console.ForegroundColor = ConsoleColor.White;
+                                       "Please write down the 24 seed word and store it somewhere safe and secure.\n" +
+                                       "Your seed and passphrase/pin will not be displayed again!");
+                    _console.ResetColor();
                     
                     _console.WriteLine();
 
                     _console.WriteLine("Your wallet can be found here:");
                     _console.ForegroundColor = ConsoleColor.Green;
                     _console.WriteLine($"{path}");
-                    _console.ForegroundColor = ConsoleColor.White;
+                    _console.ResetColor();
 
                     _console.WriteLine();
 
                     _console.WriteLine("Wallet Name:");
                     _console.ForegroundColor = ConsoleColor.Green;
                     _console.WriteLine($"{id}");
-                    _console.ForegroundColor = ConsoleColor.White;
+                    _console.ResetColor();
                     _console.WriteLine("Seed:");
                     _console.ForegroundColor = ConsoleColor.Green;
                     _console.WriteLine($"{joinMmnemonic}");
-                    _console.ForegroundColor = ConsoleColor.White;
+                    _console.ResetColor();
                     _console.WriteLine("Passphrase/Pin:");
                     _console.ForegroundColor = ConsoleColor.Green;
                     _console.WriteLine($"{passTemp}");
-                    _console.ForegroundColor = ConsoleColor.White;
+                    _console.ResetColor();
 
                     joinMmnemonic.ZeroString();
                     passTemp.ZeroString();

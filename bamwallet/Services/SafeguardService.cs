@@ -72,23 +72,24 @@ namespace BAMWallet.Services
                     var safeguardBlocksResponse =
                         _client.Send<SafeguardBlocksResponse>(new Parameter
                         { MessageCommand = MessageCommand.GetSafeguardBlocks });
-                    if (safeguardBlocksResponse != null)
+                    if (safeguardBlocksResponse == null)
                     {
-                        if (!string.IsNullOrEmpty(safeguardBlocksResponse.Error))
-                        {
-                            throw new Exception($"SafeGuard: {safeguardBlocksResponse.Error}");
-                        }
-                        var fileStream = SafeguardData(GetDays());
-                        var buffer = MessagePack.MessagePackSerializer.Serialize(new BlocksResponse { Blocks = safeguardBlocksResponse.Blocks.ToList() });
-                        fileStream.Write(buffer, 0, buffer.Length);
-                        fileStream.Flush();
-                        fileStream.Close();
-                        _safeguardDownloadingFlagService.TryDownloading = false;
+                        _logger.Here().Fatal("SafeGuard timed out. Connection to the node cannot be established");
+                        return Task.CompletedTask;
                     }
-                    else
+                    if (!string.IsNullOrEmpty(safeguardBlocksResponse.Error))
                     {
-                        throw new Exception("SafeGuard timed out. Connection to the node cannot be established");
+                        _logger.Here().Fatal("SafeGuard downloading blocks: {@Message}",  safeguardBlocksResponse.Error);
+                        return Task.CompletedTask;
                     }
+
+                    var fileStream = SafeguardData(GetDays());
+                    var buffer = MessagePack.MessagePackSerializer.Serialize(new BlocksResponse
+                        { Blocks = safeguardBlocksResponse.Blocks.ToList() });
+                    fileStream.Write(buffer, 0, buffer.Length);
+                    fileStream.Flush();
+                    fileStream.Close();
+                    _safeguardDownloadingFlagService.TryDownloading = false;
                 }
             }
             catch (Exception ex) when (ex is not TaskCanceledException)
