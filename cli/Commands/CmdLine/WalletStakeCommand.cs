@@ -27,18 +27,36 @@ public class WalletStakeCommand : Command
 
     public override async Task Execute(Session activeSession = null)
     {
+        var rewardAddress = string.Empty;
         var seed = Prompt.GetPasswordAsSecureString("Seed:", ConsoleColor.Red);
-        var rewardAddress = Prompt.GetString("Reward Address:", null, ConsoleColor.Yellow);
+        var yesNoAddress = Prompt.GetYesNo("Use default wallet address (y) or specify an address (n)", true, ConsoleColor.Yellow);
+        if (!yesNoAddress)
+        {
+            rewardAddress = Prompt.GetString("Reward Address:", null, ConsoleColor.Yellow);
+        }
+        
         var secret = Prompt.GetPasswordAsSecureString("Node Private Key:", ConsoleColor.Red);
         var token = Prompt.GetPasswordAsSecureString("Node Token:", ConsoleColor.Red);
-        if (seed.Length != 0 && !string.IsNullOrEmpty(rewardAddress) && secret.Length != 0 &&
-            token.Length != 0)
+        if (seed.Length != 0 &&  secret.Length != 0 && token.Length != 0)
         {
             await Spinner.StartAsync("Setting up staking on your node ...", async spinner =>
             {
                 try
                 {
                     if (activeSession == null) return;
+                    if (string.IsNullOrEmpty(rewardAddress))
+                    {
+                        var request = _commandReceiver.Address(activeSession);
+                        if (request.Item1 is null)
+                        {
+                            _console.ForegroundColor = ConsoleColor.Red;
+                            _console.WriteLine($"Address request failed : {request.Item2}");
+                            _console.ResetColor();
+                            return;
+                        }
+                        rewardAddress = request.Item1 as string;
+                    }
+                    
                     var stakeCredentialsRequest = new StakeCredentialsRequest
                     {
                         Passphrase = activeSession.Passphrase.ToArray(),
@@ -61,7 +79,7 @@ public class WalletStakeCommand : Command
                 {
                     _console.ForegroundColor = ConsoleColor.Red;
                     _console.WriteLine($"{ex.Message}");
-                    _console.ForegroundColor = ConsoleColor.White;
+                    _console.ResetColor();
                 }
             }, Patterns.Hearts);
         }
