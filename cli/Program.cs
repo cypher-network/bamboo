@@ -61,7 +61,7 @@ namespace Cli
                                   $"Or run Bamboo with elevated permissions.");
                     Log.Error("{@Message}", ex.Message);
                 }
-                
+
                 return 0;
             }
 
@@ -158,9 +158,9 @@ namespace Cli
                     RemoteNodePubKey = nodePk,
                     WalletEndpoint = walletEndpoint
                 };
-                
+
                 Helper.Utils.SetConsoleTitle(networkSettings.Environment);
-                
+
                 var liteDatabase = BAMWallet.Helper.Util.LiteRepositoryAppSettingsFactory();
                 if (!liteDatabase.Database.CollectionExists($"{nameof(NetworkSettings)}"))
                 {

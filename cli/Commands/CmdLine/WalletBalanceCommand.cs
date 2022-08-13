@@ -43,8 +43,8 @@ namespace Cli.Commands.CmdLine
                     {
                         var table = new ConsoleTable("Payments", "Coinstake", "Coinbase", "Change", "Balance");
                         var payment = balances.Where(x => x.Commitment.T == CoinType.Payment).Sum(x => x.Total.DivWithGYin());
-                        var coinstake = balances.Where(x => x.Commitment.T == CoinType.Coinstake).Sum(x => x.Total.DivWithGYin());
-                        var coinbase = balances.Where(x => x.Commitment.T == CoinType.Coinbase).Sum(x => x.Total.DivWithGYin());
+                        var coinstake = balances.Where(x => x.Commitment.T == CoinType.Coinstake).Sum(x => x.Commitment.A.DivWithGYin());
+                        var coinbase = balances.Where(x => x.Commitment.T == CoinType.Coinbase).Sum(x => x.Commitment.A.DivWithGYin());
                         var change = balances.Where(x => x.Commitment.T == CoinType.Change).Sum(x => x.Total.DivWithGYin());
 
                         var balance = payment + coinstake + coinbase + change;

@@ -28,7 +28,7 @@ namespace Cli.Commands.CmdLine
             if (activeSession == null) return;
             var yesno = Prompt.GetYesNo("Restoring your wallet is an expensive operation that requires downloading large amounts of data.\n" +
                                         "Please be specific when entering the block height where you know when the first transaction was received.\n" +
-                                        "If you don't know the specific block height then please follow the instruction here: https://tangrams.io \n" +
+                                        "If you don't know the specific block height then please ask for instructions in general: https://discord.gg/6DT3yFhXCB \n" +
                                         "Backup your wallet before starting or if restoring to a clean wallet then no backup is required.\n" +
                                         "To continue, enter y or N to exit.", false, ConsoleColor.Yellow);
             if (yesno)

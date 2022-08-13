@@ -19,6 +19,7 @@ using System.Linq;
 using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
+using LiteDB;
 using NBitcoin.DataEncoders;
 using NBitcoin.Stealth;
 using Transaction = BAMWallet.Model.Transaction;
@@ -35,7 +36,7 @@ namespace BAMWallet.HD
             _logger = logger.ForContext("SourceContext", nameof(CommandReceiver));
             _client = new Client(_logger);
             _commandExecutionCounter = 0;
-            
+
             SetNetworkSettings();
         }
 
@@ -66,7 +67,7 @@ namespace BAMWallet.HD
                 _network = NBitcoin.Network.TestNet;
             }
 
-            var peer =  _client.GetSeedPeer().Result;
+            var peer = _client.GetSeedPeer().Result;
             if (peer == null)
                 throw new Exception(
                     "Cannot establish a connection to the Remote node! Please check settings and the remote node's peer details");
@@ -187,7 +188,7 @@ namespace BAMWallet.HD
                                 DateTime = walletTransaction.DateTime,
                                 Commitment = output,
                                 State = walletTransaction.State,
-                                Total = message.Paid,
+                                Total = message.Amount,
                                 TxnId = walletTransaction.Transaction.TxnId
                             });
                         }
@@ -826,7 +827,7 @@ namespace BAMWallet.HD
                     .Where(s => s.Id == id).FirstOrDefault();
                 if (walletTransaction != null)
                 {
-                    session.Database.Delete<WalletTransaction>(new LiteDB.BsonValue(walletTransaction.Id));
+                    session.Database.Delete<WalletTransaction>(new BsonValue(walletTransaction.Id));
                 }
             }
             catch (Exception ex)
@@ -908,7 +909,6 @@ namespace BAMWallet.HD
                 {
                     return new Tuple<object, string>(null, "Unable to find any wallet transactions.");
                 }
-
                 var (_, scan) = Unlock(session);
                 ulong received = 0;
                 foreach (var transaction in walletTransactions.Where(n => n.State != WalletTransactionState.NotFound)
@@ -930,17 +930,61 @@ namespace BAMWallet.HD
                     var change = transaction.Vout
                         .Where(z => z.T is CoinType.Change or CoinType.Coinstake or CoinType.Coinbase).ToArray();
                     if (!change.Any()) continue;
-                    if (change.ElementAt(0).T == CoinType.Coinbase)
+                    var outputs = change.Select(x => Enum.GetName(x.T)).ToArray();
+                    if (outputs.Contains(Enum.GetName(CoinType.Coinbase)) ||
+                        outputs.Contains(Enum.GetName(CoinType.Coinstake)))
                     {
-                        var messageCoinbase = Transaction.Message(change.ElementAt(0), scan);
-                        var messageCoinstake = Transaction.Message(change.ElementAt(1), scan);
-                        if (messageCoinbase == null || messageCoinstake == null) continue;
-                        received -= messageCoinstake.Amount;
-                        received += messageCoinstake.Amount;
-                        received += messageCoinbase.Amount;
-                        balanceSheets.Add(MoneyBalanceSheet(messageCoinstake.Date, messageCoinstake.Memo,
-                            messageCoinstake.Amount, messageCoinstake.Amount, messageCoinbase.Amount, received, change,
-                            transaction.TxnId.ByteToHex(), walletTransaction.State, isLocked));
+                        WalletTransactionMessage messageCoinbase = null;
+                        WalletTransactionMessage messageCoinstake = null;
+                        if (outputs.Contains(Enum.GetName(CoinType.Coinbase)))
+                        {
+                            messageCoinbase = Transaction.Message(change.ElementAt(0), scan);
+                        }
+
+                        if (outputs.Contains(Enum.GetName(CoinType.Coinstake)))
+                        {
+                            messageCoinstake = Transaction.Message(change.ElementAt(0), scan);
+                        }
+
+                        if (outputs.Contains(Enum.GetName(CoinType.Coinbase)) &&
+                            outputs.Contains(Enum.GetName(CoinType.Coinstake)))
+                        {
+                            messageCoinbase = Transaction.Message(change.ElementAt(0), scan);
+                            messageCoinstake = Transaction.Message(change.ElementAt(1), scan);
+                        }
+
+                        if (messageCoinbase != null)
+                        {
+                            received += messageCoinbase.Amount;
+                        }
+
+                        if (messageCoinstake != null)
+                        {
+                            received -= messageCoinstake.Amount;
+                            received += messageCoinstake.Amount;
+                        }
+
+                        if (messageCoinstake == null && messageCoinbase != null)
+                        {
+                            balanceSheets.Add(MoneyBalanceSheet(messageCoinbase.Date, messageCoinbase.Memo, 0,
+                                0, messageCoinbase.Amount, received, change,
+                                transaction.TxnId.ByteToHex(), walletTransaction.State, isLocked));
+                        }
+
+                        if (messageCoinstake != null && messageCoinbase != null)
+                        {
+                            balanceSheets.Add(MoneyBalanceSheet(messageCoinstake.Date, messageCoinstake.Memo,
+                                messageCoinstake.Amount, messageCoinstake.Amount, messageCoinbase.Amount, received,
+                                change, transaction.TxnId.ByteToHex(), walletTransaction.State, isLocked));
+                        }
+
+                        if (messageCoinstake != null && messageCoinbase == null)
+                        {
+                            balanceSheets.Add(MoneyBalanceSheet(messageCoinstake.Date, messageCoinstake.Memo,
+                                messageCoinstake.Amount, messageCoinstake.Amount, 0, received, change,
+                                transaction.TxnId.ByteToHex(), walletTransaction.State, isLocked));
+                        }
+
                         continue;
                     }
 

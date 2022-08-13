@@ -103,7 +103,7 @@ namespace Cli
             app.UseSwagger()
                 .UseSwaggerUI(c =>
                 {
-                    c.SwaggerEndpoint($"{ (!string.IsNullOrEmpty(pathBase) ? pathBase : string.Empty) }/swagger/v1/swagger.json", "BAMWalletRest.API V1");
+                    c.SwaggerEndpoint($"{(!string.IsNullOrEmpty(pathBase) ? pathBase : string.Empty)}/swagger/v1/swagger.json", "BAMWalletRest.API V1");
                     c.OAuthClientId("walletrestswaggerui");
                     c.OAuthAppName("Bamboo Wallet Rest Swagger UI");
                 })
