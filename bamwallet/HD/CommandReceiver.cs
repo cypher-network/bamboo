@@ -67,14 +67,89 @@ namespace BAMWallet.HD
                 _network = NBitcoin.Network.TestNet;
             }
 
+            _client.SetNetworkingSettings();
             var peer = _client.GetSeedPeer().Result;
             if (peer == null)
-                throw new Exception(
-                    "Cannot establish a connection to the Remote node! Please check settings and the remote node's peer details");
-            if (!peer.PublicKey.Equals(_networkSettings.RemoteNodePubKey))
             {
-                throw new Exception("Remote node's public key has change. Please reset or make sure it's correct in settings");
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("Cannot establish a connection to the Remote node! Please check Node and Node Http Port settings details are correct");
+                Console.ResetColor();
             }
+
+            var blockCountResponse = _client.Send<BlockCountResponse>(new Parameter
+            {
+                MessageCommand = MessageCommand.GetBlockCount
+            });
+
+            if (blockCountResponse == null)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("Cannot establish a connection to the Remote node! Please check Node and Node Port settings details are correct");
+                Console.ResetColor();
+            }
+
+            if (peer == null) return;
+            if (peer.PublicKey.Equals(_networkSettings.RemoteNodePubKey)) return;
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("WARNING: Remote node's public key has change. Please reset or make sure it's correct in settings");
+            Console.ResetColor();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public NetworkSettings NetworkSettings()
+        {
+            return _networkSettings;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public ulong GetLastKnownStakeAmount(in Session session)
+        {
+            try
+            {
+                var lastKnownStake = session.Database.Query<LastKnownStake>().First();
+                return lastKnownStake.Amount;
+            }
+            catch (Exception)
+            {
+                // Ignore
+            }
+
+            return 0ul;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="session"></param>
+        /// <param name="stakeAmount"></param>
+        /// <returns></returns>
+        public bool SaveLastKnownStakeAmount(in Session session, ulong stakeAmount)
+        {
+            try
+            {
+                if (!session.Database.Database.CollectionExists(nameof(LastKnownStake)))
+                {
+                    Save(session, new LastKnownStake { Amount = stakeAmount });
+                    return true;
+                }
+
+                var lastKnownStake = session.Database.Query<LastKnownStake>().First();
+                lastKnownStake.Amount = stakeAmount;
+                Update(session, lastKnownStake);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.Here().Error("{@Message}", ex.Message);
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -201,6 +276,28 @@ namespace BAMWallet.HD
             }
 
             return balances.ToArray();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="session"></param>
+        /// <param name="balanceArray"></param>
+        /// <returns></returns>
+        public BalanceProfile GetBalanceProfile(in Session session, Balance[] balanceArray = null)
+        {
+            BalanceProfile balanceProfile = null;
+            var balances = balanceArray ?? GetBalances(session);
+            if (balances.Length == 0) return null;
+            var payment = balances.Where(x => x.Commitment.T == CoinType.Payment).Sum(x => x.Total.DivWithGYin());
+            var coinstake = balances.Where(x => x.Commitment.T == CoinType.Coinstake)
+                .Sum(x => x.Commitment.A.DivWithGYin());
+            var coinbase = balances.Where(x => x.Commitment.T == CoinType.Coinbase)
+                .Sum(x => x.Commitment.A.DivWithGYin());
+            var change = balances.Where(x => x.Commitment.T == CoinType.Change).Sum(x => x.Total.DivWithGYin());
+            var balance = payment + coinstake + coinbase + change;
+            balanceProfile = new BalanceProfile(payment, coinstake, coinbase, change, balance);
+            return balanceProfile;
         }
 
         /// <summary>
@@ -1601,9 +1698,11 @@ namespace BAMWallet.HD
         /// <param name="stakeCredentialsRequest"></param>
         /// <param name="privateKey"></param>
         /// <param name="token"></param>
+        /// <param name="outputs"></param>
         /// <returns></returns>
-        public Task<MessageResponse<StakeCredentialsResponse>> SendStakeCredentials(in Session session,
-            in StakeCredentialsRequest stakeCredentialsRequest, in byte[] privateKey, in byte[] token)
+        public Task<MessageResponse<StakeCredentialsResponse>> SendStakeCredentials(
+            in StakeCredentialsRequest stakeCredentialsRequest, in byte[] privateKey, in byte[] token,
+            in Output[] outputs)
         {
             Guard.Argument(stakeCredentialsRequest, nameof(stakeCredentialsRequest)).NotNull();
             Guard.Argument(privateKey, nameof(privateKey)).NotNull().NotEmpty().MaxCount(32);
@@ -1619,17 +1718,9 @@ namespace BAMWallet.HD
                 }));
             }
 
-            var balances = GetBalances(in session);
-            var listOutputs = balances.Select(balance => new Output
-            {
-                C = balance.Commitment.C,
-                E = balance.Commitment.E,
-                N = balance.Commitment.N,
-                T = balance.Commitment.T
-            }).ToArray();
-
-            var stakeCredentials = stakeCredentialsRequest with { Outputs = listOutputs };
-            var packet = Cryptography.Crypto.EncryptChaCha20Poly1305(MessagePack.MessagePackSerializer.Serialize(stakeCredentials),
+            var stakeCredentials = stakeCredentialsRequest with { Outputs = outputs };
+            var packet = Cryptography.Crypto.EncryptChaCha20Poly1305(
+                MessagePack.MessagePackSerializer.Serialize(stakeCredentials),
                 privateKey, token, out var tag, out var nonce);
             if (packet is null)
                 return Task.FromResult(new MessageResponse<StakeCredentialsResponse>(

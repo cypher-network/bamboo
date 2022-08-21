@@ -6,7 +6,7 @@
     <RootNamespace>CLi</RootNamespace>
     <LangVersion>10</LangVersion>
     <Platforms>AnyCPU;x64</Platforms>
-    <AssemblyVersion>0.0.42.0</AssemblyVersion>
+    <AssemblyVersion>0.0.43.0</AssemblyVersion>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
     <InvariantGlobalization>true</InvariantGlobalization>
     <Company>Tangram</Company>
@@ -50,7 +50,7 @@
     <PackageReference Include="runtime.native.System.IO.Compression" Version="4.3.2" />
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="4.0.1" />
-    <PackageReference Include="Serilog.AspNetCore" Version="5.0.0" />
+    <PackageReference Include="Serilog.AspNetCore" Version="6.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.2.7" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.1" />
   </ItemGroup>

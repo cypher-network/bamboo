@@ -17,6 +17,7 @@ namespace BAMWallet.HD
         public const long Aether = 1_000_000_000_000_000_000;
 
         public const string AppSettingsFile = "appsettings.json";
+        public const string AppSettingsDbFile = "appsettings.db";
         public const string AppSettingsFileDev = "appsettings.Development.json";
 
         public const string ConfigSectionNameLog = "Log";
