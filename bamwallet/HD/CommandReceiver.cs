@@ -67,14 +67,89 @@ namespace BAMWallet.HD
                 _network = NBitcoin.Network.TestNet;
             }
 
+            _client.SetNetworkingSettings();
             var peer = _client.GetSeedPeer().Result;
             if (peer == null)
-                throw new Exception(
-                    "Cannot establish a connection to the Remote node! Please check settings and the remote node's peer details");
-            if (!peer.PublicKey.Equals(_networkSettings.RemoteNodePubKey))
             {
-                throw new Exception("Remote node's public key has change. Please reset or make sure it's correct in settings");
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("Cannot establish a connection to the Remote node! Please check Node and Node Http Port settings details are correct");
+                Console.ResetColor();
             }
+            
+            var blockCountResponse = _client.Send<BlockCountResponse>(new Parameter
+            {
+                MessageCommand = MessageCommand.GetBlockCount
+            });
+
+            if (blockCountResponse == null)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("Cannot establish a connection to the Remote node! Please check Node and Node Port settings details are correct");
+                Console.ResetColor();
+            }
+
+            if (peer == null) return;
+            if (peer.PublicKey.Equals(_networkSettings.RemoteNodePubKey)) return;
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("WARNING: Remote node's public key has change. Please reset or make sure it's correct in settings");
+            Console.ResetColor();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public NetworkSettings NetworkSettings()
+        {
+            return _networkSettings;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public ulong GetLastKnownStakeAmount(in Session session)
+        {
+            try
+            {
+                var lastKnownStake = session.Database.Query<LastKnownStake>().First();
+                return lastKnownStake.Amount;
+            }
+            catch (Exception)
+            {
+                // Ignore
+            }
+            
+            return 0ul;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="session"></param>
+        /// <param name="stakeAmount"></param>
+        /// <returns></returns>
+        public bool SaveLastKnownStakeAmount(in Session session, ulong stakeAmount)
+        {
+            try
+            {
+                if (!session.Database.Database.CollectionExists(nameof(LastKnownStake)))
+                {
+                    Save(session, new LastKnownStake { Amount = stakeAmount});
+                    return true;
+                }
+
+                var lastKnownStake = session.Database.Query<LastKnownStake>().First();
+                lastKnownStake.Amount = stakeAmount;
+                Update(session, lastKnownStake);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.Here().Error("{@Message}", ex.Message);
+            }
+
+            return false;
         }
 
         /// <summary>

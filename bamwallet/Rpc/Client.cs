@@ -151,7 +151,7 @@ namespace BAMWallet.Rpc
         /// <summary>
         /// 
         /// </summary>
-        private void SetNetworkingSettings()
+        public void SetNetworkingSettings()
         {
             _networkSettings = Util.LiteRepositoryAppSettingsFactory().Query<NetworkSettings>().FirstOrDefault();
         }
