@@ -54,7 +54,7 @@ namespace BAMWallet.Rpc
                         }
 
                         using var socket = NngFactorySingleton.Instance.Factory.RequesterOpen()
-                            .ThenDial($"tcp://{_networkSettings.RemoteNode}").Unwrap();
+                            .ThenDial($"tcp://{_networkSettings.RemoteNode}:{_networkSettings.RemotePort}").Unwrap();
                         using var ctx = socket.CreateAsyncContext(NngFactorySingleton.Instance.Factory).Unwrap();
                         var (pk, sk) = Cryptography.Crypto.KeyPair();
                         var cipher = Cryptography.Crypto.BoxSeal(MessagePackSerializer.Serialize(values),
