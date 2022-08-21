@@ -75,7 +75,7 @@ namespace BAMWallet.HD
                 Console.WriteLine("Cannot establish a connection to the Remote node! Please check Node and Node Http Port settings details are correct");
                 Console.ResetColor();
             }
-            
+
             var blockCountResponse = _client.Send<BlockCountResponse>(new Parameter
             {
                 MessageCommand = MessageCommand.GetBlockCount
@@ -119,7 +119,7 @@ namespace BAMWallet.HD
             {
                 // Ignore
             }
-            
+
             return 0ul;
         }
 
@@ -135,7 +135,7 @@ namespace BAMWallet.HD
             {
                 if (!session.Database.Database.CollectionExists(nameof(LastKnownStake)))
                 {
-                    Save(session, new LastKnownStake { Amount = stakeAmount});
+                    Save(session, new LastKnownStake { Amount = stakeAmount });
                     return true;
                 }
 
@@ -299,7 +299,7 @@ namespace BAMWallet.HD
             balanceProfile = new BalanceProfile(payment, coinstake, coinbase, change, balance);
             return balanceProfile;
         }
-        
+
         /// <summary>
         /// 
         /// </summary>

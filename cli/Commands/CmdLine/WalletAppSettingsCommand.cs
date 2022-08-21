@@ -76,7 +76,7 @@ public class WalletAppSettingsCommand : Command
         {
             networkSettings.RemotePort = nodePort;
         }
-        
+
         if (networkSettings.RemoteNodeHttpPort != nodeRestPort)
         {
             networkSettings.RemoteNodeHttpPort = nodeRestPort;

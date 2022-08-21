@@ -188,11 +188,11 @@ public class WalletStakeCommand : Command
                         }
 
                         _commandReceiver.SaveLastKnownStakeAmount(activeSession, stakeAmount.ConvertToUInt64());
-                        
+
                         _console.WriteLine();
 
                         Thread.Sleep(100);
-                        
+
                         spinner.Succeed(messageResponse.Value.Message);
                     }
                     catch (Exception ex)
