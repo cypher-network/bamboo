@@ -24,8 +24,9 @@ namespace BAMWallet.HD
         Tuple<object, string> CreateTransaction(Session session, ref WalletTransaction transaction);
         Tuple<object, string> RecoverTransactions(in Session session, int start, bool recoverCompletely = false);
         Task SyncWallet(in Session session);
-        Task<MessageResponse<StakeCredentialsResponse>> SendStakeCredentials(in Session session,
-            in StakeCredentialsRequest stakeCredentialsRequest, in byte[] privateKey, in byte[] token);
+        Task<MessageResponse<StakeCredentialsResponse>> SendStakeCredentials(
+            in StakeCredentialsRequest stakeCredentialsRequest, in byte[] privateKey, in byte[] token,
+            in Output[] outputs);
         bool IsBase58(string address);
         Tuple<object, string> NotFoundTransactions(in Session session);
         Balance[] GetBalances(in Session session);
@@ -42,5 +43,9 @@ namespace BAMWallet.HD
         TaskResult<bool> Update<T>(Session session, T data);
         Transaction[] ReadWalletTransactions(in Session session);
         void SetNetworkSettings();
+        BalanceProfile GetBalanceProfile(in Session session, Balance[] balanceArray = null);
+        NetworkSettings NetworkSettings();
+        ulong GetLastKnownStakeAmount(in Session session);
+        bool SaveLastKnownStakeAmount(in Session session, ulong stakeAmount);
     }
 }

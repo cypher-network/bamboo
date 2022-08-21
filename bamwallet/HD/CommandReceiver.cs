@@ -282,6 +282,28 @@ namespace BAMWallet.HD
         /// 
         /// </summary>
         /// <param name="session"></param>
+        /// <param name="balanceArray"></param>
+        /// <returns></returns>
+        public BalanceProfile GetBalanceProfile(in Session session, Balance[] balanceArray = null)
+        {
+            BalanceProfile balanceProfile = null;
+            var balances = balanceArray ?? GetBalances(session);
+            if (balances.Length == 0) return null;
+            var payment = balances.Where(x => x.Commitment.T == CoinType.Payment).Sum(x => x.Total.DivWithGYin());
+            var coinstake = balances.Where(x => x.Commitment.T == CoinType.Coinstake)
+                .Sum(x => x.Commitment.A.DivWithGYin());
+            var coinbase = balances.Where(x => x.Commitment.T == CoinType.Coinbase)
+                .Sum(x => x.Commitment.A.DivWithGYin());
+            var change = balances.Where(x => x.Commitment.T == CoinType.Change).Sum(x => x.Total.DivWithGYin());
+            var balance = payment + coinstake + coinbase + change;
+            balanceProfile = new BalanceProfile(payment, coinstake, coinbase, change, balance);
+            return balanceProfile;
+        }
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="session"></param>
         /// <param name="transactionId"></param>
         /// <returns></returns>
         public Balance[] GetBalancesByTransactionId(in Session session, in byte[] transactionId)
@@ -1676,9 +1698,11 @@ namespace BAMWallet.HD
         /// <param name="stakeCredentialsRequest"></param>
         /// <param name="privateKey"></param>
         /// <param name="token"></param>
+        /// <param name="outputs"></param>
         /// <returns></returns>
-        public Task<MessageResponse<StakeCredentialsResponse>> SendStakeCredentials(in Session session,
-            in StakeCredentialsRequest stakeCredentialsRequest, in byte[] privateKey, in byte[] token)
+        public Task<MessageResponse<StakeCredentialsResponse>> SendStakeCredentials(
+            in StakeCredentialsRequest stakeCredentialsRequest, in byte[] privateKey, in byte[] token,
+            in Output[] outputs)
         {
             Guard.Argument(stakeCredentialsRequest, nameof(stakeCredentialsRequest)).NotNull();
             Guard.Argument(privateKey, nameof(privateKey)).NotNull().NotEmpty().MaxCount(32);
@@ -1694,17 +1718,9 @@ namespace BAMWallet.HD
                 }));
             }
 
-            var balances = GetBalances(in session);
-            var listOutputs = balances.Select(balance => new Output
-            {
-                C = balance.Commitment.C,
-                E = balance.Commitment.E,
-                N = balance.Commitment.N,
-                T = balance.Commitment.T
-            }).ToArray();
-
-            var stakeCredentials = stakeCredentialsRequest with { Outputs = listOutputs };
-            var packet = Cryptography.Crypto.EncryptChaCha20Poly1305(MessagePack.MessagePackSerializer.Serialize(stakeCredentials),
+            var stakeCredentials = stakeCredentialsRequest with { Outputs = outputs };
+            var packet = Cryptography.Crypto.EncryptChaCha20Poly1305(
+                MessagePack.MessagePackSerializer.Serialize(stakeCredentials),
                 privateKey, token, out var tag, out var nonce);
             if (packet is null)
                 return Task.FromResult(new MessageResponse<StakeCredentialsResponse>(
