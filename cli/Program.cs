@@ -28,76 +28,87 @@ namespace Cli
         [Obsolete]
         public static async Task<int> Main(string[] args)
         {
-            var basePath = AppDomain.CurrentDomain.BaseDirectory;
-            var appsettingsExists =
-                File.Exists(Path.Combine(basePath, Constant.AppSettingsFile));
-
-            if (args.FirstOrDefault(arg => arg == "--configure") != null)
+            try
             {
-                if (appsettingsExists)
+                //args = new string[] { "--configure" };
+                var basePath = AppDomain.CurrentDomain.BaseDirectory;
+                var appsettingsExists =
+                    File.Exists(Path.Combine(basePath, Constant.AppSettingsFile));
+
+                if (args.FirstOrDefault(arg => arg == "--configure") != null)
                 {
-                    // Do not return an error; this check is part of the application installation process
-                    Console.WriteLine(
-                        $"{Constant.AppSettingsFile} already exists. Please remove file before running configuration again");
+                    if (appsettingsExists)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        // Do not return an error; this check is part of the application installation process
+                        Console.WriteLine($"{Constant.AppSettingsFile} already exists. Delete the file to continue (y) Or cancel (n)");
+                        Console.ResetColor();
+                        var line = Console.ReadLine();
+                        if (line == "y")
+                        {
+                            File.Delete(Path.Combine(basePath, Constant.AppSettingsFile));
+                        }
+                        else
+                        {
+                            return 0;   
+                        }
+                    }
+
+                    var ui = new TerminalUserInterface();
+                    var nc = new Configuration.Configuration(ui);
+
+                    var storedAppSettings = BAMWallet.Helper.Util.WalletPath("appsettings");
+                    try
+                    {
+                        if (File.Exists(storedAppSettings))
+                        {
+                            File.Delete(storedAppSettings);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.Write($"Something went wrong!" +
+                                      $"\nBamboo might not have permissions to delete the file appsettings.db" +
+                                      $"\nPlease manually delete the file : {storedAppSettings}\n" +
+                                      $"Or run Bamboo with elevated permissions.");
+                        Log.Error("{@Message}", ex.Message);
+                    }
+
                     return 0;
                 }
 
-                var ui = new TerminalUserInterface();
-                var nc = new Configuration.Configuration(ui);
-
-                var storedAppSettings = BAMWallet.Helper.Util.WalletPath("appsettings");
-                try
+                if (!appsettingsExists)
                 {
-                    if (File.Exists(storedAppSettings))
-                    {
-                        File.Delete(storedAppSettings);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.Write($"Something went wrong!" +
-                                  $"\nBamboo might not have permissions to delete the file appsettings.db." +
-                                  $"\nPlease manually delete the file : {storedAppSettings}\n" +
-                                  $"Or run Bamboo with elevated permissions.");
-                    Log.Error("{@Message}", ex.Message);
+                    await Console.Error.WriteLineAsync($"{Constant.AppSettingsFile} not found. Please create one running 'clibamwallet --configure'");
+                    return 1;
                 }
 
-                return 0;
-            }
+                var config = new ConfigurationBuilder()
+                    .SetBasePath(basePath)
+                    .AddJsonFile(Constant.AppSettingsFile, true)
+                    .AddCommandLine(args)
+                    .Build();
 
-            if (!appsettingsExists)
-            {
-                await Console.Error.WriteLineAsync($"{Constant.AppSettingsFile} not found. Please create one running 'clibamwallet --configure'");
-                return 1;
-            }
+                var configVersion = config.GetSection(Constant.ConfigSectionNameConfigVersion);
+                if (!int.TryParse(configVersion.Value, out var configVersionNumber) ||
+                    configVersionNumber < Constant.MinimumConfigVersion)
+                {
+                    await Console.Error.WriteLineAsync("Configuration file outdated. Please delete appsettings.json and create a new one running 'clibamwallet --configure'");
+                    return 1;
+                }
 
-            var config = new ConfigurationBuilder()
-                .SetBasePath(basePath)
-                .AddJsonFile(Constant.AppSettingsFile, true)
-                .AddCommandLine(args)
-                .Build();
+                if (config.GetSection(Constant.ConfigSectionNameLog) != null)
+                {
+                    Log.Logger = new LoggerConfiguration()
+                        .ReadFrom.Configuration(config, Constant.ConfigSectionNameLog)
+                        .CreateLogger();
+                }
+                else
+                {
+                    throw new Exception($"No \"{Constant.ConfigSectionNameLog}\" section found in appsettings.json");
+                }
 
-            var configVersion = config.GetSection(Constant.ConfigSectionNameConfigVersion);
-            if (!int.TryParse(configVersion.Value, out var configVersionNumber) ||
-                configVersionNumber < Constant.MinimumConfigVersion)
-            {
-                await Console.Error.WriteLineAsync("Configuration file outdated. Please delete appsettings.json and create a new one running 'clibamwallet --configure'");
-                return 1;
-            }
 
-            if (config.GetSection(Constant.ConfigSectionNameLog) != null)
-            {
-                Log.Logger = new LoggerConfiguration()
-                    .ReadFrom.Configuration(config, Constant.ConfigSectionNameLog)
-                    .CreateLogger();
-            }
-            else
-            {
-                throw new Exception($"No \"{Constant.ConfigSectionNameLog}\" section found in appsettings.json");
-            }
-
-            try
-            {
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 Console.WriteLine(@$"
 .______        ___      .___  ___. .______     ______     ______   
