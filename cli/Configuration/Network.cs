@@ -122,7 +122,7 @@ namespace Cli.Configuration
         #region node
         private bool StepNode()
         {
-            UserInterfaceChoice optionNodeTangram = new("Tangram Team-managed node (167.99.81.173:7946)");
+            UserInterfaceChoice optionNodeTangram = new("Tangram team-managed node (167.99.81.173:7946)");
             UserInterfaceChoice optionNodeCustom = new("Custom node");
 
             var section = new UserInterfaceSection(
@@ -246,12 +246,7 @@ namespace Cli.Configuration
                 return StepWalletIpAddressManual();
             }
 
-            if (choiceIpAddress.Equals(_optionIpAddressAuto))
-            {
-                return StepWalletIpAddressAuto();
-            }
-
-            return false;
+            return choiceIpAddress.Equals(_optionIpAddressAuto) && StepWalletIpAddressAuto();
         }
 
         private bool StepWalletIpAddressManual()
@@ -326,7 +321,8 @@ namespace Cli.Configuration
         private bool StepWalletNodePubKey()
         {
             var section = new TextInput<string>(
-                "Enter remote node public key from http://167.99.81.173:48655/member/peer",
+                "Enter the remote node public key from the list of the peers http://167.99.81.173:48655/member/peers (choose one)\n " +
+                "   Or if you have a node running, use your public key instead",
                 pubkey => !string.IsNullOrEmpty(pubkey), pubkey => pubkey);
             var success = _userInterface.Do(section, out var key);
             if (!success) return false;
