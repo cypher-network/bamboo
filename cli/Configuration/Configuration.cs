@@ -43,7 +43,7 @@ namespace Cli.Configuration
                 .Replace("<WALLET_ENDPOINT_BIND>",
                     $"http://{networkConfiguration.Configuration.WalletIPAddress}:{networkConfiguration.Configuration.WalletPort.ToString()}")
                 .Replace("<NODE_ENDPOINT>",
-                    $"{networkConfiguration.Configuration.NodeIPAddress}:{networkConfiguration.Configuration.NodePort}")
+                    $"{networkConfiguration.Configuration.NodeIPAddress}")
                 .Replace("<NODE_ENDPOINT_PORT>",
                     $"{networkConfiguration.Configuration.NodePort}")
                 .Replace("<NODE_HTTP_ENDPOINT_PORT>",
