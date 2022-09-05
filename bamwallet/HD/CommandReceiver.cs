@@ -461,7 +461,7 @@ namespace BAMWallet.HD
 
                 var size = transaction.GetSize() / 1024;
                 var timer = new Stopwatch();
-                var t = (int)(delay * decimal.Round(size, 2, MidpointRounding.ToZero) * 600 * (decimal)1.6);
+                var t = (int)(delay * decimal.Round(size, 2, MidpointRounding.ToZero) * 600 * (decimal)1.4);
                 timer.Start();
                 var nonce = Cryptography.Sloth.Eval(t, x);
                 timer.Stop();
