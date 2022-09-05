@@ -245,12 +245,14 @@ namespace BAMWallet.HD
                             if (keyImage == null) continue;
                             var spent = IsSpent(session, keyImage);
                             if (spent) continue;
+                            var total = Transaction.Amount(output, scan);
+                            if (total == 0) continue;
                             balances.Add(new Balance
                             {
                                 DateTime = walletTransaction.DateTime,
                                 Commitment = output,
                                 State = walletTransaction.State,
-                                Total = Transaction.Amount(output, scan),
+                                Total = total,
                                 TxnId = walletTransaction.Transaction.TxnId
                             });
                         }
@@ -258,6 +260,7 @@ namespace BAMWallet.HD
                         {
                             var message = Transaction.Message(output, scan);
                             if (message == null) continue;
+                            if (message.Amount == 0) continue;
                             balances.Add(new Balance
                             {
                                 DateTime = walletTransaction.DateTime,
