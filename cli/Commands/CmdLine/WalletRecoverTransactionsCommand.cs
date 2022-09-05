@@ -34,7 +34,7 @@ namespace Cli.Commands.CmdLine
             if (yesno)
             {
                 var start = 0;
-                
+
                 var ynRecoverCompletely = Prompt.GetYesNo("All existing transactions will be dropped. Recover all (y) continue (n)", false, ConsoleColor.Red);
                 if (!ynRecoverCompletely)
                 {

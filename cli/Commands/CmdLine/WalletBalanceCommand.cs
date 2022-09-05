@@ -45,7 +45,7 @@ namespace Cli.Commands.CmdLine
                         table.Configure(o => o.NumberAlignment = Alignment.Right);
                         _console.WriteLine($"\n{table}");
                         _console.WriteLine("\n");
-                        
+
                         Thread.Sleep(100);
                     }
                     return Task.CompletedTask;

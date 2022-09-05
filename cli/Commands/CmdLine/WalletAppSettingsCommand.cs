@@ -63,7 +63,7 @@ public class WalletAppSettingsCommand : Command
                 networkSettings.WalletEndpoint = walletEndpoint;
             }
         }
-        
+
         var previousNode = networkSettings.RemoteNode;
         if (!string.IsNullOrEmpty(node))
         {
@@ -113,7 +113,7 @@ public class WalletAppSettingsCommand : Command
             _console.WriteLine("New node detected. Wallet shutting down. Please restart the wallet for the new safeguard download.");
             Environment.Exit(0);
         }
-        
+
         _commandReceiver.SetNetworkSettings();
 
         Cli.Helper.Utils.SetConsoleTitle(networkSettings.Environment);

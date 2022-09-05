@@ -536,7 +536,7 @@ namespace BAMWallet.HD
             {
                 return null;
             }
-            begin:
+        begin:
             transactions.Shuffle();
             for (var k = 0; k < nRows - 1; ++k)
                 for (var i = 0; i < nCols; ++i)
@@ -1765,7 +1765,7 @@ namespace BAMWallet.HD
             Guard.Argument(token, nameof(token)).NotNull().NotEmpty().MaxCount(16);
             using var commandExecutionGuard =
                 new RAIIGuard(IncrementCommandExecutionCount, DecrementCommandExecutionCount);
-            
+
             var packet = Cryptography.Crypto.EncryptChaCha20Poly1305(
                 MessagePack.MessagePackSerializer.Serialize(stakeCredentialsRequest),
                 privateKey, token, out var tag, out var nonce);
@@ -1868,7 +1868,7 @@ namespace BAMWallet.HD
                     return new Tuple<object, string>(null, $"Please remove then restore the wallet! The ({_networkSettings.RemoteNode}) node block height: [{height}] " +
                                                            $"is smaller than the wallet start block height: [{start}]");
                 }
-                
+
                 const int maxBlocks = 10;
                 var chunks = Enumerable.Repeat(maxBlocks, height / maxBlocks).ToList();
                 if (height % maxBlocks != 0) chunks.Add(height % maxBlocks);
@@ -1884,7 +1884,7 @@ namespace BAMWallet.HD
                             ? new Tuple<object, string>(true, null)
                             : new Tuple<object, string>(null, "Node might be busy. Please try again later");
                     }
-                    
+
                     foreach (var block in blocksResponse.Blocks)
                     {
                         foreach (var transaction in block.Txs)
@@ -1917,7 +1917,7 @@ namespace BAMWallet.HD
                                     transaction.TxnId.ByteToHex());
                             }
                         }
-                        
+
                         start++;
                     }
 

@@ -135,9 +135,9 @@ public class WalletStakeCommand : Command
                         if (!messageResponse.Value.Success)
                         {
                             spinner.Fail(messageResponse.Value.Message);
-                            return Task.CompletedTask;;
+                            return Task.CompletedTask; ;
                         }
-                        
+
                         _console.WriteLine();
 
                         Thread.Sleep(100);
@@ -159,7 +159,7 @@ public class WalletStakeCommand : Command
                         _console.ResetColor();
                     }
 
-                    return Task.CompletedTask;;
+                    return Task.CompletedTask; ;
                 }, Patterns.Hearts);
 
 
@@ -173,7 +173,7 @@ public class WalletStakeCommand : Command
                     return;
                 }
             }
-            
+
             Balance[] balances = null;
             await Spinner.StartAsync("Checking confirmed balance(s) ...", spinner =>
             {
