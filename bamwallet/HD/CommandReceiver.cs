@@ -1722,7 +1722,7 @@ namespace BAMWallet.HD
             var packet = Cryptography.Crypto.EncryptChaCha20Poly1305(
                 MessagePack.MessagePackSerializer.Serialize(stakeCredentials),
                 privateKey, token, out var tag, out var nonce);
-            if (packet is null)
+            if (packet.Length == 0)
                 return Task.FromResult(new MessageResponse<StakeCredentialsResponse>(
                     new StakeCredentialsResponse { Success = false, Message = "Failed to encrypt message." }));
             var stakeRequest = new StakeRequest { Tag = tag, Nonce = nonce, Data = packet, Token = token };
@@ -1730,6 +1730,41 @@ namespace BAMWallet.HD
             {
                 Value = MessagePack.MessagePackSerializer.Serialize(stakeRequest),
                 MessageCommand = MessageCommand.Stake
+            });
+            return Task.FromResult(new MessageResponse<StakeCredentialsResponse>(new StakeCredentialsResponse
+            {
+                Success = mStakeCredentialsResponse.Success,
+                Message = mStakeCredentialsResponse.Message
+            }));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="stakeCredentialsRequest"></param>
+        /// <param name="privateKey"></param>
+        /// <param name="token"></param>
+        /// <returns></returns>
+        public Task<MessageResponse<StakeCredentialsResponse>> StakeEnabledCredentials(
+            in StakeCredentialsRequest stakeCredentialsRequest, in byte[] privateKey, in byte[] token)
+        {
+            Guard.Argument(stakeCredentialsRequest, nameof(stakeCredentialsRequest)).NotNull();
+            Guard.Argument(privateKey, nameof(privateKey)).NotNull().NotEmpty().MaxCount(32);
+            Guard.Argument(token, nameof(token)).NotNull().NotEmpty().MaxCount(16);
+            using var commandExecutionGuard =
+                new RAIIGuard(IncrementCommandExecutionCount, DecrementCommandExecutionCount);
+            
+            var packet = Cryptography.Crypto.EncryptChaCha20Poly1305(
+                MessagePack.MessagePackSerializer.Serialize(stakeCredentialsRequest),
+                privateKey, token, out var tag, out var nonce);
+            if (packet.Length == 0)
+                return Task.FromResult(new MessageResponse<StakeCredentialsResponse>(
+                    new StakeCredentialsResponse { Success = false, Message = "Failed to encrypt message." }));
+            var stakeRequest = new StakeRequest { Tag = tag, Nonce = nonce, Data = packet, Token = token };
+            var mStakeCredentialsResponse = _client.Send<StakeCredentialsResponse>(new Parameter
+            {
+                Value = MessagePack.MessagePackSerializer.Serialize(stakeRequest),
+                MessageCommand = MessageCommand.StakeEnabled
             });
             return Task.FromResult(new MessageResponse<StakeCredentialsResponse>(new StakeCredentialsResponse
             {

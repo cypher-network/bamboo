@@ -120,6 +120,60 @@ public class WalletStakeCommand : Command
         var token = Prompt.GetPasswordAsSecureString("Node Token:", ConsoleColor.Red);
         if (seed.Length != 0 && secret.Length != 0 && token.Length != 0)
         {
+            var stakingEnabled = false;
+            await Spinner.StartAsync($"Checking staking is enabled ... {_commandReceiver.NetworkSettings().RemoteNode} ...",
+                async spinner =>
+                {
+                    try
+                    {
+                        var stakeCredentialsRequest = new StakeCredentialsRequest
+                        {
+                            Seed = seed.ToArray()
+                        };
+                        var messageResponse = await _commandReceiver.StakeEnabledCredentials(stakeCredentialsRequest,
+                            secret.FromSecureString().HexToByte(), token.FromSecureString().HexToByte());
+                        if (!messageResponse.Value.Success)
+                        {
+                            spinner.Fail(messageResponse.Value.Message);
+                            return Task.CompletedTask;;
+                        }
+                        
+                        _console.WriteLine();
+
+                        Thread.Sleep(100);
+
+                        if (messageResponse.Value.Message == "Staking enabled")
+                        {
+                            stakingEnabled = true;
+                            spinner.Succeed(messageResponse.Value.Message);
+                        }
+                        else
+                        {
+                            spinner.Info(messageResponse.Value.Message);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _console.ForegroundColor = ConsoleColor.Red;
+                        _console.WriteLine($"{ex.Message}");
+                        _console.ResetColor();
+                    }
+
+                    return Task.CompletedTask;;
+                }, Patterns.Hearts);
+
+
+            if (stakingEnabled)
+            {
+                var yesNoStakeEnabled =
+                    Prompt.GetYesNo($"Staking is enabled. To exit staking setup (y) or continue (n)", true,
+                        ConsoleColor.Yellow);
+                if (yesNoStakeEnabled)
+                {
+                    return;
+                }
+            }
+            
             Balance[] balances = null;
             await Spinner.StartAsync("Checking confirmed balance(s) ...", spinner =>
             {
