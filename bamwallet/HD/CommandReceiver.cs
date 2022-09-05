@@ -1449,6 +1449,10 @@ namespace BAMWallet.HD
                 }
 
                 var ringConfidentialTransaction = RingCT(session, amount, (ulong)change, spending);
+                if (ringConfidentialTransaction.M == null)
+                {
+                    return new Tuple<object, string>(null, "Unable to generate the transaction");
+                }
                 var newWalletTransaction = new WalletTransaction
                 {
                     Balance = amount,
@@ -1533,6 +1537,7 @@ namespace BAMWallet.HD
             var blindSum = new byte[32];
             var pkIn = new Span<byte[]>(new byte[nCols * 1][]);
             m = RingMembers(session, commitment, blinds, sk, nRows, nCols, index, m, pcmIn, pkIn);
+            if (m == null) return default;
             blinds[1] = pedersen.BlindSwitch(payment, secp256K1.CreatePrivateKey());
             blinds[2] = pedersen.BlindSwitch(change, secp256K1.CreatePrivateKey());
             pcmOut[0] = pedersen.Commit(payment, blinds[1]);
