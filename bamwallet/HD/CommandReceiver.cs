@@ -532,7 +532,11 @@ namespace BAMWallet.HD
             using var pedersen = new Pedersen();
             var (spend, scan) = Unlock(session);
             var transactions = SafeguardService.GetTransactions().ToArray();
-        begin:
+            if (transactions.Length == 0)
+            {
+                return null;
+            }
+            begin:
             transactions.Shuffle();
             for (var k = 0; k < nRows - 1; ++k)
                 for (var i = 0; i < nCols; ++i)
@@ -1802,8 +1806,9 @@ namespace BAMWallet.HD
         public ulong GetLastTransactionHeight(in Session session)
         {
             ulong start = 0;
-            var walletTransactions = session.Database.Query<WalletTransaction>().OrderBy(x => x.DateTime).ToList();
-            if (walletTransactions.Count != 0)
+            var walletTransactions = session.Database.Query<WalletTransaction>().OrderBy(x => x.DateTime)
+                .Where(x => x.State != WalletTransactionState.NotFound).ToArray();
+            if (walletTransactions.Length != 0)
             {
                 start = walletTransactions.Last().BlockHeight;
             }
@@ -1816,7 +1821,7 @@ namespace BAMWallet.HD
         /// </summary>
         /// <param name="session"></param>
         /// <param name="start"></param>
-        /// <param name="settingsCompletely"></param>
+        /// <param name="recoverCompletely"></param>
         /// <returns></returns>
         public Tuple<object, string> RecoverTransactions(in Session session, int start, bool recoverCompletely = false)
         {
@@ -1851,7 +1856,11 @@ namespace BAMWallet.HD
 
                 _client.HasRemoteAddress();
                 var blockCountResponse = _client.Send<BlockCountResponse>(new Parameter { MessageCommand = MessageCommand.GetBlockCount });
-                if (blockCountResponse.Count == 0) return new Tuple<object, string>(null, "Error recovering block count.");
+                if (blockCountResponse?.Count is null)
+                {
+                    return new Tuple<object, string>(null, "Node might be busy. Please try again later");
+                }
+                if (blockCountResponse.Count == 0) return new Tuple<object, string>(null, "Error recovering block count");
                 var height = (int)blockCountResponse.Count;
 
                 if (start > height)
@@ -1868,55 +1877,58 @@ namespace BAMWallet.HD
                     var blocksResponse = _client.Send<BlocksResponse>(
                         new Parameter { Value = start.ToByte(), MessageCommand = MessageCommand.GetBlocks },
                         new Parameter { Value = chunk.ToByte(), MessageCommand = MessageCommand.GetBlocks });
-                    if (blocksResponse.Blocks is { })
-                    {
-                        foreach (var block in blocksResponse.Blocks)
-                        {
-                            foreach (var transaction in block.Txs)
-                            {
-                                var (spend, scan) = Unlock(session);
-                                var outputs = new List<Vout>();
-                                foreach (var v in transaction.Vout)
-                                {
-                                    Key uncover = spend.Uncover(scan, new PubKey(v.E));
-                                    if (uncover.PubKey.ToBytes().Xor(v.P)) outputs.Add(v);
-                                }
 
-                                if (outputs.Any() != true) continue;
-                                if (AlreadyReceivedPayment(transaction.TxnId.ByteToHex(), session)) continue;
-                                var tx = new WalletTransaction
-                                {
-                                    Id = session.SessionId,
-                                    BlockHeight = block.Height,
-                                    SenderAddress = session.KeySet.StealthAddress,
-                                    DateTime = DateTime.UtcNow,
-                                    Transaction = transaction with { Id = session.SessionId, Vout = outputs.ToArray() },
-                                    WalletType = WalletType.Restore,
-                                    Delay = 5,
-                                    State = WalletTransactionState.Confirmed
-                                };
-                                var saved = Save(session, tx);
-                                if (!saved.Success)
-                                {
-                                    _logger.Here().Error("Unable to save transaction: {@Transaction}",
-                                        transaction.TxnId.ByteToHex());
-                                }
+                    if (blocksResponse?.Blocks is null)
+                    {
+                        return start == height
+                            ? new Tuple<object, string>(true, null)
+                            : new Tuple<object, string>(null, "Node might be busy. Please try again later");
+                    }
+                    
+                    foreach (var block in blocksResponse.Blocks)
+                    {
+                        foreach (var transaction in block.Txs)
+                        {
+                            var (spend, scan) = Unlock(session);
+                            var outputs = new List<Vout>();
+                            foreach (var v in transaction.Vout)
+                            {
+                                Key uncover = spend.Uncover(scan, new PubKey(v.E));
+                                if (uncover.PubKey.ToBytes().Xor(v.P)) outputs.Add(v);
+                            }
+
+                            if (outputs.Any() != true) continue;
+                            if (AlreadyReceivedPayment(transaction.TxnId.ByteToHex(), session)) continue;
+                            var tx = new WalletTransaction
+                            {
+                                Id = session.SessionId,
+                                BlockHeight = block.Height,
+                                SenderAddress = session.KeySet.StealthAddress,
+                                DateTime = DateTime.UtcNow,
+                                Transaction = transaction with { Id = session.SessionId, Vout = outputs.ToArray() },
+                                WalletType = WalletType.Restore,
+                                Delay = 5,
+                                State = WalletTransactionState.Confirmed
+                            };
+                            var saved = Save(session, tx);
+                            if (!saved.Success)
+                            {
+                                _logger.Here().Error("Unable to save transaction: {@Transaction}",
+                                    transaction.TxnId.ByteToHex());
                             }
                         }
-                    }
-                    else
-                    {
-                        break;
+                        
+                        start++;
                     }
 
-                    start += chunk;
+                    //start += chunk;
                 }
 
                 return new Tuple<object, string>(true, null);
             }
             catch (Exception ex)
             {
-                _logger.Here().Error(ex, "Error recovering transactions.");
+                _logger.Here().Error(ex, "Error recovering transactions");
                 return new Tuple<object, string>(null, $"Error recovering transactions: {ex.Message}");
             }
         }
