@@ -7,6 +7,7 @@
 // work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using BAMWallet.HD;
 using Kurukuru;
@@ -44,6 +45,8 @@ namespace Cli.Commands.CmdLine
                         table.Configure(o => o.NumberAlignment = Alignment.Right);
                         _console.WriteLine($"\n{table}");
                         _console.WriteLine("\n");
+                        
+                        Thread.Sleep(100);
                     }
                     return Task.CompletedTask;
                 });

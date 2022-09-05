@@ -360,16 +360,13 @@ namespace Cli.Commands.Common
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            Task.Run(async () => { await InteractiveCliLoop(); });
+            Task.Run(async () => { await InteractiveCliLoop(); }, cancellationToken);
             return Task.CompletedTask;
         }
 
         public async Task StopAsync(CancellationToken cancellationToken)
         {
-            await Task.Run(() =>
-            {
-                StopCommandProcessing();
-            });
+            await Task.Run(StopCommandProcessing, cancellationToken);
         }
     }
 }

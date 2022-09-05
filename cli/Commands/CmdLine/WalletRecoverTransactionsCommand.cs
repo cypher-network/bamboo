@@ -30,11 +30,12 @@ namespace Cli.Commands.CmdLine
                                         "Please be specific when entering the block height where you know when the first transaction was received.\n" +
                                         "If you don't know the specific block height then please ask for instructions in general: https://discord.gg/6DT3yFhXCB \n" +
                                         "Backup your wallet before starting or if restoring to a clean wallet then no backup is required.\n" +
-                                        "To continue, enter y or N to exit.", false, ConsoleColor.Yellow);
+                                        "To continue, enter (y) or (n) to exit.", false, ConsoleColor.Yellow);
             if (yesno)
             {
                 var start = 0;
-                var ynRecoverCompletely = Prompt.GetYesNo("All existing transactions will be dropped. Do you want to recover from the beginning?", false, ConsoleColor.Red);
+                
+                var ynRecoverCompletely = Prompt.GetYesNo("All existing transactions will be dropped. Recover all (y) continue (n)", false, ConsoleColor.Red);
                 if (!ynRecoverCompletely)
                 {
                     start = Prompt.GetInt("Recover from specific blockchain height or leave it blank to recover from your last transaction height:", 0, ConsoleColor.Magenta);

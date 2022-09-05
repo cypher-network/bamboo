@@ -105,7 +105,7 @@ namespace Cli.Commands.CmdLine
                         catch (Exception ex)
                         {
                             activeSession.SessionId = Guid.NewGuid();
-                            _logger.LogError($"Message: {ex.Message}\nStack Trace:{ex.StackTrace}");
+                            _logger.LogError("{@Message}/n{@Trace}", ex.Message, ex.StackTrace);
                             throw;
                         }
 

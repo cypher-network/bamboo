@@ -188,7 +188,7 @@ namespace BAMWallet.HD
             {
                 var balances = GetBalances(session);
                 if ((long)walletTransaction.Payment < 0)
-                    return TaskResult<bool>.CreateFailure(new Exception("Unable to use zero value payment amount."));
+                    return TaskResult<bool>.CreateFailure(new Exception("Unable to use zero value payment amount"));
                 var payment = (long)walletTransaction.Payment;
                 var totals = new List<Balance>();
                 foreach (var balance in balances.Where(balance => !balance.Commitment.IsLockedOrInvalid())
@@ -201,11 +201,11 @@ namespace BAMWallet.HD
 
                 if (!totals.Any())
                     return TaskResult<bool>.CreateFailure(
-                        new Exception("No free commitments available. Please retry after commitments unlock."));
+                        new Exception("No free commitments available. Please retry after commitments unlock"));
                 var total = totals.Sum(x => x.Total.DivWithGYin());
                 if (walletTransaction.Payment > total.ConvertToUInt64())
                     return TaskResult<bool>.CreateFailure(
-                        new Exception("The payment exceeds the total commitment balance."));
+                        new Exception("The payment exceeds the total commitment balance"));
                 walletTransaction.DateTime = DateTime.UtcNow;
                 walletTransaction.Id = session.SessionId;
                 walletTransaction.Spending = totals.Select(x => x.Commitment).ToArray();
@@ -215,7 +215,7 @@ namespace BAMWallet.HD
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "Error calculating change.");
+                _logger.Error(ex, "Error calculating change");
                 return TaskResult<bool>.CreateFailure(ex);
             }
 
@@ -272,7 +272,7 @@ namespace BAMWallet.HD
             }
             catch (Exception ex)
             {
-                _logger.Here().Error(ex, "Error adding balances.");
+                _logger.Here().Error(ex, "Error adding balances");
             }
 
             return balances.ToArray();
@@ -1415,7 +1415,7 @@ namespace BAMWallet.HD
             using var commandExecutionGuard = new RAIIGuard(IncrementCommandExecutionCount,
                 DecrementCommandExecutionCount);
             Guard.Argument(session.SessionId, nameof(session.SessionId)).NotDefault();
-            while (_safeguardDownloadingFlagProvider.TryDownloading)
+            while (_safeguardDownloadingFlagProvider.Downloading)
             {
                 Thread.Sleep(100);
             }
@@ -1835,7 +1835,7 @@ namespace BAMWallet.HD
                         if (!dropped)
                         {
                             var message = $"Unable to drop collection for {nameof(WalletTransaction)}";
-                            _logger.Here().Error(message);
+                            _logger.Here().Error("{@Message}", message);
                             return new Tuple<object, string>(false, message);
                         }
                     }
@@ -1851,7 +1851,7 @@ namespace BAMWallet.HD
                     return new Tuple<object, string>(null, $"Please remove then restore the wallet! The ({_networkSettings.RemoteNode}) node block height: [{height}] " +
                                                            $"is smaller than the wallet start block height: [{start}]");
                 }
-
+                
                 const int maxBlocks = 10;
                 var chunks = Enumerable.Repeat(maxBlocks, height / maxBlocks).ToList();
                 if (height % maxBlocks != 0) chunks.Add(height % maxBlocks);
