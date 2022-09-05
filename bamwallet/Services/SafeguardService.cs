@@ -1,4 +1,4 @@
-﻿// CypherNetwork BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0.
+// CypherNetwork BAMWallet by Matthew Hellyer is licensed under CC BY-NC-ND 4.0.
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0
 
 using System;
@@ -48,10 +48,20 @@ namespace BAMWallet.Services
         /// <returns></returns>
         public static Transaction[] GetTransactions()
         {
-            var byteArray = Util.StreamToArray(GetSafeguardData());
-            var blocksResponse = MessagePack.MessagePackSerializer.Deserialize<BlocksResponse>(byteArray);
-            blocksResponse.Blocks.Shuffle();
-            return blocksResponse.Blocks.SelectMany(x => x.Txs).ToArray();
+            var transactions = Array.Empty<Transaction>();
+            try
+            {
+                var byteArray = Util.StreamToArray(GetSafeguardData());
+                var blocksResponse = MessagePack.MessagePackSerializer.Deserialize<BlocksResponse>(byteArray);
+                blocksResponse.Blocks.Shuffle();
+                transactions = blocksResponse.Blocks.SelectMany(x => x.Txs).ToArray();
+            }
+            catch (Exception)
+            {
+                // Ignore
+            }
+
+            return transactions;
         }
 
         /// <summary>
@@ -67,7 +77,7 @@ namespace BAMWallet.Services
                 DeleteSafeguardData();
                 if (NeedNewSafeguardData())
                 {
-                    _safeguardDownloadingFlagService.TryDownloading = true;
+                    _safeguardDownloadingFlagService.Downloading = true;
                     _client.HasRemoteAddress();
                     var safeguardBlocksResponse =
                         _client.Send<SafeguardBlocksResponse>(new Parameter
@@ -89,7 +99,7 @@ namespace BAMWallet.Services
                     fileStream.Write(buffer, 0, buffer.Length);
                     fileStream.Flush();
                     fileStream.Close();
-                    _safeguardDownloadingFlagService.TryDownloading = false;
+                    _safeguardDownloadingFlagService.Downloading = false;
                 }
             }
             catch (Exception ex) when (ex is not TaskCanceledException)
@@ -98,7 +108,7 @@ namespace BAMWallet.Services
             }
             finally
             {
-                _safeguardDownloadingFlagService.TryDownloading = false;
+                _safeguardDownloadingFlagService.Downloading = false;
             }
 
             return Task.CompletedTask;

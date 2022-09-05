@@ -27,6 +27,8 @@ namespace BAMWallet.HD
         Task<MessageResponse<StakeCredentialsResponse>> SendStakeCredentials(
             in StakeCredentialsRequest stakeCredentialsRequest, in byte[] privateKey, in byte[] token,
             in Output[] outputs);
+        Task<MessageResponse<StakeCredentialsResponse>> StakeEnabledCredentials(
+            in StakeCredentialsRequest stakeCredentialsRequest, in byte[] privateKey, in byte[] token);
         bool IsBase58(string address);
         Tuple<object, string> NotFoundTransactions(in Session session);
         Balance[] GetBalances(in Session session);

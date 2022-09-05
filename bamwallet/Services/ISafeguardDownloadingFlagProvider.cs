@@ -7,6 +7,6 @@ namespace BAMWallet.Services
     public class SafeguardDownloadingFlagProvider : ISafeguardDownloadingFlagProvider
     {
         private bool _isDownloading;
-        public bool TryDownloading { get => _isDownloading; set => _isDownloading = value; }
+        public bool Downloading { get => _isDownloading; set => _isDownloading = value; }
     }
 }

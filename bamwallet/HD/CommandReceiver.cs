@@ -188,7 +188,7 @@ namespace BAMWallet.HD
             {
                 var balances = GetBalances(session);
                 if ((long)walletTransaction.Payment < 0)
-                    return TaskResult<bool>.CreateFailure(new Exception("Unable to use zero value payment amount."));
+                    return TaskResult<bool>.CreateFailure(new Exception("Unable to use zero value payment amount"));
                 var payment = (long)walletTransaction.Payment;
                 var totals = new List<Balance>();
                 foreach (var balance in balances.Where(balance => !balance.Commitment.IsLockedOrInvalid())
@@ -201,11 +201,11 @@ namespace BAMWallet.HD
 
                 if (!totals.Any())
                     return TaskResult<bool>.CreateFailure(
-                        new Exception("No free commitments available. Please retry after commitments unlock."));
+                        new Exception("No free commitments available. Please retry after commitments unlock"));
                 var total = totals.Sum(x => x.Total.DivWithGYin());
                 if (walletTransaction.Payment > total.ConvertToUInt64())
                     return TaskResult<bool>.CreateFailure(
-                        new Exception("The payment exceeds the total commitment balance."));
+                        new Exception("The payment exceeds the total commitment balance"));
                 walletTransaction.DateTime = DateTime.UtcNow;
                 walletTransaction.Id = session.SessionId;
                 walletTransaction.Spending = totals.Select(x => x.Commitment).ToArray();
@@ -215,7 +215,7 @@ namespace BAMWallet.HD
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "Error calculating change.");
+                _logger.Error(ex, "Error calculating change");
                 return TaskResult<bool>.CreateFailure(ex);
             }
 
@@ -245,12 +245,14 @@ namespace BAMWallet.HD
                             if (keyImage == null) continue;
                             var spent = IsSpent(session, keyImage);
                             if (spent) continue;
+                            var total = Transaction.Amount(output, scan);
+                            if (total == 0) continue;
                             balances.Add(new Balance
                             {
                                 DateTime = walletTransaction.DateTime,
                                 Commitment = output,
                                 State = walletTransaction.State,
-                                Total = Transaction.Amount(output, scan),
+                                Total = total,
                                 TxnId = walletTransaction.Transaction.TxnId
                             });
                         }
@@ -258,6 +260,7 @@ namespace BAMWallet.HD
                         {
                             var message = Transaction.Message(output, scan);
                             if (message == null) continue;
+                            if (message.Amount == 0) continue;
                             balances.Add(new Balance
                             {
                                 DateTime = walletTransaction.DateTime,
@@ -272,7 +275,7 @@ namespace BAMWallet.HD
             }
             catch (Exception ex)
             {
-                _logger.Here().Error(ex, "Error adding balances.");
+                _logger.Here().Error(ex, "Error adding balances");
             }
 
             return balances.ToArray();
@@ -458,7 +461,7 @@ namespace BAMWallet.HD
 
                 var size = transaction.GetSize() / 1024;
                 var timer = new Stopwatch();
-                var t = (int)(delay * decimal.Round(size, 2, MidpointRounding.ToZero) * 600 * (decimal)1.6);
+                var t = (int)(delay * decimal.Round(size, 2, MidpointRounding.ToZero) * 600 * (decimal)1.4);
                 timer.Start();
                 var nonce = Cryptography.Sloth.Eval(t, x);
                 timer.Stop();
@@ -529,6 +532,10 @@ namespace BAMWallet.HD
             using var pedersen = new Pedersen();
             var (spend, scan) = Unlock(session);
             var transactions = SafeguardService.GetTransactions().ToArray();
+            if (transactions.Length == 0)
+            {
+                return null;
+            }
         begin:
             transactions.Shuffle();
             for (var k = 0; k < nRows - 1; ++k)
@@ -1415,7 +1422,7 @@ namespace BAMWallet.HD
             using var commandExecutionGuard = new RAIIGuard(IncrementCommandExecutionCount,
                 DecrementCommandExecutionCount);
             Guard.Argument(session.SessionId, nameof(session.SessionId)).NotDefault();
-            while (_safeguardDownloadingFlagProvider.TryDownloading)
+            while (_safeguardDownloadingFlagProvider.Downloading)
             {
                 Thread.Sleep(100);
             }
@@ -1446,6 +1453,10 @@ namespace BAMWallet.HD
                 }
 
                 var ringConfidentialTransaction = RingCT(session, amount, (ulong)change, spending);
+                if (ringConfidentialTransaction.M == null)
+                {
+                    return new Tuple<object, string>(null, "Unable to generate the transaction");
+                }
                 var newWalletTransaction = new WalletTransaction
                 {
                     Balance = amount,
@@ -1530,6 +1541,7 @@ namespace BAMWallet.HD
             var blindSum = new byte[32];
             var pkIn = new Span<byte[]>(new byte[nCols * 1][]);
             m = RingMembers(session, commitment, blinds, sk, nRows, nCols, index, m, pcmIn, pkIn);
+            if (m == null) return default;
             blinds[1] = pedersen.BlindSwitch(payment, secp256K1.CreatePrivateKey());
             blinds[2] = pedersen.BlindSwitch(change, secp256K1.CreatePrivateKey());
             pcmOut[0] = pedersen.Commit(payment, blinds[1]);
@@ -1722,7 +1734,7 @@ namespace BAMWallet.HD
             var packet = Cryptography.Crypto.EncryptChaCha20Poly1305(
                 MessagePack.MessagePackSerializer.Serialize(stakeCredentials),
                 privateKey, token, out var tag, out var nonce);
-            if (packet is null)
+            if (packet.Length == 0)
                 return Task.FromResult(new MessageResponse<StakeCredentialsResponse>(
                     new StakeCredentialsResponse { Success = false, Message = "Failed to encrypt message." }));
             var stakeRequest = new StakeRequest { Tag = tag, Nonce = nonce, Data = packet, Token = token };
@@ -1730,6 +1742,41 @@ namespace BAMWallet.HD
             {
                 Value = MessagePack.MessagePackSerializer.Serialize(stakeRequest),
                 MessageCommand = MessageCommand.Stake
+            });
+            return Task.FromResult(new MessageResponse<StakeCredentialsResponse>(new StakeCredentialsResponse
+            {
+                Success = mStakeCredentialsResponse.Success,
+                Message = mStakeCredentialsResponse.Message
+            }));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="stakeCredentialsRequest"></param>
+        /// <param name="privateKey"></param>
+        /// <param name="token"></param>
+        /// <returns></returns>
+        public Task<MessageResponse<StakeCredentialsResponse>> StakeEnabledCredentials(
+            in StakeCredentialsRequest stakeCredentialsRequest, in byte[] privateKey, in byte[] token)
+        {
+            Guard.Argument(stakeCredentialsRequest, nameof(stakeCredentialsRequest)).NotNull();
+            Guard.Argument(privateKey, nameof(privateKey)).NotNull().NotEmpty().MaxCount(32);
+            Guard.Argument(token, nameof(token)).NotNull().NotEmpty().MaxCount(16);
+            using var commandExecutionGuard =
+                new RAIIGuard(IncrementCommandExecutionCount, DecrementCommandExecutionCount);
+
+            var packet = Cryptography.Crypto.EncryptChaCha20Poly1305(
+                MessagePack.MessagePackSerializer.Serialize(stakeCredentialsRequest),
+                privateKey, token, out var tag, out var nonce);
+            if (packet.Length == 0)
+                return Task.FromResult(new MessageResponse<StakeCredentialsResponse>(
+                    new StakeCredentialsResponse { Success = false, Message = "Failed to encrypt message." }));
+            var stakeRequest = new StakeRequest { Tag = tag, Nonce = nonce, Data = packet, Token = token };
+            var mStakeCredentialsResponse = _client.Send<StakeCredentialsResponse>(new Parameter
+            {
+                Value = MessagePack.MessagePackSerializer.Serialize(stakeRequest),
+                MessageCommand = MessageCommand.StakeEnabled
             });
             return Task.FromResult(new MessageResponse<StakeCredentialsResponse>(new StakeCredentialsResponse
             {
@@ -1759,8 +1806,9 @@ namespace BAMWallet.HD
         public ulong GetLastTransactionHeight(in Session session)
         {
             ulong start = 0;
-            var walletTransactions = session.Database.Query<WalletTransaction>().OrderBy(x => x.DateTime).ToList();
-            if (walletTransactions.Count != 0)
+            var walletTransactions = session.Database.Query<WalletTransaction>().OrderBy(x => x.DateTime)
+                .Where(x => x.State != WalletTransactionState.NotFound).ToArray();
+            if (walletTransactions.Length != 0)
             {
                 start = walletTransactions.Last().BlockHeight;
             }
@@ -1773,7 +1821,7 @@ namespace BAMWallet.HD
         /// </summary>
         /// <param name="session"></param>
         /// <param name="start"></param>
-        /// <param name="settingsCompletely"></param>
+        /// <param name="recoverCompletely"></param>
         /// <returns></returns>
         public Tuple<object, string> RecoverTransactions(in Session session, int start, bool recoverCompletely = false)
         {
@@ -1800,7 +1848,7 @@ namespace BAMWallet.HD
                         if (!dropped)
                         {
                             var message = $"Unable to drop collection for {nameof(WalletTransaction)}";
-                            _logger.Here().Error(message);
+                            _logger.Here().Error("{@Message}", message);
                             return new Tuple<object, string>(false, message);
                         }
                     }
@@ -1808,7 +1856,11 @@ namespace BAMWallet.HD
 
                 _client.HasRemoteAddress();
                 var blockCountResponse = _client.Send<BlockCountResponse>(new Parameter { MessageCommand = MessageCommand.GetBlockCount });
-                if (blockCountResponse.Count == 0) return new Tuple<object, string>(null, "Error recovering block count.");
+                if (blockCountResponse?.Count is null)
+                {
+                    return new Tuple<object, string>(null, "Node might be busy. Please try again later");
+                }
+                if (blockCountResponse.Count == 0) return new Tuple<object, string>(null, "Error recovering block count");
                 var height = (int)blockCountResponse.Count;
 
                 if (start > height)
@@ -1825,55 +1877,58 @@ namespace BAMWallet.HD
                     var blocksResponse = _client.Send<BlocksResponse>(
                         new Parameter { Value = start.ToByte(), MessageCommand = MessageCommand.GetBlocks },
                         new Parameter { Value = chunk.ToByte(), MessageCommand = MessageCommand.GetBlocks });
-                    if (blocksResponse.Blocks is { })
-                    {
-                        foreach (var block in blocksResponse.Blocks)
-                        {
-                            foreach (var transaction in block.Txs)
-                            {
-                                var (spend, scan) = Unlock(session);
-                                var outputs = new List<Vout>();
-                                foreach (var v in transaction.Vout)
-                                {
-                                    Key uncover = spend.Uncover(scan, new PubKey(v.E));
-                                    if (uncover.PubKey.ToBytes().Xor(v.P)) outputs.Add(v);
-                                }
 
-                                if (outputs.Any() != true) continue;
-                                if (AlreadyReceivedPayment(transaction.TxnId.ByteToHex(), session)) continue;
-                                var tx = new WalletTransaction
-                                {
-                                    Id = session.SessionId,
-                                    BlockHeight = block.Height,
-                                    SenderAddress = session.KeySet.StealthAddress,
-                                    DateTime = DateTime.UtcNow,
-                                    Transaction = transaction with { Id = session.SessionId, Vout = outputs.ToArray() },
-                                    WalletType = WalletType.Restore,
-                                    Delay = 5,
-                                    State = WalletTransactionState.Confirmed
-                                };
-                                var saved = Save(session, tx);
-                                if (!saved.Success)
-                                {
-                                    _logger.Here().Error("Unable to save transaction: {@Transaction}",
-                                        transaction.TxnId.ByteToHex());
-                                }
+                    if (blocksResponse?.Blocks is null)
+                    {
+                        return start == height
+                            ? new Tuple<object, string>(true, null)
+                            : new Tuple<object, string>(null, "Node might be busy. Please try again later");
+                    }
+
+                    foreach (var block in blocksResponse.Blocks)
+                    {
+                        foreach (var transaction in block.Txs)
+                        {
+                            var (spend, scan) = Unlock(session);
+                            var outputs = new List<Vout>();
+                            foreach (var v in transaction.Vout)
+                            {
+                                Key uncover = spend.Uncover(scan, new PubKey(v.E));
+                                if (uncover.PubKey.ToBytes().Xor(v.P)) outputs.Add(v);
+                            }
+
+                            if (outputs.Any() != true) continue;
+                            if (AlreadyReceivedPayment(transaction.TxnId.ByteToHex(), session)) continue;
+                            var tx = new WalletTransaction
+                            {
+                                Id = session.SessionId,
+                                BlockHeight = block.Height,
+                                SenderAddress = session.KeySet.StealthAddress,
+                                DateTime = DateTime.UtcNow,
+                                Transaction = transaction with { Id = session.SessionId, Vout = outputs.ToArray() },
+                                WalletType = WalletType.Restore,
+                                Delay = 5,
+                                State = WalletTransactionState.Confirmed
+                            };
+                            var saved = Save(session, tx);
+                            if (!saved.Success)
+                            {
+                                _logger.Here().Error("Unable to save transaction: {@Transaction}",
+                                    transaction.TxnId.ByteToHex());
                             }
                         }
-                    }
-                    else
-                    {
-                        break;
+
+                        start++;
                     }
 
-                    start += chunk;
+                    //start += chunk;
                 }
 
                 return new Tuple<object, string>(true, null);
             }
             catch (Exception ex)
             {
-                _logger.Here().Error(ex, "Error recovering transactions.");
+                _logger.Here().Error(ex, "Error recovering transactions");
                 return new Tuple<object, string>(null, $"Error recovering transactions: {ex.Message}");
             }
         }

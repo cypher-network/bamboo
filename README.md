@@ -4,17 +4,18 @@
 [![GitHub release](https://img.shields.io/github/release/cypher-network/bamboo.svg)](https://GitHub.com/cypher-network/bamboo/releases/)
 
 
-| OS             | Version      | Architecture | Supported           |
-|----------------|--------------|--------------|---------------------|
-| Ubuntu         | 21.10,22.04  | x64          | :heavy_check_mark:  |
-| CentOS Stream  | 8,9          | x64          | :heavy_check_mark:  |
-| Windows        | 10,11        | x64          | :heavy_check_mark:  |
-| macOS          | 11,12        | x64          | :heavy_check_mark:  |
-| Raspberry Pi 4 | 10 (buster)  | x64          | :heavy_check_mark:  |
+| OS             | Version      | Architecture | Supported          |
+|----------------|--------------|--------------|--------------------|
+| Ubuntu         | 21.10,22.04  | x64          | :heavy_check_mark: |
+| CentOS Stream  | 8,9          | x64          | :heavy_check_mark: |
+| Windows        | 10,11        | x64          | :heavy_check_mark: |
+| macOS          | 11,12        | x64          | :heavy_check_mark: |
+| Raspberry Pi 4 | 10 (buster)  | x64          | ? (workaround)     |
 
 > Some unknown operating systems are still being tested. 
 > If you are technical or would like to get your hands dirty, please go ahead and install the wallet. It won't bite :yum:
 
+>Raspberry Pi 4 needs an update, patch released soon™
 
 ## Installation
 ### .Net 6

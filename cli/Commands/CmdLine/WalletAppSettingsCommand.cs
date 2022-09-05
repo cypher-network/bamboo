@@ -64,6 +64,7 @@ public class WalletAppSettingsCommand : Command
             }
         }
 
+        var previousNode = networkSettings.RemoteNode;
         if (!string.IsNullOrEmpty(node))
         {
             if (networkSettings.RemoteNode != node)
@@ -105,6 +106,12 @@ public class WalletAppSettingsCommand : Command
         {
             liteDatabase.Update(networkSettings);
             _console.WriteLine("Network settings updated.");
+        }
+
+        if (!previousNode.Equals(networkSettings.RemoteNode))
+        {
+            _console.WriteLine("New node detected. Wallet shutting down. Please restart the wallet for the new safeguard download.");
+            Environment.Exit(0);
         }
 
         _commandReceiver.SetNetworkSettings();
