@@ -13,7 +13,6 @@ using BAMWallet.HD;
 using BAMWallet.Model;
 using Cli.Commands.Common;
 using Kurukuru;
-using LiteDB;
 using McMaster.Extensions.CommandLineUtils;
 
 namespace Cli.Commands.CmdLine
@@ -58,6 +57,13 @@ namespace Cli.Commands.CmdLine
                 await Spinner.StartAsync("Syncing wallet ...", async spinner =>
                 {
                     await _commandReceiver.SyncWallet(ActiveSession);
+                     _commandReceiver.RecoverTransactions(ActiveSession, 0);
+                });
+                
+                await Spinner.StartAsync("Scanning for new transactions ...", spinner =>
+                {
+                    _commandReceiver.RecoverTransactions(ActiveSession, 0);
+                    return Task.CompletedTask;
                 });
             }
             else

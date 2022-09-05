@@ -33,7 +33,7 @@ namespace Cli.Commands.CmdLine
 
             _console.ForegroundColor = ConsoleColor.Yellow;
             _console.WriteLine("Your wallet has been generated!\n");
-            _console.WriteLine("To start synchronizing with the network, login and the use the recover command.\n");
+            _console.WriteLine("To start synchronizing with the network, login with your wallet name and passphrase or PIN\n");
             _console.ForegroundColor = ConsoleColor.White;
             _console.ForegroundColor = ConsoleColor.Green;
             _console.WriteLine($"Wallet Name: {id}");
