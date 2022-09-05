@@ -63,7 +63,8 @@ public class WalletAppSettingsCommand : Command
                 networkSettings.WalletEndpoint = walletEndpoint;
             }
         }
-
+        
+        var previousNode = networkSettings.RemoteNode;
         if (!string.IsNullOrEmpty(node))
         {
             if (networkSettings.RemoteNode != node)
@@ -107,6 +108,12 @@ public class WalletAppSettingsCommand : Command
             _console.WriteLine("Network settings updated.");
         }
 
+        if (!previousNode.Equals(networkSettings.RemoteNode))
+        {
+            _console.WriteLine("New node detected. Wallet shutting down. Please restart the wallet for the new safeguard download.");
+            Environment.Exit(0);
+        }
+        
         _commandReceiver.SetNetworkSettings();
 
         Cli.Helper.Utils.SetConsoleTitle(networkSettings.Environment);
