@@ -202,7 +202,13 @@ install_dependencies() {
       else
         sudo apt-get install libatomic1
       fi
-    fi     
+    fi
+    if [ -d /usr/lib/x86_64-linux-gnu ] then
+    # Create symlinks for libdl.so if they're not where we expect them
+        if [ ! -e /usr/lib/x86_64-linux-gnu/libdl.so ]; then
+            sudo ln -s /usr/lib/x86_64-linux-gnu/libdl.so.2 /usr/lib/x86_64-linux-gnu/libdl.so
+        fi
+    fi
   fi
   
   if cat /etc/*release | grep ^NAME | grep CentOS; then
@@ -229,6 +235,12 @@ install_dependencies() {
       printf "  %b Installing libatomic.x86_64\n" "${INFO}"
       sudo yum update
       yum install libatomic.x86_64
+    fi
+    if [ -d /usr/lib64 ] then
+        # Create symlinks for libdl.so if they're not where we expect them
+        if [ ! -e /usr/lib64/libdl.so ]; then
+            sudo ln -s /usr/lib64/libdl.so.2 /usr/lib64/libdl.so
+        fi
     fi
   fi
 }
