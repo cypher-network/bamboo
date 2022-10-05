@@ -57,7 +57,6 @@ namespace Cli.Commands.CmdLine
                 await Spinner.StartAsync("Syncing wallet ...", async spinner =>
                 {
                     await _commandReceiver.SyncWallet(ActiveSession);
-                    _commandReceiver.RecoverTransactions(ActiveSession, 0);
                 });
 
                 await Spinner.StartAsync("Scanning for new transactions ...", spinner =>
