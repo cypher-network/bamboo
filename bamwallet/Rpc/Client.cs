@@ -130,14 +130,14 @@ namespace BAMWallet.Rpc
 
                 return new Peer
                 {
-                    Advertise = jObject["advertise"].Value<string>(),
+                    IpAddress = jObject["ipAddress"].Value<string>(),
                     BlockCount = jObject["blockHeight"].Value<ulong>(),
-                    Listening = jObject["listening"].Value<string>(),
+                    TcpPort = jObject["tcpPort"].Value<string>(),
                     Name = jObject["name"].Value<string>(),
                     Version = jObject["version"].Value<string>(),
                     ClientId = jObject["clientId"].Value<ulong>(),
                     PublicKey = jObject["publicKey"].Value<string>(),
-                    HttpEndPoint = jObject["httpEndPoint"].Value<string>()
+                    HttpPort = jObject["httpPort"].Value<string>()
                 };
             }
             catch (Exception ex)
