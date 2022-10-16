@@ -9,6 +9,7 @@
 using System;
 using System.Net;
 using System.Net.Sockets;
+using BAMWallet.Helper;
 
 namespace Cli.Helper;
 
@@ -51,5 +52,24 @@ public class Utils
     public static void SetConsoleTitle(string networkMode)
     {
         Console.Title = $"Bamboo v{BAMWallet.Helper.Util.GetAssemblyVersion()} network mode: [{networkMode}]";
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
+    public static IPAddress GetIpAddress()
+    {
+        var host1 = Dns.GetHostEntry(Dns.GetHostName());
+        foreach (var ip in host1.AddressList)
+        {
+            if (ip.AddressFamily != AddressFamily.InterNetwork) continue;
+            if (!ip.IsPrivate())
+            {
+                return ip;
+            }
+        }
+
+        return IPAddress.Loopback;
     }
 }

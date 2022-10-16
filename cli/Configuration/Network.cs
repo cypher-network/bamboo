@@ -165,20 +165,12 @@ namespace Cli.Configuration
                 });
 
             var choiceSameSystem = _userInterface.Do(section);
+            if (!choiceSameSystem.Equals(optionYes)) return choiceSameSystem.Equals(optionNo) && StepNodeIPAddress();
+            var ipAddress = Helper.Utils.GetIpAddress();
+            Configuration.WalletIPAddress = ipAddress;
+            Configuration.NodeIPAddress = ipAddress;
+            return StepNodePort();
 
-            if (choiceSameSystem.Equals(optionYes))
-            {
-                Configuration.WalletIPAddress = IPAddress.Loopback;
-                Configuration.NodeIPAddress = IPAddress.Loopback;
-                return StepNodePort();
-            }
-
-            if (choiceSameSystem.Equals(optionNo))
-            {
-                return StepNodeIPAddress();
-            }
-
-            return false;
         }
 
         private bool StepNodeIPAddress()

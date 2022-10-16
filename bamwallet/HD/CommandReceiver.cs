@@ -536,7 +536,7 @@ namespace BAMWallet.HD
             {
                 return null;
             }
-            begin:
+        begin:
             transactions.Shuffle();
             for (var k = 0; k < nRows - 1; ++k)
                 for (var i = 0; i < nCols; ++i)
