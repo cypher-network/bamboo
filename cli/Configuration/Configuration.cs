@@ -33,7 +33,6 @@ namespace Cli.Configuration
             Console.WriteLine("Wallet Http port     : " + networkConfiguration.Configuration.WalletPort);
             Console.WriteLine("Node TcpIP address   : " + networkConfiguration.Configuration.NodeIPAddress);
             Console.WriteLine("Node port            : " + networkConfiguration.Configuration.NodePort);
-            Console.WriteLine("Node Http port       : " + networkConfiguration.Configuration.NodeHttpPort);
             Console.WriteLine("Node Public Key      : " + networkConfiguration.Configuration.NodePubKey);
             Console.WriteLine();
 
@@ -46,8 +45,6 @@ namespace Cli.Configuration
                     $"{networkConfiguration.Configuration.NodeIPAddress}")
                 .Replace("<NODE_ENDPOINT_PORT>",
                     $"{networkConfiguration.Configuration.NodePort}")
-                .Replace("<NODE_HTTP_ENDPOINT_PORT>",
-                    $"{networkConfiguration.Configuration.NodeHttpPort}")
                 .Replace("<NODE_PUBKEY>", $"{networkConfiguration.Configuration.NodePubKey}");
 
             var configFileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Constant.AppSettingsFile);

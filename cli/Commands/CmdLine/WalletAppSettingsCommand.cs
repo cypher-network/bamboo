@@ -30,7 +30,6 @@ public class WalletAppSettingsCommand : Command
         _console.WriteLine($"[2] Wallet endpoint [http://0.0.0.0:8001]: {networkSettings.WalletEndpoint}");
         _console.WriteLine($"[3] Node [127.0.0.1]:                      {networkSettings.RemoteNode}");
         _console.WriteLine($"[3] Node Port [7946]:                      {networkSettings.RemotePort}");
-        _console.WriteLine($"[4] Node Http Port [48655]:                {networkSettings.RemoteNodeHttpPort}");
         _console.WriteLine($"[4] Node Public Key:                       {networkSettings.RemoteNodePubKey}");
         _console.WriteLine($"[5] Number of confirmations:               {networkSettings.NumberOfConfirmations}");
         _console.WriteLine("");
@@ -40,7 +39,6 @@ public class WalletAppSettingsCommand : Command
         var walletEndpoint = Prompt.GetString("Wallet endpoint:", null, ConsoleColor.Green);
         var node = Prompt.GetString("Node:", null, ConsoleColor.Green);
         var nodePort = Prompt.GetInt("Node Port:", 7946, ConsoleColor.Green);
-        var nodeRestPort = Prompt.GetInt("Node Http Port:", 48655, ConsoleColor.Green);
         var nodePk = Prompt.GetString("Node public key:", null, ConsoleColor.Green);
         var nrConfirmations = Prompt.GetInt("Number of confirmations:", 1, ConsoleColor.Green);
 
@@ -76,11 +74,6 @@ public class WalletAppSettingsCommand : Command
         if (networkSettings.RemotePort != nodePort)
         {
             networkSettings.RemotePort = nodePort;
-        }
-
-        if (networkSettings.RemoteNodeHttpPort != nodeRestPort)
-        {
-            networkSettings.RemoteNodeHttpPort = nodeRestPort;
         }
 
         if (!string.IsNullOrEmpty(nodePk))
