@@ -319,23 +319,7 @@ namespace Cli.Configuration
             var success = _userInterface.Do(section, out var key);
             if (!success) return false;
             Configuration.NodePubKey = key;
-            return StepNodeRestPort();
-        }
-
-        private bool StepNodeRestPort()
-        {
-            var section = new TextInput<ushort>(
-                "Enter node http port (e.g. 48655)",
-                (string portString) => ushort.TryParse(portString, out _),
-                (string portString) => ushort.Parse(portString));
-
-            var success = _userInterface.Do(section, out var port);
-            if (success)
-            {
-                Configuration.NodeHttpPort = port;
-            }
-
-            return success;
+            return true;
         }
 
         #endregion

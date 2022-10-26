@@ -158,7 +158,6 @@ namespace Cli
                 var env = configuration["NetworkSettings:Environment"];
                 var node = configuration["NetworkSettings:RemoteNode"];
                 var nodePort = configuration["NetworkSettings:RemotePort"];
-                var nodeHttp = configuration["NetworkSettings:RemoteNodeHttpPort"];
                 var nodePk = configuration["NetworkSettings:RemoteNodePubKey"];
                 var confirmations = configuration["NetworkSettings:NumberOfConfirmations"];
                 var networkSettings = new NetworkSettings
@@ -167,7 +166,6 @@ namespace Cli
                     Environment = env,
                     RemoteNode = node,
                     RemotePort = Convert.ToInt32(nodePort),
-                    RemoteNodeHttpPort = Convert.ToInt32(nodeHttp),
                     RemoteNodePubKey = nodePk,
                     WalletEndpoint = walletEndpoint
                 };

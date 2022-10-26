@@ -3,14 +3,11 @@
 
 using System;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
 using BAMWallet.Extensions;
 using BAMWallet.Helper;
 using BAMWallet.Model;
 using MessagePack;
-using Newtonsoft.Json.Linq;
 using NitraLibSodium.Box;
 using nng;
 using Serilog;
@@ -109,43 +106,6 @@ namespace BAMWallet.Rpc
             if (!string.IsNullOrEmpty(uriString)) return;
             _logger.Here().Error("Remote node address not set in config");
             throw new Exception("Address not specified");
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public async Task<Peer> GetSeedPeer()
-        {
-            try
-            {
-                var httpClient = new HttpClient();
-                if (!IPEndPoint.TryParse(_networkSettings.RemoteNode, out var ipEndPoint)) return default;
-                var url = $"http://{ipEndPoint.Address}:{_networkSettings.RemoteNodeHttpPort}/member/peer";
-                using var httpResponseMessage = await httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get, new Uri(url)));
-                using var stream = httpResponseMessage.Content.ReadAsStringAsync();
-                if (!httpResponseMessage.IsSuccessStatusCode) return default;
-                var read = await stream;
-                var jObject = JObject.Parse(read);
-
-                return new Peer
-                {
-                    IpAddress = jObject["ipAddress"].Value<string>(),
-                    BlockCount = jObject["blockHeight"].Value<ulong>(),
-                    TcpPort = jObject["tcpPort"].Value<string>(),
-                    Name = jObject["name"].Value<string>(),
-                    Version = jObject["version"].Value<string>(),
-                    ClientId = jObject["clientId"].Value<ulong>(),
-                    PublicKey = jObject["publicKey"].Value<string>(),
-                    HttpPort = jObject["httpPort"].Value<string>()
-                };
-            }
-            catch (Exception ex)
-            {
-                _logger.Here().Error("{@Message}", ex.Message);
-            }
-
-            return null;
         }
 
         /// <summary>

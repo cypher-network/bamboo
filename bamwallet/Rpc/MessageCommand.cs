@@ -5,6 +5,7 @@ namespace BAMWallet.Rpc
 {
     public enum MessageCommand : byte
     {
+        GetPeer = 0x10,
         GetBlocks = 0x14,
         GetBlockCount = 0x18,
         GetMemTransaction = 0x19,

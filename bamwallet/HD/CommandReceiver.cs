@@ -68,7 +68,10 @@ namespace BAMWallet.HD
             }
 
             _client.SetNetworkingSettings();
-            var peer = _client.GetSeedPeer().Result;
+            var peer = _client.Send<Peer>(new Parameter
+            {
+                MessageCommand = MessageCommand.GetPeer
+            });
             if (peer == null)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
@@ -89,7 +92,7 @@ namespace BAMWallet.HD
             }
 
             if (peer == null) return;
-            if (peer.PublicKey.Equals(_networkSettings.RemoteNodePubKey)) return;
+            if (peer.PublicKey.Xor(_networkSettings.RemoteNodePubKey.HexToByte())) return;
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine("WARNING: Remote node's public key has change. Please reset or make sure it's correct in settings");
             Console.ResetColor();
